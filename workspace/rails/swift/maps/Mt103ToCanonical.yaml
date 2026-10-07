@@ -1,0 +1,64 @@
+kind: Mapping
+name: rails.swift.maps.Mt103ToCanonical
+description: >
+  Reads an MT103 received for one of our customers into the canonical instruction: one batch with
+  one transaction. Field 20, the reference of the sending bank, is kept as the id a return quotes.
+rules:
+  # the reference is unique for its sender only
+  - set: msgId
+    value: concat(src.sender, '-', mtField(src, '20'))
+  - append: batches
+    rules:
+      - set: batchRef
+        value: mtField(src, '20')
+      - set: originalMsgId
+        value: mtField(src, '20')
+      - set: originalMessageType
+        value: "'MT103'"
+      - set: sendingAgentBic
+        value: src.sender
+      - set: settlementDate
+        value: mtDate(mtField(src, '32A'))
+      - append: txns
+        rules:
+          - let: orderer
+            value: coalesce(mtField(src, '50K'), mtField(src, '50F'), mtField(src, '50A'))
+          - let: beneficiary
+            value: coalesce(mtField(src, '59'), mtField(src, '59F'), mtField(src, '59A'))
+          - let: charges
+            value: mtField(src, '71A')
+          - set: endToEndId
+            value: mtField(src, '20')
+          - set: originalTxId
+            value: mtField(src, '20')
+          - set: uetr
+            value: src.b3.121
+          - set: amount
+            value: mtAmt(mtField(src, '32A'))
+          - set: currency
+            value: mtCcy(mtField(src, '32A'))
+          - set: debtor.name
+            value: mtName(orderer)
+          - set: debtor.account
+            value: mtAccount(orderer)
+          - set: debtor.agentBic
+            value: coalesce(mtField(src, '52A'), src.sender)
+          - set: creditor.name
+            value: mtName(beneficiary)
+          - set: creditor.account
+            value: mtAccount(beneficiary)
+          - set: creditor.agentBic
+            value: coalesce(mtField(src, '57A'), src.receiver)
+          - set: remittance
+            value: replace(mtField(src, '70'), '\n', ' ')
+          - set: chargeBearer
+            value: "charges == 'OUR' ? 'DEBT' : charges == 'BEN' ? 'CRED' : 'SHAR'"
+          # what the banks before us deducted (71F), what the sender prepaid for us (71G), and what the payer instructed (33B)
+          - set: charges.sendersCharges
+            value: mtField(src, '71F')
+          - set: charges.prepaid
+            value: mtField(src, '71G')
+          - set: instructed.amount
+            value: mtAmt(mtField(src, '33B'))
+          - set: instructed.currency
+            value: mtCcy(mtField(src, '33B'))

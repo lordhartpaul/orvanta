@@ -1,0 +1,13 @@
+kind: Channel
+name: rails.sepa.InvestigationInfoOutbound
+description: Answers to requests for information about a payment (camt.028), written by a person and approved by a second.
+direction: outbound
+format: iso20022
+messageType: camt.028.001.09
+mapping: payments.outbound.CanonicalToCamt028
+destination:
+  type: folder
+  path: outbound/sepa-investigations
+  extension: xml
+properties:
+  senderBic: ORVADEFF

@@ -1,0 +1,18 @@
+kind: Channel
+name: channels.ZaRtcInbound
+description: >
+  Domestic rand payments arriving from the clearing system for our customers: pacs.008 that names the
+  clearing system ZA-RTC. Credited to the customer's account, or sent back with the reason.
+direction: inbound
+purpose: instruction
+format: iso20022
+messageTypes: [pacs.008]
+match:
+  path: Document.FIToFICstmrCdtTrf.GrpHdr.SttlmInf.ClrSys.Prtry
+  equals: ZA-RTC
+mapping: rails.sepa.maps.Pacs008ToCanonical
+paymentType: IN
+processingFlow: payments.flows.IncomingDomesticProcessing
+returnChannel: channels.ZaRtcReturnOutbound
+notificationChannel: channels.CustomerNotificationOutbound
+inherit: [settlementDate, sendingAgentBic, originalMsgId]

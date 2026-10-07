@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "orvanta-pay",
+      "runtimeExecutable": "java",
+      "runtimeArgs": ["-jar", "orvanta-pay/target/orvanta-pay-0.1.0-all.jar", "--config=config/orvanta.yaml", "--workspace.syncOnStart=true"],
+      "port": 8480
+    }
+  ]
+}

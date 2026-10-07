@@ -1,0 +1,12 @@
+kind: TestCase
+name: tests.AResolutionCarriesTheCaseAndTheConfirmation
+description: "A camt.029 answering a claim of non-receipt with IPAY names the case and the day the payment was processed."
+target: payments.outbound.CanonicalToInvestigationResolution
+given:
+  answer: {id: ORVOUT0000000600, createdAt: "2026-10-06T15:00:00Z", senderBic: ORVADEFF, assignerBic: BNPAFRPP, caseId: CASE-CNR-1, kind: CLAIM_NON_RECEIPT, confirmation: IPAY}
+  txn: {id: ORVTXN0000000900, creditedAt: "2026-10-06T10:00:00Z", creditor: {agentBic: ORVADEFF}}
+expect:
+  - result.Document.RsltnOfInvstgtn.RslvdCase.Id == 'CASE-CNR-1'
+  - result.Document.RsltnOfInvstgtn.Sts.Conf == 'IPAY'
+  - result.Document.RsltnOfInvstgtn.ClmNonRctDtls.DtPrcd == '2026-10-06'
+  - result.Document.RsltnOfInvstgtn.Assgnmt.Assgne.Agt.FinInstnId.BICFI == 'BNPAFRPP'

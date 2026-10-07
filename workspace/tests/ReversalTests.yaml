@@ -1,0 +1,12 @@
+kind: TestCase
+name: tests.PostingIsReversedWithItsOwnKey
+description: The reversal flow asks the posting system to reverse the posting and records the answer.
+target: payments.flows.PostingReversal
+given:
+  txn:
+    id: ORVTXN0000000007
+    reasonCode: AC04
+    posting: {status: POSTED, postingId: SIMPST-1}
+expect:
+  - result.status == 'COMPLETED'
+  - txn.posting.reversal.status == 'REVERSED'

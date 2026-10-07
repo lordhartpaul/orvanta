@@ -1,0 +1,13 @@
+kind: Channel
+name: rails.sepa.InvestigationResolutionOutbound
+description: Resolutions of claims of non-receipt and requests to modify a payment (camt.029), decided by a person and approved by a second.
+direction: outbound
+format: iso20022
+messageType: camt.029.001.09
+mapping: payments.outbound.CanonicalToInvestigationResolution
+destination:
+  type: folder
+  path: outbound/sepa-investigations
+  extension: xml
+properties:
+  senderBic: ORVADEFF

@@ -1,0 +1,34 @@
+kind: Mapping
+name: payments.outbound.CanonicalToMt940
+description: >
+  Builds the MT940 customer statement of one account for one day from the platform's ledger: opening
+  balance (60F), one statement line (61) with its information line (86) per entry, closing balance (62F).
+  A reversal is marked RC (a credit taken back, so a debit) or RD (a debit taken back, so a credit).
+rules:
+  - let: opening
+    value: balances[0]
+  - let: closing
+    value: balances[1]
+  - set: type
+    value: "'940'"
+  - set: sender
+    value: report.senderBic
+  - set: receiver
+    value: report.receiverBic
+  - field: 20
+    value: report.reference16
+  - field: 25
+    value: report.account
+  - field: 28C
+    value: concat(str(report.number), '/1')
+  - field: 60F
+    value: "concat(opening.creditDebit == 'CRDT' ? 'C' : 'D', opening.yymmdd, opening.currency, mtAmount(opening.amount))"
+  - forEach: entries
+    as: e
+    rules:
+      - field: 61
+        value: "concat(e.yymmdd, e.creditDebit == 'CRDT' ? (e.reversal ? 'RD' : 'C') : (e.reversal ? 'RC' : 'D'), mtAmount(e.amount), 'NTRF', left(coalesce(e.txn.endToEndId, 'NONREF'), 16), '//', right(e.reference, 16))"
+      - field: 86
+        value: left(coalesce(e.txn.remittance, e.text, e.txn.id, 'NO DETAILS'), 65)
+  - field: 62F
+    value: "concat(closing.creditDebit == 'CRDT' ? 'C' : 'D', closing.yymmdd, closing.currency, mtAmount(closing.amount))"

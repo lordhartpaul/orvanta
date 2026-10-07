@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pacs.028.001.03">
+  <FIToFIPmtStsReq>
+    <GrpHdr>
+      <MsgId>ENQ-2026-10-06-001</MsgId>
+      <CreDtTm>2026-10-06T12:00:00Z</CreDtTm>
+      <InstgAgt><FinInstnId><BICFI>BNPAFRPP</BICFI></FinInstnId></InstgAgt>
+    </GrpHdr>
+    <TxInf>
+      <StsReqId>ENQ-TX-1</StsReqId>
+      <OrgnlGrpInf><OrgnlMsgId>INST-IN-2026-10-06-0001</OrgnlMsgId><OrgnlMsgNmId>pacs.008.001.08</OrgnlMsgNmId></OrgnlGrpInf>
+      <OrgnlEndToEndId>DINNER-SPLIT</OrgnlEndToEndId>
+      <OrgnlTxId>INSTTX-1</OrgnlTxId>
+    </TxInf>
+    <TxInf>
+      <StsReqId>ENQ-TX-2</StsReqId>
+      <OrgnlGrpInf><OrgnlMsgId>NEVER-SENT-1</OrgnlMsgId><OrgnlMsgNmId>pacs.008.001.08</OrgnlMsgNmId></OrgnlGrpInf>
+      <OrgnlEndToEndId>LOST-PAYMENT</OrgnlEndToEndId>
+      <OrgnlTxId>LOSTTX-1</OrgnlTxId>
+    </TxInf>
+  </FIToFIPmtStsReq>
+</Document>

@@ -1,0 +1,12 @@
+kind: ReferenceTable
+name: reference.FeeSchedule
+description: >
+  What a customer is charged for a payment, per scheme of the route: a fixed part, a percentage of the
+  amount, and the least and the most (fee() computes it). The fee is debited with the payment and credited
+  to the fee account named here, which must be an active FEE account of the same currency in the ledger
+  (NO_FEE_ACCOUNT otherwise). A scheme without a row charges nothing. Sample rows; the bank's tariff goes here.
+key: scheme
+rows:
+  - {scheme: SEPA-SCT, fixed: 0.50, percent: 0, feeAccount: "4099000002", text: Fee for a SEPA credit transfer}
+  - {scheme: SEPA-INST, fixed: 1.00, percent: 0, feeAccount: "4099000002", text: Fee for an instant payment}
+  - {scheme: SWIFT, fixed: 150.00, percent: 0.1, min: 150.00, max: 750.00, feeAccount: "4099000001", text: Fee for a cross-border payment}

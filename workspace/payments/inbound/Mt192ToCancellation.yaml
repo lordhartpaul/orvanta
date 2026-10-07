@@ -1,0 +1,18 @@
+kind: Mapping
+name: payments.inbound.Mt192ToCancellation
+description: >
+  Reads an MT192 request for cancellation: field 21 names the message to cancel by its reference, and
+  no single transaction, so the one entry means all of them. The sender is kept for the answer.
+rules:
+  - set: msgId
+    value: mtField(src, '20')
+  - set: senderBic
+    value: src.sender
+  - append: entries
+    rules:
+      - set: originalMsgId
+        value: mtField(src, '21')
+      - set: reasonCode
+        value: "'CUST'"
+      - set: reasonText
+        value: left(replace(mtField(src, '79'), '\n', ' '), 105)

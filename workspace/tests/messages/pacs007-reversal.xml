@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pacs.007.001.09">
+  <FIToFIPmtRvsl>
+    <GrpHdr>
+      <MsgId>REVERSAL-2026-10-09-001</MsgId>
+      <CreDtTm>2026-10-09T08:00:00</CreDtTm>
+      <NbOfTxs>2</NbOfTxs>
+      <SttlmInf><SttlmMtd>CLRG</SttlmMtd></SttlmInf>
+    </GrpHdr>
+    <TxInf>
+      <RvslId>RVS-1</RvslId>
+      <OrgnlGrpInf><OrgnlMsgId>CLEARING-DD-2026-10-07-001</OrgnlMsgId><OrgnlMsgNmId>pacs.003.001.08</OrgnlMsgNmId></OrgnlGrpInf>
+      <OrgnlEndToEndId>POWER-OCT</OrgnlEndToEndId>
+      <OrgnlTxId>SNDDD-1</OrgnlTxId>
+      <RvsdIntrBkSttlmAmt Ccy="EUR">84.20</RvsdIntrBkSttlmAmt>
+      <RvslRsnInf><Rsn><Cd>AM05</Cd></Rsn><AddtlInf>Collected twice by mistake</AddtlInf></RvslRsnInf>
+    </TxInf>
+    <TxInf>
+      <RvslId>RVS-2</RvslId>
+      <OrgnlGrpInf><OrgnlMsgId>CLEARING-DD-2026-10-07-001</OrgnlMsgId><OrgnlMsgNmId>pacs.003.001.08</OrgnlMsgNmId></OrgnlGrpInf>
+      <OrgnlEndToEndId>NEVER-COLLECTED</OrgnlEndToEndId>
+      <OrgnlTxId>SNDDD-77</OrgnlTxId>
+      <RvsdIntrBkSttlmAmt Ccy="EUR">10.00</RvsdIntrBkSttlmAmt>
+      <RvslRsnInf><Rsn><Cd>AM05</Cd></Rsn></RvslRsnInf>
+    </TxInf>
+  </FIToFIPmtRvsl>
+</Document>

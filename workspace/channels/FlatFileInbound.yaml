@@ -1,0 +1,17 @@
+kind: Channel
+name: channels.FlatFileInbound
+description: >
+  Payment files of fixed-width records (formats.PaymentsFixed) from a legacy system, placed in a folder.
+  A flat file is always read for the channel it arrives on: the text alone does not say what it is.
+direction: inbound
+purpose: instruction
+format: flat
+formatSpec: formats.PaymentsFixed
+messageTypes: [formats.PaymentsFixed]
+mapping: payments.inbound.FlatToCanonical
+validation: payments.rules.InstructionValidation
+statusReport: channels.CustomerStatusOutbound
+duplicates: REJECT
+transport:
+  - type: folder
+    path: inbound/flat

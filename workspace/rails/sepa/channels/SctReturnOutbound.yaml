@@ -1,0 +1,20 @@
+kind: Channel
+name: rails.sepa.SctReturnOutbound
+description: >
+  Returns of SEPA Credit Transfers we received (pacs.004): payments that could not be credited, and
+  refunds of payments that were. A payment sent on this channel has reached its end: it is RETURNED.
+direction: outbound
+format: iso20022
+messageType: pacs.004.001.09
+mapping: rails.sepa.maps.CanonicalToSepaPacs004
+sentStatus: RETURNED
+bulking:
+  maxTransactions: 100
+  maxWaitSeconds: 3
+destination:
+  type: folder
+  path: outbound/sepa-returns
+  extension: xml
+properties:
+  senderBic: ORVADEFF
+  scheme: SEPA-SCT

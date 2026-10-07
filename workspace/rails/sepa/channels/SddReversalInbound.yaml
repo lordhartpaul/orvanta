@@ -1,0 +1,11 @@
+kind: Channel
+name: rails.sepa.SddReversalInbound
+description: >
+  Reversals of direct debit collections by the bank of the creditor (pacs.007): a collection that was
+  debited from our customer is taken back by the side that collected it. The debit is reversed and the
+  customer is told; nothing is sent back.
+direction: inbound
+purpose: reversal
+format: iso20022
+messageTypes: [pacs.007]
+mapping: rails.sepa.maps.Pacs007ToReversal

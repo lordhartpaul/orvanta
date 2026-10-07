@@ -1,0 +1,16 @@
+kind: Channel
+name: channels.CustomerAccountReportOutbound
+description: >
+  Account reports (camt.052) to customers: everything booked on one account in a period, with the number
+  and sum of credits and debits. Written on request, and once a day for the accounts whose customer asked
+  for a daily report in the notification preferences.
+direction: outbound
+format: iso20022
+messageType: camt.052.001.08
+mapping: payments.outbound.CanonicalToCamt052
+destination:
+  type: folder
+  path: outbound/customer-reports
+  extension: xml
+properties:
+  senderBic: ORVADEFF

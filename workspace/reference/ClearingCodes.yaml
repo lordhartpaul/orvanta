@@ -1,0 +1,22 @@
+kind: ReferenceTable
+name: reference.ClearingCodes
+description: >
+  National bank codes and the BIC of the bank: key "<country>|<code>" (a sort code, IFSC, ABA number, BSB,
+  branch code). bicFromClearingCode(country, code) reads it; clearingCodeFromBic(bic, country) reads
+  reference.BicClearingCodes, the other way round. Sample rows: load the bank's directory into both tables
+  (Rows tab, CSV).
+key: key
+rows:
+  - {key: "GB|309617", bic: LOYDGB2LXXX, name: Lloyds Bank}
+  - {key: "GB|400515", bic: HBUKGB4BXXX, name: HSBC UK}
+  - {key: "GB|200000", bic: BARCGB22XXX, name: Barclays Bank}
+  - {key: "US|021000021", bic: CHASUS33XXX, name: JPMorgan Chase Bank}
+  - {key: "US|026009593", bic: BOFAUS3NXXX, name: Bank of America}
+  - {key: "IN|HDFC0000001", bic: HDFCINBBXXX, name: HDFC Bank}
+  - {key: "IN|ICIC0000001", bic: ICICINBBXXX, name: ICICI Bank}
+  - {key: "AU|062000", bic: CTBAAU2SXXX, name: Commonwealth Bank of Australia}
+  - {key: "ZA|250655", bic: FIRNZAJJXXX, name: FirstRand Bank}
+  - {key: "ZA|051001", bic: SBZAZAJJXXX, name: Standard Bank of South Africa}
+  - {key: "ZA|632005", bic: ABSAZAJJXXX, name: Absa Bank}
+  - {key: "ZA|198765", bic: NEDSZAJJXXX, name: Nedbank}
+  - {key: "ZA|470010", bic: CABLZAJJXXX, name: Capitec Bank}

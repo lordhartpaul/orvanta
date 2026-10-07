@@ -1,0 +1,7 @@
+kind: Api
+name: api.MandateDelete
+description: Cancels a mandate. It is kept for the record; no further collection is accepted under it.
+method: DELETE
+path: /mandates/{mandateId}
+permission: payments.submit
+target: api.flows.MandateCancel

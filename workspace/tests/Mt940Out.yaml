@@ -1,0 +1,32 @@
+kind: TestCase
+name: tests.Mt940StatementHasBalancesLinesAndReversalMarks
+description: "An MT940 from the ledger: opening balance, cash paid in, a payment sent, that payment taken back, closing balance."
+target: payments.outbound.CanonicalToMt940
+given:
+  report: {id: ORVSTM202610064070000001M, reference16: S261006070000001, number: 279, account: "4070000001", currency: ZAR, senderBic: ORVAZAJJ, receiverBic: KAROZAJJ}
+  balances:
+    - {code: OPBD, amount: 250.00, currency: ZAR, creditDebit: DBIT, date: "2026-10-06", yymmdd: "261006"}
+    - {code: CLBD, amount: 750.00, currency: ZAR, creditDebit: CRDT, date: "2026-10-06", yymmdd: "261006"}
+  entries:
+    - {creditDebit: CRDT, reversal: false, reference: LP-MANUAL-ORVAPR0000000004, yymmdd: "261006", amount: 1000.00, currency: ZAR, text: Cash paid in}
+    - creditDebit: DBIT
+      reversal: false
+      reference: LP-ORVTXN0000000012-DEBIT
+      yymmdd: "261006"
+      amount: 900.50
+      currency: ZAR
+      txn: {id: ORVTXN0000000012, endToEndId: INV-4411, remittance: Invoice 4411}
+    - creditDebit: CRDT
+      reversal: true
+      reference: LP-ORVTXN0000000012-REVERSAL
+      yymmdd: "261006"
+      amount: 900.50
+      currency: ZAR
+      txn: {id: ORVTXN0000000012, endToEndId: INV-4411, remittance: Invoice 4411}
+expect:
+  - result.type == '940'
+  - mtField(result, '20') == 'S261006070000001'
+  - mtField(result, '25') == '4070000001'
+  - mtField(result, '28C') == '279/1'
+  - mtField(result, '60F') == 'D261006ZAR250,'
+  - mtField(result, '62F') == 'C261006ZAR750,'

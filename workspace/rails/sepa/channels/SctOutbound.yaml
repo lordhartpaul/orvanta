@@ -1,0 +1,21 @@
+kind: Channel
+name: rails.sepa.SctOutbound
+description: SEPA Credit Transfer. Payments are collected into bulks and sent to the clearing system as pacs.008.
+direction: outbound
+# the message id of every file: a date and a sequence, as the clearing is used to (see README, message id templates)
+messageIdTemplate: "ORV{yyyyMMdd}{seq:6}"
+format: iso20022
+messageType: pacs.008.001.08
+mapping: rails.sepa.maps.CanonicalToSepaPacs008
+cancellationChannel: rails.sepa.RecallOutbound
+bulking:
+  maxTransactions: 100
+  maxWaitSeconds: 3
+destination:
+  type: folder
+  path: outbound/sepa-sct
+  extension: xml
+properties:
+  senderBic: ORVADEFF
+# development only: the built-in clearing simulator answers every file with a pacs.002
+simulator: clearing

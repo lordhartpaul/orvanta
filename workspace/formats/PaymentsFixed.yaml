@@ -1,0 +1,27 @@
+kind: Format
+name: formats.PaymentsFixed
+description: >
+  A sample fixed-width payment file: a header line (H) with the file reference and the debtor, then one
+  line per payment (D). Positions are 1-based. Amounts are digits with two implied decimals. A layout of
+  the bank's own (ACH, NACHA, a legacy host) is described the same way, as a model.
+type: fixed
+recordType: {start: 1, length: 1}
+records:
+  - type: "H"
+    name: header
+    fields:
+      - {name: fileRef, start: 2, length: 16}
+      - {name: created, start: 18, length: 8}
+      - {name: debtorName, start: 26, length: 35}
+      - {name: debtorAccount, start: 61, length: 20}
+  - type: "D"
+    name: payment
+    repeats: true
+    fields:
+      - {name: reference, start: 2, length: 16}
+      - {name: amount, start: 18, length: 12, kind: amount, decimals: 2}
+      - {name: currency, start: 30, length: 3}
+      - {name: creditorName, start: 33, length: 35}
+      - {name: creditorAccount, start: 68, length: 20}
+      - {name: creditorBic, start: 88, length: 11}
+      - {name: remittance, start: 99, length: 40}

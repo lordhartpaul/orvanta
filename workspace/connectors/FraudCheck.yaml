@@ -1,0 +1,9 @@
+kind: Connector
+name: connectors.FraudCheck
+description: >
+  Fraud scoring. Answers status CLEAR or REVIEW at once, or PENDING when the result follows
+  later as a fraud.result message on the fraud result channel.
+type: http
+url: ${env.ORVANTA_SIM_URL:-http://localhost:8480/sim}/fraud/check
+timeoutMs: 3000
+testReply: {status: CLEAR, score: 5}

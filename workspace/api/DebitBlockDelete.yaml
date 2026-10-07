@@ -1,0 +1,7 @@
+kind: Api
+name: api.DebitBlockDelete
+description: Removes a customer's block or limit for one creditor.
+method: DELETE
+path: /debit-blocks/{account}/{creditorId}
+permission: payments.approve
+target: api.flows.DebitBlockRemove

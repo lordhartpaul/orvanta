@@ -1,0 +1,15 @@
+kind: TestCase
+name: tests.ReversalNamesTheCollectionsItTakesBack
+description: "A pacs.007 from the creditor's bank: per collection the ids it was sent with, the amount and the reason."
+target: rails.sepa.maps.Pacs007ToReversal
+givenMessage:
+  var: src
+  file: tests/messages/pacs007-reversal.xml
+expect:
+  - result.msgId == 'REVERSAL-2026-10-09-001'
+  - count(result.entries) == 2
+  - result.entries[0].originalMsgId == 'CLEARING-DD-2026-10-07-001'
+  - result.entries[0].originalTxId == 'SNDDD-1'
+  - result.entries[0].amount == 84.20
+  - result.entries[0].reasonCode == 'AM05'
+  - result.entries[0].reasonText == 'Collected twice by mistake'

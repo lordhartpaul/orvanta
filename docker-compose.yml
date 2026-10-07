@@ -1,0 +1,114 @@
+# The whole platform on one machine: MongoDB, RabbitMQ, the console/API process and the engine process.
+#
+#   copy .env.example to .env and set the four values
+#   docker compose up -d --build
+#   open http://localhost:8480/ and sign in as admin with ORVANTA_ADMIN_PASSWORD
+#
+# More engine capacity:  docker compose up -d --scale engine=3
+#
+# This file is for trying the platform and for development: MongoDB and RabbitMQ take their passwords from
+# .env and are reachable only from the other containers (no ports published); the simulated external
+# systems are switched on. Production: config/orvanta-production.example.yaml and the Helm chart.
+name: orvanta
+
+x-orvanta-environment: &orvanta-environment
+  ORVANTA_STORE_URI: mongodb://orvanta:${MONGO_PASSWORD:?set MONGO_PASSWORD in .env}@mongo:27017/?authSource=admin
+  ORVANTA_STORE_DATABASE: orvanta
+  ORVANTA_BUS_TYPE: rabbit
+  # messages of one service handled in parallel by each process
+  ORVANTA_BUS_CONSUMERS: ${ORVANTA_BUS_CONSUMERS:-4}
+  ORVANTA_BUS_URI: amqp://orvanta:${RABBITMQ_PASSWORD:?set RABBITMQ_PASSWORD in .env}@rabbitmq:5672
+  ORVANTA_SECURITY_JWTSECRET: ${ORVANTA_JWT_SECRET:?set ORVANTA_JWT_SECRET in .env}
+  # every connector of the sample models points at the simulator served by the console process
+  ORVANTA_SIM_URL: http://console:8480/sim
+  # the account system is the simulator too, unless ORVANTA_ACCOUNTS_URL names another: http://console:8480/ledger is the platform's own ledger
+  ORVANTA_SIMULATOR_ENABLED: ${ORVANTA_SIMULATOR_ENABLED:-true}
+  # the engine container calls the simulator in the console container
+  ORVANTA_SIMULATOR_ALLOWREMOTE: "true"
+
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    environment:
+      # the root user the platform connects as; set on the first start of an empty volume
+      MONGO_INITDB_ROOT_USERNAME: orvanta
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "-u", "orvanta", "-p", "${MONGO_PASSWORD}", "--authenticationDatabase", "admin", "--eval", "db.adminCommand('ping').ok"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: orvanta
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      # healthy only when the listeners accept connections, not merely when the node is up
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "check_port_connectivity"]
+      interval: 5s
+      timeout: 10s
+      retries: 30
+
+  # console, REST API, inbound folder and channel transports
+  console:
+    build: .
+    image: orvanta/orvanta-pay:0.1.0
+    restart: unless-stopped
+    # the process finishes the work in hand before it stops (shutdown.graceSeconds, 30 by default)
+    stop_grace_period: 45s
+    environment:
+      <<: *orvanta-environment
+      ORVANTA_UNITS: api,ingest
+      # creates the user "admin" at the first start, when there are no users yet
+      ORVANTA_SECURITY_BOOTSTRAPPASSWORD: ${ORVANTA_ADMIN_PASSWORD:?set ORVANTA_ADMIN_PASSWORD in .env}
+    ports:
+      - "${ORVANTA_PORT:-8480}:8480"
+    volumes:
+      - orvanta-data:/app/data
+    depends_on:
+      mongo:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8480/api/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+
+  # every processing service; scale this one for throughput
+  engine:
+    image: orvanta/orvanta-pay:0.1.0
+    restart: unless-stopped
+    # the process finishes the work in hand before it stops (shutdown.graceSeconds, 30 by default)
+    stop_grace_period: 45s
+    environment:
+      <<: *orvanta-environment
+      ORVANTA_UNITS: debulk,process,bulk,dispatch,acknowledge,cancel,return,report,recover,callback,post,reconcile,recall,notify
+      ORVANTA_HEALTH_PORT: "8081"
+    volumes:
+      # the same data directory as the console: files the engine writes and files that arrive
+      - orvanta-data:/app/data
+    depends_on:
+      console:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8081/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+
+volumes:
+  mongo-data:
+  rabbitmq-data:
+  orvanta-data:

@@ -1,0 +1,19 @@
+kind: Channel
+name: rails.sepa.SctInbound
+description: >
+  SEPA Credit Transfers arriving from the clearing system for our customers (pacs.008). Each payment
+  is credited to the customer's account, or sent back through the return channel with the reason.
+direction: inbound
+# a sanctions hit freezes the funds on the seized-funds account while a person decides (RETURN: nothing is booked)
+sanctionsHit: FREEZE
+purpose: instruction
+format: iso20022
+messageTypes: [pacs.008]
+mapping: rails.sepa.maps.Pacs008ToCanonical
+# these transactions are incoming payments, processed by their own flow
+paymentType: IN
+processingFlow: rails.sepa.flows.IncomingCreditProcessing
+returnChannel: rails.sepa.SctReturnOutbound
+# the customer is told of the credit, and of its reversal when the payment is refunded
+notificationChannel: channels.CustomerNotificationOutbound
+inherit: [settlementDate, sendingAgentBic, originalMsgId]

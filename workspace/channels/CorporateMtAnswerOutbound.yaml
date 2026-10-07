@@ -1,0 +1,15 @@
+kind: Channel
+name: channels.CorporateMtAnswerOutbound
+description: >
+  Answers to MT192 requests for cancellation (MT196): one status for the request and how many
+  transactions were cancelled, refused or are still with the receiving side.
+direction: outbound
+format: swift.mt
+messageType: MT196
+mapping: payments.outbound.CanonicalToMt196
+destination:
+  type: folder
+  path: outbound/customer-mt-answers
+  extension: fin
+properties:
+  senderBic: ORVAZAJJ

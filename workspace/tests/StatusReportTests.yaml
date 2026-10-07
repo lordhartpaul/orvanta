@@ -1,0 +1,30 @@
+kind: TestCase
+name: tests.Pain002ReportsEachOutcome
+description: Accepted, rejected, returned, cancelled and pending transactions each get the right status and reason.
+target: payments.outbound.CanonicalToPain002
+given:
+  report: {id: ORVOUT0000000009, createdAt: "2026-10-04T10:00:00Z", originalMsgId: SALARY-2026-10-001, originalMessageType: pain.001.001.09, senderBic: ORVAZAJJ}
+  batches:
+    - batchRef: SALARY-2026-10-001-ZAR
+      txns:
+        - {endToEndId: E1, status: ACCEPTED, amount: 100, currency: ZAR}
+        - {endToEndId: E2, status: REJECTED_BY_APPLICATION, reasonCode: AM01, reasonText: Amount must be greater than zero, amount: 0, currency: ZAR}
+        - {endToEndId: E3, status: RETURNED, reasonCode: AC04, reasonText: Closed account number, amount: 5, currency: ZAR}
+        - {endToEndId: E4, status: CANCELLED, reasonCode: DUPL, reasonText: Paid twice, amount: 7, currency: ZAR}
+        - {endToEndId: E5, status: SENT, amount: 9, currency: ZAR}
+        - {endToEndId: E6, status: REJECTED_BY_APPLICATION, reasonCode: SANCTIONS_HIT, reasonText: Matched, amount: 9, currency: ZAR}
+expect:
+  - result.Document.CstmrPmtStsRpt.OrgnlGrpInfAndSts.OrgnlMsgId == 'SALARY-2026-10-001'
+  - not exists(result.Document.CstmrPmtStsRpt.OrgnlGrpInfAndSts.GrpSts)
+  - result.Document.CstmrPmtStsRpt.OrgnlPmtInfAndSts[0].OrgnlPmtInfId == 'SALARY-2026-10-001-ZAR'
+  - count(result.Document.CstmrPmtStsRpt.OrgnlPmtInfAndSts[0].TxInfAndSts) == 6
+  - result.Document.CstmrPmtStsRpt.OrgnlPmtInfAndSts[0].TxInfAndSts[0].TxSts == 'ACCP'
+  - not exists(result.Document.CstmrPmtStsRpt.OrgnlPmtInfAndSts[0].TxInfAndSts[0].StsRsnInf)
+  - result.Document.CstmrPmtStsRpt.OrgnlPmtInfAndSts[0].TxInfAndSts[1].TxSts == 'RJCT'
+  - result.Document.CstmrPmtStsRpt.OrgnlPmtInfAndSts[0].TxInfAndSts[1].StsRsnInf.Rsn.Cd == 'AM01'
+  - result.Document.CstmrPmtStsRpt.OrgnlPmtInfAndSts[0].TxInfAndSts[2].TxSts == 'RJCT'
+  - startsWith(result.Document.CstmrPmtStsRpt.OrgnlPmtInfAndSts[0].TxInfAndSts[2].StsRsnInf.AddtlInf, 'Returned after acceptance.')
+  - result.Document.CstmrPmtStsRpt.OrgnlPmtInfAndSts[0].TxInfAndSts[3].TxSts == 'CANC'
+  - result.Document.CstmrPmtStsRpt.OrgnlPmtInfAndSts[0].TxInfAndSts[4].TxSts == 'PDNG'
+  - result.Document.CstmrPmtStsRpt.OrgnlPmtInfAndSts[0].TxInfAndSts[5].StsRsnInf.Rsn.Prtry == 'SANCTIONS_HIT'
+  - not exists(result.Document.CstmrPmtStsRpt.OrgnlPmtInfAndSts[0].TxInfAndSts[5].StsRsnInf.Rsn.Cd)

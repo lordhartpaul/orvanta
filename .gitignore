@@ -1,0 +1,11 @@
+target/
+data/
+*.log
+.idea/
+*.iml
+.env
+config/seed-users.yaml
+*.p12
+*.jks
+node_modules/
+console-tests/test-results/

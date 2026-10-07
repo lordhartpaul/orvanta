@@ -1,0 +1,24 @@
+kind: TestCase
+name: tests.IncomingPaymentForAClosedAccountGoesBack
+description: "The account is closed: the flow ends with the return reason AC04 and nothing is credited."
+target: rails.sepa.flows.IncomingCreditProcessing
+given:
+  txn:
+    id: ORVTXN0000000900
+    paymentType: IN
+    channelIn: rails.sepa.SctInbound
+    endToEndId: RENT-OCT
+    originalTxId: SNDTX-1
+    originalMsgId: SND-MSG-1
+    amount: 950.00
+    currency: EUR
+    debtor: {name: "Camille Laurent", account: "FR1420041010050500013M02606", agentBic: BNPAFRPP}
+    creditor: {name: "Rheinland Pumpen GmbH", account: "DE50500105179990000001"}
+mocks:
+  connectors.AccountLookup: {status: CLOSED, currency: EUR}
+  connectors.SanctionsScreening: {status: CLEAR}
+  connectors.AccountPosting: {status: POSTED, postingId: P-1}
+expect:
+  - result.status == 'REJECTED'
+  - result.code == 'AC04'
+  - not exists(txn.posting)

@@ -1,0 +1,23 @@
+kind: ReferenceTable
+name: reference.IbanBankCodes
+description: >
+  The BIC of a bank by the bank identifier inside its IBANs: key "<country>|<bank code>" as ibanProblem()
+  and bicFromIban() cut it out with reference.IbanStructures. When a customer gives a creditor IBAN and no
+  BIC, enrichment fills the creditor's bank from here, so SEPA reachability and routing can go on.
+  Sample data for a few banks: load the bank's IBAN Plus directory into this table (Rows tab, CSV).
+key: key
+rows:
+  - {key: "DE|37040044", bic: COBADEFFXXX, name: Commerzbank}
+  - {key: "DE|50010517", bic: INGDDEFFXXX, name: ING-DiBa}
+  - {key: "DE|10070000", bic: DEUTDEBBXXX, name: Deutsche Bank Berlin}
+  - {key: "DE|12030000", bic: BYLADEM1001, name: Deutsche Kreditbank}
+  - {key: "FR|30004", bic: BNPAFRPPXXX, name: BNP Paribas}
+  - {key: "FR|30003", bic: SOGEFRPPXXX, name: Societe Generale}
+  - {key: "NL|INGB", bic: INGBNL2AXXX, name: ING Bank}
+  - {key: "NL|ABNA", bic: ABNANL2AXXX, name: ABN AMRO}
+  - {key: "NL|RABO", bic: RABONL2UXXX, name: Rabobank}
+  - {key: "ES|2100", bic: CAIXESBBXXX, name: CaixaBank}
+  - {key: "BE|001", bic: GEBABEBBXXX, name: BNP Paribas Fortis}
+  - {key: "IT|02008", bic: UNCRITMMXXX, name: UniCredit}
+  - {key: "GB|NWBK", bic: NWBKGB2LXXX, name: NatWest}
+  - {key: "GB|BARC", bic: BARCGB22XXX, name: Barclays}

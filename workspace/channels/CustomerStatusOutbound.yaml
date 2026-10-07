@@ -1,0 +1,19 @@
+kind: Channel
+name: channels.CustomerStatusOutbound
+description: Payment status reports (pain.002) sent back to the customer that submitted the instruction.
+direction: outbound
+format: iso20022
+messageType: pain.002.001.10
+mapping: payments.outbound.CanonicalToPain002
+reporting:
+  # the first report waits until every transaction is final, but not longer than this;
+  # transactions still in progress are then reported as pending and reported again when they finish
+  maxWaitSeconds: 20
+destination:
+  type: folder
+  path: outbound/customer-status
+  extension: xml
+properties:
+  senderBic: ORVAZAJJ
+  # the language the reasons are explained in (reference.ReasonTexts); leave out for the engine's own text
+  language: en

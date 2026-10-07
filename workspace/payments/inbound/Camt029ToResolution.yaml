@@ -1,0 +1,27 @@
+kind: Mapping
+name: payments.inbound.Camt029ToResolution
+description: >
+  Reads a resolution of investigation (camt.029), the answer to a cancellation request we forwarded:
+  one entry per transaction with the cancellation status the receiving side decided.
+rules:
+  - let: res
+    value: src.Document.RsltnOfInvstgtn
+  - set: msgId
+    value: res.Assgnmt.Id
+  - forEach: res.CxlDtls
+    as: d
+    rules:
+      - forEach: d.TxInfAndSts
+        as: st
+        append: entries
+        rules:
+          - set: transactionId
+            value: st.OrgnlTxId
+          - set: endToEndId
+            value: st.OrgnlEndToEndId
+          - set: status
+            value: coalesce(st.TxCxlSts, res.Sts.Conf)
+          - set: reasonCode
+            value: coalesce(st.CxlStsRsnInf.Rsn.Cd, st.CxlStsRsnInf.Rsn.Prtry)
+          - set: reasonText
+            value: st.CxlStsRsnInf.AddtlInf

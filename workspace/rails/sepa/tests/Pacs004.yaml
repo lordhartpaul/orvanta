@@ -1,0 +1,40 @@
+kind: TestCase
+name: tests.ReturnMessageQuotesThePaymentAsItWasReceived
+description: "The pacs.004 names the ids of the received payment, the amount, the reason and who decided."
+target: rails.sepa.maps.CanonicalToSepaPacs004
+clock: "2026-10-06T08:00:00Z"
+given:
+  bulk: {msgId: ORVOUT0000000077, createdAt: "2026-10-06T08:00:00Z", count: 2, total: 1200.00, senderBic: ORVADEFF}
+  txns:
+    - id: ORVTXN0000000900
+      endToEndId: RENT-OCT
+      originalTxId: SNDTX-1
+      originalMsgId: SND-MSG-1
+      instructionRef: SND-INSTR-1
+      amount: 950.00
+      currency: EUR
+      debtor: {name: "Camille Laurent", account: "FR1420041010050500013M02606", agentBic: BNPAFRPP}
+      creditor: {name: "Rheinland Pumpen GmbH", account: "DE50500105179990000001"}
+      return: {reasonCode: AC04, reasonText: Creditor account is closed, requestedBy: application}
+    - id: ORVTXN0000000901
+      endToEndId: GIFT-1
+      originalTxId: SNDTX-2
+      originalMsgId: SND-MSG-1
+      amount: 250.00
+      currency: EUR
+      debtor: {name: "Marco Rossi", account: "IT60X0542811101000000123456", agentBic: BCITITMM}
+      creditor: {name: "Sophie Peeters", account: "DE08500105175400000042"}
+      return: {reasonCode: CUST, reasonText: Paid twice by mistake, requestedBy: operator1 (approved by checker1)}
+expect:
+  - result.Document.PmtRtr.GrpHdr.NbOfTxs == '2'
+  - result.Document.PmtRtr.GrpHdr.IntrBkSttlmDt == '2026-10-06'
+  - result.Document.PmtRtr.TxInf[0].RtrId == 'ORVTXN0000000900'
+  - result.Document.PmtRtr.TxInf[0].OrgnlGrpInf.OrgnlMsgId == 'SND-MSG-1'
+  - result.Document.PmtRtr.TxInf[0].OrgnlEndToEndId == 'RENT-OCT'
+  - result.Document.PmtRtr.TxInf[0].OrgnlTxId == 'SNDTX-1'
+  - result.Document.PmtRtr.TxInf[0].RtrRsnInf.Rsn.Cd == 'AC04'
+  - result.Document.PmtRtr.TxInf[0].RtrRsnInf.Orgtr.Id.OrgId.AnyBIC == 'ORVADEFF'
+  - result.Document.PmtRtr.TxInf[0].OrgnlTxRef.DbtrAgt.FinInstnId.BICFI == 'BNPAFRPP'
+  - result.Document.PmtRtr.TxInf[1].RtrRsnInf.Rsn.Cd == 'CUST'
+  - result.Document.PmtRtr.TxInf[1].RtrRsnInf.Orgtr.Nm == 'Sophie Peeters'
+  - not exists(result.Document.PmtRtr.TxInf[1].OrgnlInstrId)

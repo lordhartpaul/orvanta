@@ -1,0 +1,15 @@
+kind: Flow
+name: api.flows.DebitBlockRemove
+description: Removes the block or limit a customer had for one creditor.
+steps:
+  - id: remove
+    type: remove
+    dataset: data.DebitBlocks
+    key: concat(request.path.account, ':', request.path.creditorId)
+
+  - id: answer
+    type: set
+    values:
+      response.account: request.path.account
+      response.creditorId: request.path.creditorId
+      response.removed: "true"

@@ -1,0 +1,17 @@
+kind: RuleSet
+name: rails.swift.rules.Relationship
+description: >
+  Before a SWIFT payment leaves: the bank the MT103 goes to must have a relationship with us that allows
+  it (RMA), and so must the correspondent for what it receives (an MT103 when serial, an MT202 COV when
+  cover). A payment without the relationship is not sent out blind; it is rejected with NO_RMA.
+rules:
+  - id: RMA_CREDITOR_BANK
+    when: txn.route.settlementMethod == 'COVER'
+    assert: rmaAllows('rails.swift.Relationships', txn.creditor.agentBic, 'MT103')
+    code: NO_RMA
+    message: No relationship with the creditor's bank for MT103
+  - id: RMA_CORRESPONDENT
+    when: exists(txn.route.correspondentBic)
+    assert: "rmaAllows('rails.swift.Relationships', txn.route.correspondentBic, txn.route.settlementMethod == 'COVER' ? 'MT202' : 'MT103')"
+    code: NO_RMA
+    message: No relationship with the correspondent for the message it would receive

@@ -1,0 +1,93 @@
+# Orvanta Pay: a hardened configuration for a production installation. Copy to orvanta.yaml and fill in the
+# environment variables it names; nothing secret is written in this file. Every line that differs from the
+# development configuration says why. Start with:  java -jar orvanta-pay-<version>-all.jar --config=config/orvanta.yaml
+#
+# Required environment:
+#   ORVANTA_SECURITY_JWTSECRET      at least 32 random characters, the same in every process (sessions survive a restart and are shared)
+#   ORVANTA_SECURITY_INTEGRITYKEY   at least 32 random characters: seals deployments; a deployment changed in the database is refused
+#   ORVANTA_STORE_URI               mongodb+srv://... or mongodb://user:password@host:27017/?tls=true&authSource=admin
+#   ORVANTA_BUS_URI                 amqps://user:password@host:5671/vhost  (when more than one process runs)
+#   ORVANTA_SERVER_TLS_PASSWORD     the keystore password, when TLS ends in this process
+#   ORVANTA_METRICS_TOKEN           bearer token the monitoring system presents to /metrics
+#   ORVANTA_ALERTS_WEBHOOK          where incidents are posted (and ORVANTA_ALERTS_TOKEN when it needs one)
+#   ORVANTA_SECURITY_BOOTSTRAPPASSWORD  only for the very first start without users: creates 'admin', then remove it
+#   the ORVANTA_SSO_* variables when single sign-on is used; the partner and system credentials the channel and
+#   connector models name (${env.NAME:-}); ORVANTA_CORPORATE_API_KEY and the like
+
+server:
+  port: 8443
+  # TLS ends here, or at a proxy in front: then leave tls out and set behindTlsProxy so that HSTS is sent and the
+  # caller's address is read from X-Forwarded-For (the proxy must set it)
+  tls:
+    keystore: config/server.p12
+    password: ${env.ORVANTA_SERVER_TLS_PASSWORD:-}
+  behindTlsProxy: false
+
+# one process for the Console and API, others for the engine: the bus carries the work between them
+units: all
+
+store:
+  type: mongo
+  uri: ${env.ORVANTA_STORE_URI:-}          # credentials and tls=true in the URI; never the default without authentication
+  database: orvanta
+
+bus:
+  type: rabbit                              # memory only when one process runs everything
+  uri: ${env.ORVANTA_BUS_URI:-}             # amqps://, with credentials
+  consumers: 4
+
+workspace:
+  dir: workspace
+  syncOnStart: false                        # production never bypasses maker-checker: models change through approved requests only
+  writeBack: false                          # the deployed models are the truth; the directory is the installation's copy
+
+data:
+  dir: /var/lib/orvanta/data                # the server's own account only: payment files live here
+
+schemas:
+  dir: /etc/orvanta/schemas/iso20022        # the bank's ISO 20022 schemas (XSD per message type): validation on every message
+
+engine:
+  processingFlow: payments.flows.TransactionProcessing
+
+sso:
+  enabled: ${env.ORVANTA_SSO_ENABLED:-false}
+  issuer: ${env.ORVANTA_SSO_ISSUER:-}
+  clientId: ${env.ORVANTA_SSO_CLIENT_ID:-orvanta-console}
+  clientSecret: ${env.ORVANTA_SSO_CLIENT_SECRET:-}
+  redirectUri: ${env.ORVANTA_SSO_REDIRECT_URI:-}
+  usernameClaim: preferred_username
+  label: Sign in with the bank's account
+
+security:
+  jwtSecret: ${env.ORVANTA_SECURITY_JWTSECRET:-}
+  integrityKey: ${env.ORVANTA_SECURITY_INTEGRITYKEY:-}
+  tokenMinutes: 30                          # shorter sessions than in development
+  requireMfa: true                          # everyone signs in with a second step (or through single sign-on)
+  maxFailedLogins: 5
+  lockMinutes: 30
+  loginAttempts: 10
+  loginWindowSeconds: 300
+  seedFile: ""                              # no seed file: users are created in the Console with approval (bootstrap once, see above)
+  bootstrapPassword: ${env.ORVANTA_SECURITY_BOOTSTRAPPASSWORD:-}
+  # every host a connector, token URL or HTTP destination may call: nothing else is reachable from a model
+  connectorHosts: "*.bank.example,api.sanctions.example,login.bank.example"
+
+metrics:
+  token: ${env.ORVANTA_METRICS_TOKEN:-}      # /metrics answers only with this token (or from this machine)
+
+alerts:
+  webhook: ${env.ORVANTA_ALERTS_WEBHOOK:-}
+  token: ${env.ORVANTA_ALERTS_TOKEN:-}
+
+simulator:
+  enabled: false                            # the built-in stand-ins are for development only
+  allowRemote: false
+
+# relational data sources for DataSet models that name a 'table' and a 'datasource'. The JDBC driver is put on the
+# classpath: java -cp orvanta-pay-0.1.0-all.jar;lib/mysql-connector-j.jar io.orvanta.pay.OrvantaServer ...
+# The password is best set in the environment as ORVANTA_DATASOURCES_<NAME>_PASSWORD (upper case name).
+# datasources:
+#   customers:
+#     url: jdbc:mysql://db.bank.example:3306/customers
+#     username: orvanta

@@ -1,0 +1,16 @@
+kind: TestCase
+name: tests.AFeeIsComputedFromASchedule
+target: payments.rules.TransactionValidation
+given:
+  txn:
+    endToEndId: FEE-1
+    amount: 10
+    currency: EUR
+    debtor: {account: "4051122334"}
+    creditor: {name: Someone, account: "DE89370400440532013000"}
+expect:
+  - fee(1000, 7.50, 0.1, 10, 50) == 10
+  - fee(100000, 150, 0.1, 150, 750) == 250
+  - fee(5000000, 150, 0.1, 150, 750) == 750
+  - fee(100, 0.50, 0, null, null) == 0.5
+  - fee(100, null, null, null, null) == 0

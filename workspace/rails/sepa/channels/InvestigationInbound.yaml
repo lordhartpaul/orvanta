@@ -1,0 +1,16 @@
+kind: Channel
+name: rails.sepa.InvestigationInbound
+description: >
+  Investigations from other banks about a payment: a request for information (camt.026), a claim that a
+  payment was not received (camt.027), a request to modify a payment (camt.087). Each opens a case on the
+  payment for a person to answer; the answer goes out as camt.028 (information) or camt.029 (resolution).
+direction: inbound
+purpose: investigation
+format: iso20022
+messageTypes: [camt.026, camt.027, camt.087]
+mapping: rails.sepa.maps.InvestigationToCase
+infoChannel: rails.sepa.InvestigationInfoOutbound
+answerChannel: rails.sepa.InvestigationResolutionOutbound
+transport:
+  - type: folder
+    path: inbound/sepa-investigations

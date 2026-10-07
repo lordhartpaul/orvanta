@@ -1,0 +1,17 @@
+kind: Flow
+name: api.flows.DocumentFetch
+steps:
+  - id: lookup
+    type: find
+    dataset: data.Documents
+    where:
+      reference: request.path.reference
+    first: true
+    into: response
+
+  - id: none
+    type: end
+    when: not exists(response)
+    status: NOT_FOUND
+    code: NOT_FOUND
+    message: No document is stored for this reference

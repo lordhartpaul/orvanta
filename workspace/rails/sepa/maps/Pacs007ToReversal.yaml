@@ -1,0 +1,28 @@
+kind: Mapping
+name: rails.sepa.maps.Pacs007ToReversal
+description: >
+  Reads a payment reversal (pacs.007) from the creditor's bank: one entry per collection it takes
+  back, with the ids the collection had when it was sent to us.
+rules:
+  - let: rvsl
+    value: src.Document.FIToFIPmtRvsl
+  - set: msgId
+    value: rvsl.GrpHdr.MsgId
+  - forEach: rvsl.TxInf
+    as: tx
+    append: entries
+    rules:
+      - set: reversalId
+        value: tx.RvslId
+      - set: originalMsgId
+        value: coalesce(tx.OrgnlGrpInf.OrgnlMsgId, rvsl.OrgnlGrpInf.OrgnlMsgId)
+      - set: originalTxId
+        value: tx.OrgnlTxId
+      - set: endToEndId
+        value: tx.OrgnlEndToEndId
+      - set: amount
+        value: num(tx.RvsdIntrBkSttlmAmt)
+      - set: reasonCode
+        value: coalesce(tx.RvslRsnInf.Rsn.Cd, tx.RvslRsnInf.Rsn.Prtry)
+      - set: reasonText
+        value: tx.RvslRsnInf.AddtlInf

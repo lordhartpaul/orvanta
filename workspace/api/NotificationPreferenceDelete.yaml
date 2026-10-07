@@ -1,0 +1,7 @@
+kind: Api
+name: api.NotificationPreferenceDelete
+description: Removes a customer's notification preference.
+method: DELETE
+path: /notification-preferences/{account}
+permission: payments.approve
+target: api.flows.NotificationPreferenceRemove

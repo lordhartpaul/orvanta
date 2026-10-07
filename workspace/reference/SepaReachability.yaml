@@ -1,0 +1,10 @@
+kind: ReferenceTable
+name: reference.SepaReachability
+description: >
+  Which SEPA schemes a bank can receive: a bank listed here with sct false cannot take a SEPA credit
+  transfer, with inst false not an instant one. A bank not listed is taken as reachable (the register
+  of the scheme is the source; load it here). Sample rows.
+key: bic
+rows:
+  - {bic: NORCHDEFF, sct: true, inst: false}
+  - {bic: NOSEDEFFXXX, sct: false, inst: false}

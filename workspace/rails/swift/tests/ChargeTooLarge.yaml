@@ -1,0 +1,26 @@
+kind: TestCase
+name: tests.AChargeThatWouldEatThePaymentWaitsForAPerson
+description: "100 rand received and a charge of 125: held, nothing credited."
+target: rails.swift.flows.IncomingSwiftProcessing
+given:
+  txn:
+    id: ORVTXN0000000980
+    paymentType: IN
+    channelIn: rails.swift.Mt103Inbound
+    endToEndId: CHASE-REF-0100
+    originalTxId: CHASE-REF-0100
+    sendingAgentBic: CHASUS33
+    amount: 100.00
+    currency: ZAR
+    chargeBearer: SHAR
+    debtor: {name: "Atlas Drilling Equipment Inc", account: "000123456789", agentBic: CHASUS33}
+    creditor: {name: "Thandiwe Mokoena", account: "62011223344"}
+mocks:
+  connectors.AccountLookup: {status: ACTIVE, currency: ZAR}
+  connectors.SanctionsScreening: {status: CLEAR}
+  connectors.AccountPosting: {status: POSTED, postingId: P-7}
+  connectors.FxRates: {rate: 18.50}
+expect:
+  - result.status == 'HOLD'
+  - result.code == 'CHRG'
+  - not exists(txn.posting)

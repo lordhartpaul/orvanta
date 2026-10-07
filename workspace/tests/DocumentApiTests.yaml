@@ -1,0 +1,15 @@
+kind: TestCase
+name: tests.DocumentUploadStoresAndValidates
+description: An upload is stored with who uploaded it; the size is recorded.
+target: api.flows.DocumentUpload
+given:
+  request:
+    path: {reference: INV-88120}
+    body: {name: invoice-88120.pdf, contentType: application/pdf, content: "QUJDREVGRw=="}
+    user: operator1
+expect:
+  - result.status == 'COMPLETED'
+  - response.stored == true
+  - stored.data.Documents[0].reference == 'INV-88120'
+  - stored.data.Documents[0].uploadedBy == 'operator1'
+  - stored.data.Documents[0].size == 12

@@ -1,0 +1,28 @@
+kind: Mapping
+name: payments.outbound.CanonicalToPain012
+description: >
+  Answers a mandate message (pain.012, mandate acceptance report): the message it answers, the mandate,
+  and whether it was accepted, with the reason when not.
+rules:
+  - set: Document.@xmlns
+    value: "'urn:iso:std:iso:20022:tech:xsd:pain.012.001.07'"
+  - set: Document.MndtAccptncRpt.GrpHdr.MsgId
+    value: answer.id
+  - set: Document.MndtAccptncRpt.GrpHdr.CreDtTm
+    value: answer.createdAt
+  - set: Document.MndtAccptncRpt.GrpHdr.InitgPty.Id.OrgId.AnyBIC
+    value: answer.senderBic
+  - set: Document.MndtAccptncRpt.UndrlygAccptncDtls.OrgnlMsgInf.MsgId
+    value: answer.originalMsgId
+  - set: Document.MndtAccptncRpt.UndrlygAccptncDtls.OrgnlMsgInf.MsgNmId
+    value: answer.originalMessageType
+  - set: Document.MndtAccptncRpt.UndrlygAccptncDtls.AccptncRslt.Accptd
+    value: "answer.accepted ? 'true' : 'false'"
+  - set: Document.MndtAccptncRpt.UndrlygAccptncDtls.AccptncRslt.RjctRsn.Prtry
+    when: not answer.accepted
+    value: left(answer.reason, 35)
+  - set: Document.MndtAccptncRpt.UndrlygAccptncDtls.AccptncRslt.AddtlRjctRsnInf
+    when: not answer.accepted
+    value: left(answer.reason, 105)
+  - set: Document.MndtAccptncRpt.UndrlygAccptncDtls.OrgnlMndt.OrgnlMndtId
+    value: mandate.mandateId

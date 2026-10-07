@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:camt.055.001.08">
+  <CstmrPmtCxlReq>
+    <Assgnmt>
+      <Id>CXL-2026-10-001</Id>
+      <Assgnr>
+        <Pty>
+          <Nm>Karoo Mining Supplies (Pty) Ltd</Nm>
+        </Pty>
+      </Assgnr>
+      <Assgne>
+        <Agt>
+          <FinInstnId>
+            <BICFI>ORVAZAJJ</BICFI>
+          </FinInstnId>
+        </Agt>
+      </Assgne>
+      <CreDtTm>2026-10-04T11:00:00</CreDtTm>
+    </Assgnmt>
+    <Undrlyg>
+      <OrgnlGrpInfAndCxl>
+        <OrgnlMsgId>SALARY-2026-10-001</OrgnlMsgId>
+        <OrgnlMsgNmId>pain.001.001.09</OrgnlMsgNmId>
+      </OrgnlGrpInfAndCxl>
+      <OrgnlPmtInfAndCxl>
+        <OrgnlPmtInfId>SALARY-2026-10-001-ZAR</OrgnlPmtInfId>
+        <TxInf>
+          <OrgnlEndToEndId>SAL-0002</OrgnlEndToEndId>
+          <CxlRsnInf>
+            <Rsn>
+              <Cd>DUPL</Cd>
+            </Rsn>
+            <AddtlInf>Salary was paid twice</AddtlInf>
+          </CxlRsnInf>
+        </TxInf>
+      </OrgnlPmtInfAndCxl>
+    </Undrlyg>
+  </CstmrPmtCxlReq>
+</Document>

@@ -1,0 +1,17 @@
+kind: Channel
+name: channels.CustomerMtStatementOutbound
+description: >
+  Account statements to customers who work with MT (MT940), from the platform's own ledger: opening
+  balance, the entries of one day, closing balance. Written on request, and at the end of each day for
+  the accounts whose customer chose STATEMENT_MT in the notification preferences.
+direction: outbound
+format: swift.mt
+messageType: MT940
+mapping: payments.outbound.CanonicalToMt940
+destination:
+  type: folder
+  path: outbound/customer-mt-statements
+  extension: fin
+properties:
+  senderBic: ORVAZAJJ
+  receiverBic: KAROZAJJ

@@ -1,0 +1,86 @@
+kind: Flow
+name: rails.sepa.flows.SepaChecks
+description: >
+  What the SEPA rails add to processing, run as a step of the main flow once routing has chosen
+  SEPA-SCT or SEPA-INST: the scheme rules, the duplicate check, and when the payment may be sent.
+  A future-dated payment is warehoused until its date. SEPA Credit Transfer is also warehoused
+  outside operating hours (after the cut-off, at weekends, on TARGET2 closing days) until the next
+  opening; SEPA Instant runs around the clock.
+steps:
+  - id: schemeRules
+    type: rules
+    ref: rails.sepa.rules.CreditTransfer
+    onViolation: reject
+
+  - id: duplicates
+    type: flow
+    ref: payments.flows.DuplicateCheck
+
+  - id: clock
+    type: set
+    values:
+      txn.warehouse: "null"
+      txn.rail.today: todayIn('Europe/Berlin')
+      txn.rail.time: timeIn('Europe/Berlin')
+
+  - id: futureDated
+    type: set
+    when: txn.requestedDate > txn.rail.today
+    values:
+      txn.warehouse.until: instantOf(txn.requestedDate, '00:05', 'Europe/Berlin')
+      txn.warehouse.reason: concat('Requested for ', txn.requestedDate)
+
+  - id: waitForDate
+    type: end
+    when: txn.requestedDate > txn.rail.today
+    status: WAREHOUSE
+    code: DATE
+    message: Future-dated payment; kept until its requested execution date
+
+  # a bank the scheme cannot reach is not sent to
+  - id: unreachable
+    type: end
+    when: exists(lookup('reference.SepaReachability', txn.creditor.agentBic)) and not lookup('reference.SepaReachability', txn.creditor.agentBic).sct
+    status: REJECTED
+    code: RR04
+    message: The creditor's bank is not reachable in SEPA Credit Transfer
+
+  - id: hours
+    type: set
+    values:
+      hours: lookup('reference.CutOffs', txn.route.scheme)
+
+  # an operator may have moved today's cut-off later (data.CutOffExtensions, approved by a second person)
+  - id: extension
+    type: find
+    when: exists(hours)
+    dataset: data.CutOffExtensions
+    where:
+      scheme: txn.route.scheme
+    first: true
+    into: extension
+
+  - id: cutOff
+    type: set
+    when: exists(hours)
+    values:
+      cutOff: "exists(extension) and extension.date == txn.rail.today ? extension.until : hours.cutOff"
+
+  - id: closed
+    type: set
+    when: exists(hours) and (not isBusinessDay(hours.calendar, txn.rail.today) or txn.rail.time >= cutOff)
+    values:
+      txn.warehouse.until: instantOf(nextBusinessDay(hours.calendar, txn.rail.today), hours.opens, hours.zone)
+      txn.warehouse.reason: "isBusinessDay(hours.calendar, txn.rail.today) ? concat('Received after the ', cutOff, ' cut-off') : 'Received on a day the scheme is closed'"
+
+  - id: waitForOpening
+    type: end
+    when: exists(txn.warehouse.until)
+    status: WAREHOUSE
+    code: CUTOFF
+    message: Outside the operating hours of the scheme; kept until it opens on the next business day
+
+  - id: settlement
+    type: set
+    values:
+      txn.valueDate: txn.rail.today

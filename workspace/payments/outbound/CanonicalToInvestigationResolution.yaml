@@ -1,0 +1,29 @@
+kind: Mapping
+name: payments.outbound.CanonicalToInvestigationResolution
+description: >
+  Answers a claim of non-receipt or a request to modify a payment (camt.029.001.09, resolution of
+  investigation): the case, and the confirmation code a person chose (for example IPAY the payment was
+  made, MODI modified, RJCR the request is refused, RJNR no such payment).
+rules:
+  - set: Document.@xmlns
+    value: "'urn:iso:std:iso:20022:tech:xsd:camt.029.001.09'"
+  - set: Document.RsltnOfInvstgtn.Assgnmt.Id
+    value: answer.id
+  - set: Document.RsltnOfInvstgtn.Assgnmt.Assgnr.Agt.FinInstnId.BICFI
+    value: answer.senderBic
+  - set: Document.RsltnOfInvstgtn.Assgnmt.Assgne.Agt.FinInstnId.BICFI
+    value: answer.assignerBic
+  - set: Document.RsltnOfInvstgtn.Assgnmt.CreDtTm
+    value: answer.createdAt
+  - set: Document.RsltnOfInvstgtn.RslvdCase.Id
+    value: answer.caseId
+  - set: Document.RsltnOfInvstgtn.RslvdCase.Cretr.Agt.FinInstnId.BICFI
+    value: answer.assignerBic
+  - set: Document.RsltnOfInvstgtn.Sts.Conf
+    value: answer.confirmation
+  - set: Document.RsltnOfInvstgtn.ClmNonRctDtls.DtPrcd
+    when: answer.kind == 'CLAIM_NON_RECEIPT' and answer.confirmation == 'IPAY'
+    value: left(coalesce(txn.sentAt, txn.creditedAt, answer.createdAt), 10)
+  - set: Document.RsltnOfInvstgtn.ClmNonRctDtls.OrgnlNxtAgt.FinInstnId.BICFI
+    when: answer.kind == 'CLAIM_NON_RECEIPT' and answer.confirmation == 'IPAY'
+    value: coalesce(txn.creditor.agentBic, answer.senderBic)

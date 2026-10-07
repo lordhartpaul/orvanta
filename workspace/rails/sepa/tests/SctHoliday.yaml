@@ -1,0 +1,20 @@
+kind: TestCase
+name: tests.SepaOnAHolidayWaitsForTheNextBusinessDay
+description: "Christmas Day 2026 is a Friday and Boxing Day a Saturday: the next opening is Monday the 28th, in winter time."
+target: payments.flows.TransactionProcessing
+clock: "2026-12-25T09:00:00Z"
+given:
+  txn:
+    id: ORVTXN0000000008
+    endToEndId: SEPA-T1
+    amount: 1250
+    currency: EUR
+    requestedDate: "2026-12-25"
+    chargeBearer: SLEV
+    debtor: {name: "Rheinland Pumpen GmbH", account: "DE89370400440532013000", agentBic: DEUTDEFF}
+    creditor: {name: "Atelier Lumiere SARL", account: "FR1420041010050500013M02606", agentBic: BNPAFRPP}
+mocks:
+  connectors.AccountLookup: {status: ACTIVE, currency: EUR}
+expect:
+  - result.status == 'WAREHOUSE'
+  - txn.warehouse.until == '2026-12-28T06:00:00Z'

@@ -1,0 +1,23 @@
+kind: TestCase
+name: tests.IncomingPaymentWithABadAccountNumberGoesBack
+description: "The creditor account is not a valid IBAN: reason AC01, and the account system is not even asked."
+target: rails.sepa.flows.IncomingCreditProcessing
+given:
+  txn:
+    id: ORVTXN0000000900
+    paymentType: IN
+    channelIn: rails.sepa.SctInbound
+    endToEndId: RENT-OCT
+    originalTxId: SNDTX-1
+    originalMsgId: SND-MSG-1
+    amount: 950.00
+    currency: EUR
+    debtor: {name: "Camille Laurent", account: "FR1420041010050500013M02606", agentBic: BNPAFRPP}
+    creditor: {name: "Rheinland Pumpen GmbH", account: "DE00500105170000000042"}
+mocks:
+  connectors.AccountLookup: {status: ACTIVE, currency: EUR}
+  connectors.SanctionsScreening: {status: CLEAR}
+expect:
+  - result.status == 'REJECTED'
+  - result.code == 'AC01'
+  - not exists(txn.checks.account)

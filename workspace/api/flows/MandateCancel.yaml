@@ -1,0 +1,46 @@
+kind: Flow
+name: api.flows.MandateCancel
+steps:
+  - id: lookup
+    type: find
+    dataset: data.Mandates
+    where:
+      mandateId: request.path.mandateId
+    first: true
+    into: mandate
+
+  - id: none
+    type: end
+    when: not exists(mandate)
+    status: NOT_FOUND
+    code: NOT_FOUND
+    message: No mandate is registered under this reference
+
+  - id: cancel
+    type: save
+    dataset: data.Mandates
+    values:
+      mandateId: mandate.mandateId
+      creditorId: mandate.creditorId
+      creditorName: mandate.creditorName
+      debtorName: mandate.debtorName
+      debtorAccount: mandate.debtorAccount
+      debtorAgentBic: mandate.debtorAgentBic
+      signedOn: mandate.signedOn
+      type: mandate.type
+      status: "'CANCELLED'"
+      collections: mandate.collections
+      lastCollectionOn: mandate.lastCollectionOn
+      lastTransactionId: mandate.lastTransactionId
+      registeredBy: mandate.registeredBy
+      registeredAt: mandate.registeredAt
+      cancelledBy: request.user
+      cancelledAt: now()
+
+  - id: answer
+    type: find
+    dataset: data.Mandates
+    where:
+      mandateId: request.path.mandateId
+    first: true
+    into: response

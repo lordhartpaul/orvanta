@@ -1,0 +1,11 @@
+kind: ReferenceTable
+name: reference.HighValue
+description: >
+  The amount from which a payment is looked at by a person before it goes (code HVAL), per currency.
+  A currency without a row has no such threshold. Sample values; the bank sets its own.
+key: currency
+rows:
+  - {currency: ZAR, amount: 50000000}
+  - {currency: EUR, amount: 2500000}
+  - {currency: USD, amount: 3000000}
+  - {currency: GBP, amount: 2000000}

@@ -1,0 +1,8 @@
+kind: Api
+name: api.CutOffExtensionPut
+description: >
+  Moves a scheme's cut-off later for one day. Body {"date": "2026-10-06", "until": "17:30"}.
+method: PUT
+path: /cutoff-extensions/{scheme}
+permission: payments.approve
+target: api.flows.CutOffExtensionWrite

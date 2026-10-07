@@ -1,0 +1,16 @@
+kind: TestCase
+name: tests.ASuspendedBankATravelRuleGapAndAHighValueAreHeldForAPerson
+description: "Each compliance rule puts the payment in front of a person; an override by that person lets it through."
+target: payments.rules.Compliance
+given:
+  txn:
+    amount: 60000000
+    currency: ZAR
+    debtor: {name: Karoo Mining Supplies, account: "4051122334", agentBic: ORVAZAJJ, country: ZA}
+    creditor: {name: "", account: "62011223344", agentBic: SUSPZAJJ, country: US}
+    overrides: []
+expect:
+  - result.count == 3
+  - result.codes[0] == 'SUSP'
+  - result.codes[1] == 'TRVL'
+  - result.codes[2] == 'HVAL'

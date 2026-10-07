@@ -1,0 +1,38 @@
+kind: Mapping
+name: payments.outbound.CanonicalToCamt056
+description: >
+  Builds the FI-to-FI payment cancellation request (camt.056.001.08) that asks the receiving side
+  to cancel one transaction we have already sent.
+rules:
+  - set: Document.@xmlns
+    value: "'urn:iso:std:iso:20022:tech:xsd:camt.056.001.08'"
+  - set: Document.FIToFIPmtCxlReq.Assgnmt.Id
+    value: request.id
+  - set: Document.FIToFIPmtCxlReq.Assgnmt.Assgnr.Agt.FinInstnId.BICFI
+    value: request.senderBic
+  - set: Document.FIToFIPmtCxlReq.Assgnmt.Assgne.Agt.FinInstnId.BICFI
+    value: txn.creditor.agentBic
+  - set: Document.FIToFIPmtCxlReq.Assgnmt.CreDtTm
+    value: request.createdAt
+  - set: Document.FIToFIPmtCxlReq.Undrlyg.TxInf.CxlId
+    value: request.id
+  - set: Document.FIToFIPmtCxlReq.Undrlyg.TxInf.OrgnlGrpInf.OrgnlMsgId
+    value: request.originalMsgId
+  - set: Document.FIToFIPmtCxlReq.Undrlyg.TxInf.OrgnlGrpInf.OrgnlMsgNmId
+    value: request.originalMessageType
+  - set: Document.FIToFIPmtCxlReq.Undrlyg.TxInf.OrgnlEndToEndId
+    value: txn.endToEndId
+  - set: Document.FIToFIPmtCxlReq.Undrlyg.TxInf.OrgnlTxId
+    value: txn.id
+  - set: Document.FIToFIPmtCxlReq.Undrlyg.TxInf.OrgnlIntrBkSttlmAmt.@Ccy
+    value: txn.currency
+  - set: Document.FIToFIPmtCxlReq.Undrlyg.TxInf.OrgnlIntrBkSttlmAmt.#text
+    value: str(txn.amount)
+  - set: Document.FIToFIPmtCxlReq.Undrlyg.TxInf.CxlRsnInf.Rsn.Cd
+    when: len(request.reasonCode) == 4
+    value: request.reasonCode
+  - set: Document.FIToFIPmtCxlReq.Undrlyg.TxInf.CxlRsnInf.Rsn.Prtry
+    when: exists(request.reasonCode) and len(request.reasonCode) != 4
+    value: request.reasonCode
+  - set: Document.FIToFIPmtCxlReq.Undrlyg.TxInf.CxlRsnInf.AddtlInf
+    value: left(request.reasonText, 105)

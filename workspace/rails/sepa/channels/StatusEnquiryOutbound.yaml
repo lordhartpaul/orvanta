@@ -1,0 +1,15 @@
+kind: Channel
+name: rails.sepa.StatusEnquiryOutbound
+description: >
+  Status enquiries (pacs.028) to the clearing about payments we sent that had no answer in the time the
+  rail allows. Named as 'enquiryChannel' on the outbound channel whose payments are asked about.
+direction: outbound
+format: iso20022
+messageType: pacs.028.001.03
+mapping: rails.sepa.maps.CanonicalToPacs028
+destination:
+  type: folder
+  path: outbound/sepa-enquiries
+  extension: xml
+properties:
+  senderBic: ORVADEFF

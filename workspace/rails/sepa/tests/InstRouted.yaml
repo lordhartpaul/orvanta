@@ -1,0 +1,22 @@
+kind: TestCase
+name: tests.SepaInstantRunsAroundTheClock
+description: "An instant payment on a Sunday evening is sent; the cut-off and the calendar do not apply."
+target: payments.flows.TransactionProcessing
+clock: "2026-10-04T20:00:00Z"
+given:
+  txn:
+    id: ORVTXN0000000008
+    endToEndId: SEPA-T1
+    amount: 1250
+    currency: EUR
+    requestedDate: "2026-10-04"
+    chargeBearer: SLEV
+    localInstrument: INST
+    debtor: {name: "Rheinland Pumpen GmbH", account: "DE89370400440532013000", agentBic: DEUTDEFF}
+    creditor: {name: "Atelier Lumiere SARL", account: "FR1420041010050500013M02606", agentBic: BNPAFRPP}
+mocks:
+  connectors.AccountLookup: {status: ACTIVE, currency: EUR}
+expect:
+  - result.status == 'ROUTED'
+  - txn.route.scheme == 'SEPA-INST'
+  - txn.route.channel == 'rails.sepa.SctInstOutbound'

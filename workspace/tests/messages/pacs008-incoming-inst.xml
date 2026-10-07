@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pacs.008.001.08">
+  <FIToFICstmrCdtTrf>
+    <GrpHdr>
+      <MsgId>INST-IN-2026-10-06-0001</MsgId>
+      <CreDtTm>2026-10-06T21:14:03</CreDtTm>
+      <NbOfTxs>1</NbOfTxs>
+      <TtlIntrBkSttlmAmt Ccy="EUR">64.90</TtlIntrBkSttlmAmt>
+      <IntrBkSttlmDt>2026-10-06</IntrBkSttlmDt>
+      <SttlmInf><SttlmMtd>CLRG</SttlmMtd></SttlmInf>
+      <PmtTpInf><SvcLvl><Cd>SEPA</Cd></SvcLvl><LclInstrm><Cd>INST</Cd></LclInstrm></PmtTpInf>
+      <InstgAgt><FinInstnId><BICFI>BNPAFRPP</BICFI></FinInstnId></InstgAgt>
+    </GrpHdr>
+    <CdtTrfTxInf>
+      <PmtId><InstrId>INSTINS-1</InstrId><EndToEndId>DINNER-SPLIT</EndToEndId><TxId>INSTTX-1</TxId></PmtId>
+      <IntrBkSttlmAmt Ccy="EUR">64.90</IntrBkSttlmAmt>
+      <AccptncDtTm>2026-10-06T21:14:02.512Z</AccptncDtTm>
+      <ChrgBr>SLEV</ChrgBr>
+      <Dbtr><Nm>Camille Laurent</Nm></Dbtr>
+      <DbtrAcct><Id><IBAN>FR1420041010050500013M02606</IBAN></Id></DbtrAcct>
+      <DbtrAgt><FinInstnId><BICFI>BNPAFRPP</BICFI></FinInstnId></DbtrAgt>
+      <CdtrAgt><FinInstnId><BICFI>ORVADEFF</BICFI></FinInstnId></CdtrAgt>
+      <Cdtr><Nm>Lukas Schmidt</Nm></Cdtr>
+      <CdtrAcct><Id><IBAN>DE08500105175400000042</IBAN></Id></CdtrAcct>
+      <RmtInf><Ustrd>Dinner on Friday</Ustrd></RmtInf>
+    </CdtTrfTxInf>
+  </FIToFICstmrCdtTrf>
+</Document>

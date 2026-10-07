@@ -1,0 +1,21 @@
+kind: TestCase
+name: tests.AnIbanIsComposedFromItsPartsAndTakenApartAgain
+description: "The worked example of the specification: GB19LOYD30961700709943 from LOYD, sort code 309617 and account 00709943; and back."
+target: payments.enrich.TransactionEnrichment
+given:
+  txn:
+    id: ORVTXN0000000099
+    amount: 1
+    currency: GBP
+    creditor: {name: "Someone", account: "1", agentBic: LOYDGB2LXXX, country: GB}
+expect:
+  - composeIban('GB', 'LOYD', '309617', '00709943') == 'GB19LOYD30961700709943'
+  - composeIban('HU', '117', '73016', '1111101800000000') == 'HU42117730161111101800000000'
+  - decomposeIban('GB19LOYD30961700709943').bankCode == 'LOYD'
+  - decomposeIban('GB19LOYD30961700709943').branchCode == '309617'
+  - decomposeIban('GB19LOYD30961700709943').account == '00709943'
+  - decomposeIban('DE89370400440532013000').account == '0532013000'
+  - huAccountValid('11773016', '1111101800000000') == true
+  - nlAccountValid('0417164300') == true
+  - nlAccountValid('0123456788') == false
+  - not exists(ukAccountProblem('309617', '00709943'))

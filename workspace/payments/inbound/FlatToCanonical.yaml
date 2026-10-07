@@ -1,0 +1,38 @@
+kind: Mapping
+name: payments.inbound.FlatToCanonical
+description: >
+  A fixed-width payment file (formats.PaymentsFixed) becomes the canonical instruction: the header is the
+  one batch with the debtor, every payment line a transaction.
+rules:
+  - set: msgId
+    value: src.header.fileRef
+  - set: createdAt
+    value: src.header.created
+  - set: declaredCount
+    value: count(src.payment)
+  - append: batches
+    rules:
+      - set: batchRef
+        value: src.header.fileRef
+      - set: debtor.name
+        value: src.header.debtorName
+      - set: debtor.account
+        value: src.header.debtorAccount
+      - forEach: src.payment
+        as: p
+        append: txns
+        rules:
+          - set: endToEndId
+            value: p.reference
+          - set: amount
+            value: p.amount
+          - set: currency
+            value: p.currency
+          - set: creditor.name
+            value: p.creditorName
+          - set: creditor.account
+            value: p.creditorAccount
+          - set: creditor.agentBic
+            value: p.creditorBic
+          - set: remittance
+            value: p.remittance

@@ -1,0 +1,21 @@
+kind: TestCase
+name: tests.SepaInstantAboveTheLimitIsRejected
+description: "An instant payment above 100,000 euro is rejected with the amount reason."
+target: payments.flows.TransactionProcessing
+clock: "2026-10-05T08:00:00Z"
+given:
+  txn:
+    id: ORVTXN0000000008
+    endToEndId: SEPA-T1
+    amount: 250000
+    currency: EUR
+    requestedDate: "2026-10-05"
+    chargeBearer: SLEV
+    localInstrument: INST
+    debtor: {name: "Rheinland Pumpen GmbH", account: "DE89370400440532013000", agentBic: DEUTDEFF}
+    creditor: {name: "Atelier Lumiere SARL", account: "FR1420041010050500013M02606", agentBic: BNPAFRPP}
+mocks:
+  connectors.AccountLookup: {status: ACTIVE, currency: EUR}
+expect:
+  - result.status == 'REJECTED'
+  - result.code == 'AM02'

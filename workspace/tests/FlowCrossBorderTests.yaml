@@ -1,0 +1,21 @@
+kind: TestCase
+name: tests.CrossBorderPaymentGoesToSwift
+description: A non-rand payment with a creditor agent is routed to the SWIFT MT channel; invalid input is rejected first.
+target: payments.flows.TransactionProcessing
+given:
+  txn:
+    id: ORVTXN0000000004
+    endToEndId: INV-55071
+    amount: 8300.40
+    currency: EUR
+    chargeBearer: DEBT
+    debtor: {name: "Karoo Mining Supplies", account: "4051122334"}
+    creditor: {name: "Rheinland Pumpen GmbH", account: "DE89370400440532013000", agentBic: DEUTDEFF}
+mocks:
+  connectors.SanctionsScreening: {status: CLEAR}
+expect:
+  - result.status == 'ROUTED'
+  - txn.route.channel == 'channels.SwiftMtOutbound'
+  - txn.chargeBearer == 'DEBT'
+  - txn.creditor.country == 'DE'
+  - result.count == 0

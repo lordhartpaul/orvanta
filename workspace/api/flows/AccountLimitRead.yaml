@@ -1,0 +1,17 @@
+kind: Flow
+name: api.flows.AccountLimitRead
+steps:
+  - id: lookup
+    type: find
+    dataset: data.AccountLimits
+    where:
+      account: request.path.account
+    first: true
+    into: response
+
+  - id: none
+    type: end
+    when: not exists(response)
+    status: NOT_FOUND
+    code: NOT_FOUND
+    message: No limit is set for this account

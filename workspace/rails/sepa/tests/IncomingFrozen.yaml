@@ -1,0 +1,28 @@
+kind: TestCase
+name: tests.AnIncomingSanctionsHitFreezesTheFundsUntilAPersonDecides
+description: "A hit on a channel with sanctionsHit FREEZE: the funds go to the seized-funds account and the payment is held."
+target: rails.sepa.flows.IncomingCreditProcessing
+given:
+  txn:
+    id: ORVTXN0000000800
+    paymentType: IN
+    sanctionsHit: FREEZE
+    channelIn: rails.sepa.SctInbound
+    createdAt: "2026-10-06T10:00:00Z"
+    endToEndId: FROZEN-1
+    originalTxId: TX-F1
+    originalMsgId: MSG-F1
+    amount: 500.00
+    currency: EUR
+    chargeBearer: SLEV
+    debtor: {name: BLOCKED PERSON, account: "FR1420041010050500013M02606", agentBic: BNPAFRPP}
+    creditor: {name: Lukas Schmidt, account: "DE08500105175400000042"}
+mocks:
+  connectors.AccountLookup: {status: ACTIVE, currency: EUR}
+  connectors.SanctionsScreening: {status: HIT, matched: BLOCKED PERSON}
+  connectors.AccountPosting: {status: POSTED, postingId: P-FROZEN}
+expect:
+  - result.status == 'HOLD'
+  - result.code == 'SANC'
+  - txn.frozen.postingId == 'P-FROZEN'
+  - not exists(txn.posting)

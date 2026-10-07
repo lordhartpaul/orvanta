@@ -1,0 +1,13 @@
+kind: TestCase
+name: tests.AComplianceHoldReleasedByAPersonIsNotRaisedAgain
+description: "The same payment after a person released it with the three overrides: nothing is found."
+target: payments.rules.Compliance
+given:
+  txn:
+    amount: 60000000
+    currency: ZAR
+    debtor: {name: Karoo Mining Supplies, account: "4051122334", agentBic: ORVAZAJJ, country: ZA}
+    creditor: {name: "", account: "62011223344", agentBic: SUSPZAJJ, country: US}
+    overrides: [SUSP, TRVL, HVAL]
+expect:
+  - result.count == 0

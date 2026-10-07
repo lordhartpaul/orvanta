@@ -1,0 +1,26 @@
+kind: Mapping
+name: payments.inbound.Pacs004ToReturn
+description: Reads a payment return (pacs.004) into the canonical return, one entry per returned transaction.
+rules:
+  - let: rtr
+    value: src.Document.PmtRtr
+  - set: msgId
+    value: rtr.GrpHdr.MsgId
+  - forEach: rtr.TxInf
+    as: tx
+    append: entries
+    rules:
+      - set: returnId
+        value: tx.RtrId
+      - set: transactionId
+        value: tx.OrgnlTxId
+      - set: endToEndId
+        value: tx.OrgnlEndToEndId
+      - set: amount
+        value: num(tx.RtrdIntrBkSttlmAmt)
+      - set: currency
+        value: tx.RtrdIntrBkSttlmAmt.@Ccy
+      - set: reasonCode
+        value: coalesce(tx.RtrRsnInf.Rsn.Cd, tx.RtrRsnInf.Rsn.Prtry)
+      - set: reasonText
+        value: tx.RtrRsnInf.AddtlInf

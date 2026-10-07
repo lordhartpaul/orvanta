@@ -1,0 +1,32 @@
+kind: Mapping
+name: payments.outbound.CanonicalToPain014
+description: >
+  Tells the creditor's bank what the customer decided about a request to pay (pain.014, creditor payment
+  activation request status report): ACCP when accepted, RJCT with the reason when refused or expired.
+rules:
+  - set: Document.@xmlns
+    value: "'urn:iso:std:iso:20022:tech:xsd:pain.014.001.07'"
+  - set: Document.CdtrPmtActvtnReqStsRpt.GrpHdr.MsgId
+    value: answer.id
+  - set: Document.CdtrPmtActvtnReqStsRpt.GrpHdr.CreDtTm
+    value: answer.createdAt
+  - set: Document.CdtrPmtActvtnReqStsRpt.GrpHdr.InitgPty.Id.OrgId.AnyBIC
+    value: answer.senderBic
+  - set: Document.CdtrPmtActvtnReqStsRpt.OrgnlGrpInfAndSts.OrgnlMsgId
+    value: request.originalMsgId
+  - set: Document.CdtrPmtActvtnReqStsRpt.OrgnlGrpInfAndSts.OrgnlMsgNmId
+    value: "'pain.013.001.07'"
+  - set: Document.CdtrPmtActvtnReqStsRpt.OrgnlPmtInfAndSts.OrgnlPmtInfId
+    value: request.paymentInfoId
+  - set: Document.CdtrPmtActvtnReqStsRpt.OrgnlPmtInfAndSts.TxInfAndSts.StsId
+    value: request.id
+  - set: Document.CdtrPmtActvtnReqStsRpt.OrgnlPmtInfAndSts.TxInfAndSts.OrgnlEndToEndId
+    value: request.endToEndId
+  - set: Document.CdtrPmtActvtnReqStsRpt.OrgnlPmtInfAndSts.TxInfAndSts.TxSts
+    value: answer.status
+  - set: Document.CdtrPmtActvtnReqStsRpt.OrgnlPmtInfAndSts.TxInfAndSts.StsRsnInf.Rsn.Cd
+    when: answer.status == 'RJCT' and len(answer.reasonCode) == 4
+    value: answer.reasonCode
+  - set: Document.CdtrPmtActvtnReqStsRpt.OrgnlPmtInfAndSts.TxInfAndSts.StsRsnInf.AddtlInf
+    when: answer.status == 'RJCT' and exists(answer.reasonText)
+    value: left(answer.reasonText, 105)

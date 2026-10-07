@@ -1,0 +1,26 @@
+kind: TestCase
+name: tests.AnInstantPaymentThatTookTooLongIsRefusedNotCreditedLate
+description: "Twelve seconds after the payment arrived nothing is credited any more: it is refused with AB05."
+target: rails.sepa.flows.IncomingInstantProcessing
+clock: "2026-10-06T21:14:15Z"
+given:
+  txn:
+    id: ORVTXN0000000999
+    paymentType: IN
+    channelIn: rails.sepa.SctInstInbound
+    createdAt: "2026-10-06T21:14:03Z"
+    endToEndId: SLOW-ONE
+    originalTxId: INSTTX-5
+    originalMsgId: INST-IN-5
+    amount: 20.00
+    currency: EUR
+    debtor: {name: "Camille Laurent", account: "FR1420041010050500013M02606", agentBic: BNPAFRPP}
+    creditor: {name: "Lukas Schmidt", account: "DE08500105175400000042"}
+mocks:
+  connectors.AccountLookup: {status: ACTIVE, currency: EUR}
+  connectors.SanctionsScreening: {status: CLEAR}
+  connectors.AccountPosting: {status: POSTED, postingId: P-I}
+expect:
+  - result.status == 'REJECTED'
+  - result.code == 'AB05'
+  - not exists(txn.posting)

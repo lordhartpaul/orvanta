@@ -1,0 +1,11 @@
+kind: TestCase
+name: tests.AnUnknownBankCodeLeavesTheBicEmpty
+target: payments.enrich.TransactionEnrichment
+given:
+  txn:
+    id: ORVTXN0000000093
+    amount: 10
+    currency: EUR
+    creditor: {name: "Someone", account: "DE44999999990532013000"}
+expect:
+  - not exists(txn.creditor.agentBic)

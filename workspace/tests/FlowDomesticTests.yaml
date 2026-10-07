@@ -1,0 +1,25 @@
+kind: TestCase
+name: tests.DomesticPaymentIsRouted
+description: A clean rand payment passes screening and is routed to the domestic clearing channel.
+target: payments.flows.TransactionProcessing
+given:
+  txn:
+    id: ORVTXN0000000001
+    endToEndId: SAL-0001
+    amount: 18250.00
+    currency: ZAR
+    requestedDate: "2020-01-01"
+    debtor: {name: "Karoo Mining Supplies", account: "4051122334", agentBic: ORVAZAJJ}
+    creditor: {name: "Thandiwe Mokoena", account: "62011223344", agentBic: FIRNZAJJ}
+mocks:
+  connectors.SanctionsScreening: {status: CLEAR}
+expect:
+  - result.status == 'ROUTED'
+  - txn.route.channel == 'channels.ZaRtcOutbound'
+  - txn.route.scheme == 'ZA-RTC'
+  - txn.screening.status == 'CLEAR'
+  - txn.chargeBearer == 'SHAR'
+  - txn.creditor.country == 'ZA'
+  # a requested date in the past is moved to today
+  - txn.valueDate == today()
+  - len(txn.uetr) == 36

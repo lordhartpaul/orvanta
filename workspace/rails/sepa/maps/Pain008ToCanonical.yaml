@@ -1,0 +1,61 @@
+kind: Mapping
+name: rails.sepa.maps.Pain008ToCanonical
+description: >
+  Debulks a customer direct debit initiation (pain.008) into the canonical instruction. The
+  creditor, the collection date and the sequence type are given per batch; each transaction names
+  the debtor and the mandate it is collected under.
+rules:
+  - let: init
+    value: src.Document.CstmrDrctDbtInitn
+  - set: msgId
+    value: init.GrpHdr.MsgId
+  - set: createdAt
+    value: init.GrpHdr.CreDtTm
+  - set: initiatingParty
+    value: init.GrpHdr.InitgPty.Nm
+  - set: declaredCount
+    value: num(init.GrpHdr.NbOfTxs)
+  - set: declaredSum
+    value: num(init.GrpHdr.CtrlSum)
+  - forEach: init.PmtInf
+    as: pi
+    append: batches
+    rules:
+      - set: batchRef
+        value: pi.PmtInfId
+      - set: requestedDate
+        value: pi.ReqdColltnDt
+      - set: sequenceType
+        value: pi.PmtTpInf.SeqTp
+      - set: localInstrument
+        value: pi.PmtTpInf.LclInstrm.Cd
+      - set: creditor.name
+        value: pi.Cdtr.Nm
+      - set: creditor.account
+        value: coalesce(pi.CdtrAcct.Id.IBAN, pi.CdtrAcct.Id.Othr.Id)
+      - set: creditor.agentBic
+        value: coalesce(pi.CdtrAgt.FinInstnId.BICFI, pi.CdtrAgt.FinInstnId.BIC)
+      - set: creditor.schemeId
+        value: pi.CdtrSchmeId.Id.PrvtId.Othr.Id
+      - forEach: pi.DrctDbtTxInf
+        as: tx
+        append: txns
+        rules:
+          - set: endToEndId
+            value: tx.PmtId.EndToEndId
+          - set: amount
+            value: num(tx.InstdAmt)
+          - set: currency
+            value: tx.InstdAmt.@Ccy
+          - set: mandate.id
+            value: tx.DrctDbtTx.MndtRltdInf.MndtId
+          - set: mandate.signedOn
+            value: tx.DrctDbtTx.MndtRltdInf.DtOfSgntr
+          - set: debtor.name
+            value: tx.Dbtr.Nm
+          - set: debtor.account
+            value: coalesce(tx.DbtrAcct.Id.IBAN, tx.DbtrAcct.Id.Othr.Id)
+          - set: debtor.agentBic
+            value: coalesce(tx.DbtrAgt.FinInstnId.BICFI, tx.DbtrAgt.FinInstnId.BIC)
+          - set: remittance
+            value: tx.RmtInf.Ustrd

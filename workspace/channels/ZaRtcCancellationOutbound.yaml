@@ -1,0 +1,15 @@
+kind: Channel
+name: channels.ZaRtcCancellationOutbound
+description: Cancellation requests (camt.056) to the clearing system for payments already sent on the domestic channel.
+direction: outbound
+format: iso20022
+messageType: camt.056.001.08
+mapping: payments.outbound.CanonicalToCamt056
+destination:
+  type: folder
+  path: outbound/za-rtc-cancellation
+  extension: xml
+properties:
+  senderBic: ORVAZAJJ
+# development only: the built-in simulator answers every request with a camt.029
+simulator: clearing-cancellation

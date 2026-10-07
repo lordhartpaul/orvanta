@@ -1,0 +1,42 @@
+kind: Mapping
+name: payments.outbound.CanonicalToCamt028
+description: >
+  Answers a request for information about a payment (camt.028.001.09, additional payment information):
+  the case it answers, the payment it is about, and what the person wrote, as unstructured remittance information.
+rules:
+  - set: Document.@xmlns
+    value: "'urn:iso:std:iso:20022:tech:xsd:camt.028.001.09'"
+  - set: Document.AddtlPmtInf.Assgnmt.Id
+    value: answer.id
+  - set: Document.AddtlPmtInf.Assgnmt.Assgnr.Agt.FinInstnId.BICFI
+    value: answer.senderBic
+  - set: Document.AddtlPmtInf.Assgnmt.Assgne.Agt.FinInstnId.BICFI
+    value: answer.assignerBic
+  - set: Document.AddtlPmtInf.Assgnmt.CreDtTm
+    value: answer.createdAt
+  - set: Document.AddtlPmtInf.Case.Id
+    value: answer.caseId
+  - set: Document.AddtlPmtInf.Case.Cretr.Agt.FinInstnId.BICFI
+    value: answer.assignerBic
+  - set: Document.AddtlPmtInf.Undrlyg.IntrBk.OrgnlGrpInf.OrgnlMsgId
+    value: coalesce(answer.originalMsgId, txn.outboundId)
+  - set: Document.AddtlPmtInf.Undrlyg.IntrBk.OrgnlGrpInf.OrgnlMsgNmId
+    value: "'pacs.008.001.08'"
+  - set: Document.AddtlPmtInf.Undrlyg.IntrBk.OrgnlEndToEndId
+    value: txn.endToEndId
+  - set: Document.AddtlPmtInf.Undrlyg.IntrBk.OrgnlTxId
+    value: coalesce(txn.originalTxId, txn.id)
+  - set: Document.AddtlPmtInf.Undrlyg.IntrBk.OrgnlUETR
+    value: txn.uetr
+  - set: Document.AddtlPmtInf.Inf.Dbtr.Pty.Nm
+    value: txn.debtor.name
+  - set: Document.AddtlPmtInf.Inf.DbtrAcct.Id.IBAN
+    when: isIban(txn.debtor.account)
+    value: txn.debtor.account
+  - set: Document.AddtlPmtInf.Inf.Cdtr.Pty.Nm
+    value: txn.creditor.name
+  - set: Document.AddtlPmtInf.Inf.CdtrAcct.Id.IBAN
+    when: isIban(txn.creditor.account)
+    value: txn.creditor.account
+  - set: Document.AddtlPmtInf.Inf.RmtInf.Ustrd
+    value: left(answer.text, 140)

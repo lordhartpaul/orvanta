@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.013.001.07">
+  <CdtrPmtActvtnReq>
+    <GrpHdr>
+      <MsgId>RTP-2026-10-06-001</MsgId>
+      <CreDtTm>2026-10-06T09:00:00Z</CreDtTm>
+      <NbOfTxs>2</NbOfTxs>
+      <InitgPty><Nm>Nordlicht Energie GmbH</Nm></InitgPty>
+    </GrpHdr>
+    <PmtInf>
+      <PmtInfId>RTP-2026-10-06-001-1</PmtInfId>
+      <PmtMtd>TRF</PmtMtd>
+      <ReqdExctnDt><Dt>2026-10-10</Dt></ReqdExctnDt>
+      <XpryDt><Dt>2026-10-20</Dt></XpryDt>
+      <Dbtr><Nm>Karoo Mining Supplies</Nm></Dbtr>
+      <DbtrAcct><Id><Othr><Id>4051122334</Id></Othr></Id></DbtrAcct>
+      <DbtrAgt><FinInstnId><BICFI>ORVAZAJJ</BICFI></FinInstnId></DbtrAgt>
+      <CdtTrfTx>
+        <PmtId><EndToEndId>ELECTRICITY-OCT</EndToEndId></PmtId>
+        <Amt><InstdAmt Ccy="ZAR">1840.00</InstdAmt></Amt>
+        <CdtrAgt><FinInstnId><BICFI>FIRNZAJJ</BICFI></FinInstnId></CdtrAgt>
+        <Cdtr><Nm>Nordlicht Energie GmbH</Nm></Cdtr>
+        <CdtrAcct><Id><Othr><Id>62011223344</Id></Othr></Id></CdtrAcct>
+        <RmtInf><Ustrd>Electricity October 2026</Ustrd></RmtInf>
+      </CdtTrfTx>
+      <CdtTrfTx>
+        <PmtId><EndToEndId>LATE-FEE-SEP</EndToEndId></PmtId>
+        <Amt><InstdAmt Ccy="ZAR">150.00</InstdAmt></Amt>
+        <CdtrAgt><FinInstnId><BICFI>FIRNZAJJ</BICFI></FinInstnId></CdtrAgt>
+        <Cdtr><Nm>Nordlicht Energie GmbH</Nm></Cdtr>
+        <CdtrAcct><Id><Othr><Id>62011223344</Id></Othr></Id></CdtrAcct>
+        <RmtInf><Ustrd>Late payment fee September</Ustrd></RmtInf>
+      </CdtTrfTx>
+    </PmtInf>
+  </CdtrPmtActvtnReq>
+</Document>

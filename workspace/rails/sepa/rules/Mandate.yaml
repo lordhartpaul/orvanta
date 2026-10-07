@@ -1,0 +1,41 @@
+kind: RuleSet
+name: rails.sepa.rules.Mandate
+description: >
+  A collection is only valid under a mandate the debtor signed. "mandate" is the stored mandate
+  (missing when none is stored); the collection must agree with it. The sequence rules are skipped
+  when this collection was already counted, so that a retry is not taken for a second use.
+rules:
+  - id: MANDATE_EXISTS
+    assert: exists(mandate)
+    code: MD01
+    message: No mandate is registered under this mandate reference
+  - id: MANDATE_ACTIVE
+    when: exists(mandate) and mandate.lastTransactionId != txn.id
+    assert: mandate.status == 'ACTIVE'
+    code: MD01
+    message: The mandate is cancelled or already used up
+  - id: MANDATE_CREDITOR
+    when: exists(mandate)
+    assert: mandate.creditorId == txn.creditor.schemeId
+    code: MD01
+    message: The mandate was given to a different creditor
+  - id: MANDATE_DEBTOR_ACCOUNT
+    when: exists(mandate)
+    assert: mandate.debtorAccount == txn.debtor.account
+    code: MD02
+    message: The debtor account differs from the account in the mandate
+  - id: ONE_OFF_MATCHES
+    when: exists(mandate)
+    assert: (mandate.type == 'OOFF') == (txn.sequenceType == 'OOFF')
+    code: AG02
+    message: A one-off mandate allows only a one-off collection, and a recurrent mandate none
+  - id: FIRST_COLLECTION
+    when: exists(mandate) and mandate.lastTransactionId != txn.id and txn.sequenceType in ['FRST', 'OOFF']
+    assert: mandate.collections == 0
+    code: AG02
+    message: The mandate was already collected under; a first or one-off collection is not possible
+  - id: FOLLOWING_COLLECTION
+    when: exists(mandate) and mandate.lastTransactionId != txn.id and txn.sequenceType in ['RCUR', 'FNAL']
+    assert: mandate.collections >= 1
+    code: AG02
+    message: The first collection under this mandate has not been made yet

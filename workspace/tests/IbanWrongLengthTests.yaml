@@ -1,0 +1,15 @@
+kind: TestCase
+name: tests.AnIbanOfTheWrongLengthForItsCountryIsRefused
+description: >
+  Check digits can agree on an IBAN that is too short or too long for its country; the structure table
+  catches it. A German IBAN of 22 characters passes; one of 21 that still passes mod-97 is refused.
+target: payments.rules.TransactionValidation
+given:
+  txn:
+    endToEndId: IBAN-1
+    amount: 10
+    currency: EUR
+    debtor: {account: "4051122334"}
+    creditor: {name: "Rheinland Pumpen GmbH", account: "DE5137040044053201300", agentBic: COBADEFFXXX}
+expect:
+  - "'AC03' in result.codes"

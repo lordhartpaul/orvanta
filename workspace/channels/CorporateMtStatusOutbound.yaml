@@ -1,0 +1,17 @@
+kind: Channel
+name: channels.CorporateMtStatusOutbound
+description: >
+  Status messages (MT199) to customers who send MT101: what became of each transaction, and again when
+  a transaction that was still in progress has finished.
+direction: outbound
+format: swift.mt
+messageType: MT199
+mapping: payments.outbound.CanonicalToMt199
+reporting:
+  maxWaitSeconds: 20
+destination:
+  type: folder
+  path: outbound/customer-mt-status
+  extension: fin
+properties:
+  senderBic: ORVAZAJJ

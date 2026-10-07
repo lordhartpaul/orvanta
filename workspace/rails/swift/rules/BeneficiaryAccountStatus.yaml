@@ -1,0 +1,16 @@
+kind: RuleSet
+name: rails.swift.rules.BeneficiaryAccountStatus
+description: What the account system said about the account a received payment is for, as return reasons.
+rules:
+  - id: ACCOUNT_KNOWN
+    assert: txn.checks.account.status != 'UNKNOWN'
+    code: AC01
+    message: The beneficiary account does not exist
+  - id: ACCOUNT_OPEN
+    assert: txn.checks.account.status != 'CLOSED'
+    code: AC04
+    message: The beneficiary account is closed
+  - id: ACCOUNT_NOT_BLOCKED
+    assert: txn.checks.account.status != 'BLOCKED'
+    code: AC06
+    message: The beneficiary account is blocked

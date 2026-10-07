@@ -1,0 +1,18 @@
+kind: Channel
+name: rails.sepa.SddOutbound
+description: SEPA Core Direct Debit collections sent to the clearing system as bulked pacs.003.
+direction: outbound
+format: iso20022
+messageType: pacs.003.001.08
+mapping: rails.sepa.maps.CanonicalToSepaPacs003
+cancellationChannel: rails.sepa.RecallOutbound
+bulking:
+  maxTransactions: 100
+  maxWaitSeconds: 3
+destination:
+  type: folder
+  path: outbound/sepa-sdd
+  extension: xml
+properties:
+  senderBic: ORVADEFF
+simulator: clearing

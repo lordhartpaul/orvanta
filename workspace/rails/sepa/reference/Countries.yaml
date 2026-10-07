@@ -1,0 +1,41 @@
+kind: ReferenceTable
+name: rails.sepa.Countries
+description: Countries of the SEPA scheme area with the length of their IBAN.
+key: country
+rows:
+  - {country: AT, ibanLength: 20}
+  - {country: BE, ibanLength: 16}
+  - {country: BG, ibanLength: 22}
+  - {country: HR, ibanLength: 21}
+  - {country: CY, ibanLength: 28}
+  - {country: CZ, ibanLength: 24}
+  - {country: DK, ibanLength: 18}
+  - {country: EE, ibanLength: 20}
+  - {country: FI, ibanLength: 18}
+  - {country: FR, ibanLength: 27}
+  - {country: DE, ibanLength: 22}
+  - {country: GR, ibanLength: 27}
+  - {country: HU, ibanLength: 28}
+  - {country: IS, ibanLength: 26}
+  - {country: IE, ibanLength: 22}
+  - {country: IT, ibanLength: 27}
+  - {country: LV, ibanLength: 21}
+  - {country: LI, ibanLength: 21}
+  - {country: LT, ibanLength: 20}
+  - {country: LU, ibanLength: 20}
+  - {country: MT, ibanLength: 31}
+  - {country: MC, ibanLength: 27}
+  - {country: NL, ibanLength: 18}
+  - {country: NO, ibanLength: 15}
+  - {country: PL, ibanLength: 28}
+  - {country: PT, ibanLength: 25}
+  - {country: RO, ibanLength: 24}
+  - {country: SM, ibanLength: 27}
+  - {country: SK, ibanLength: 24}
+  - {country: SI, ibanLength: 19}
+  - {country: ES, ibanLength: 24}
+  - {country: SE, ibanLength: 24}
+  - {country: CH, ibanLength: 21}
+  - {country: GB, ibanLength: 22}
+  - {country: AD, ibanLength: 24}
+  - {country: VA, ibanLength: 22}

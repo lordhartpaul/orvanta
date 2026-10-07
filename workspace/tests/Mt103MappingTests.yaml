@@ -1,0 +1,26 @@
+kind: TestCase
+name: tests.Mt103IsBuilt
+description: A routed cross-border transaction becomes one MT103 with the mandatory fields.
+target: payments.outbound.CanonicalToMt103
+given:
+  bulk: {msgId: ORVOUT0000000002, senderBic: ORVAZAJJ}
+  txns:
+    - id: ORVTXN0000000004
+      endToEndId: INV-55071
+      amount: 8300.40
+      currency: EUR
+      valueDate: "2026-10-05"
+      chargeBearer: DEBT
+      uetr: 3f0c0a2e-0b7e-4b53-9d55-5f4f0f6f2b11
+      debtor: {name: "Karoo Mining Supplies (Pty) Ltd", account: "4051122334"}
+      creditor: {name: "Rheinland Pumpen GmbH", account: "DE89370400440532013000", agentBic: DEUTDEFF}
+      remittance: Invoice 55071
+expect:
+  - count(result.messages) == 1
+  - result.messages[0].type == '103'
+  - result.messages[0].receiver == 'DEUTDEFF'
+  - mtField(result.messages[0], '20') == 'ORVTXN0000000004'
+  - mtField(result.messages[0], '32A') == '261005EUR8300,4'
+  - mtField(result.messages[0], '71A') == 'OUR'
+  - mtAccount(mtField(result.messages[0], '59')) == 'DE89370400440532013000'
+  - mtName(mtField(result.messages[0], '50K')) == 'Karoo Mining Supplies (Pty) Ltd'

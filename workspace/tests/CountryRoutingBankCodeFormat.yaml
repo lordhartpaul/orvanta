@@ -1,0 +1,13 @@
+kind: TestCase
+name: tests.ABankCodeOfTheWrongFormForItsCountryIsRefused
+description: An IFSC has four letters, a zero and six characters; a six-digit code is not one.
+target: payments.rules.TransactionValidation
+given:
+  txn:
+    endToEndId: CR-2
+    amount: 10
+    currency: INR
+    debtor: {account: "4051122334"}
+    creditor: {name: "Priya Sharma", account: "000401234567", agentCode: "123456", country: IN}
+expect:
+  - "'RC01' in result.codes"

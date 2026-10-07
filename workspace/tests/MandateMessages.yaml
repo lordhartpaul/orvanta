@@ -1,0 +1,21 @@
+kind: TestCase
+name: tests.AMandateMessageIsReadWhicheverOfTheThreeItIs
+description: "A pain.010 amendment: the mandate it names, the reason and the new debtor account."
+target: rails.sepa.maps.MandateMessageToMandate
+given:
+  src:
+    Document:
+      MndtAmdmntReq:
+        GrpHdr: {MsgId: MNDT-2, InitgPty: {Id: {OrgId: {AnyBIC: DEUTDEFF}}}}
+        UndrlygAmdmntDtls:
+          - AmdmntRsn: {Rsn: {Cd: MD16}}
+            Mndt: {MndtId: MND-1, Dbtr: {Nm: Lukas Schmidt}, DbtrAcct: {Id: {IBAN: DE49500105175550000007}}}
+            OrgnlMndt: {OrgnlMndtId: MND-1}
+expect:
+  - result.kind == 'AMEND'
+  - result.messageType == 'pain.010.001.07'
+  - result.senderBic == 'DEUTDEFF'
+  - len(result.mandates) == 1
+  - result.mandates[0].mandateId == 'MND-1'
+  - result.mandates[0].reason == 'MD16'
+  - result.mandates[0].debtorAccount == 'DE49500105175550000007'

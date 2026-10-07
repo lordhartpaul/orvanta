@@ -1,0 +1,32 @@
+kind: Channel
+name: channels.CorporateIsoInbound
+description: Corporate customers sending ISO 20022 credit transfer initiations (pain.001, any version).
+direction: inbound
+purpose: instruction
+format: iso20022
+messageTypes: [pain.001]
+mapping: payments.inbound.Pain001ToCanonical
+validation: payments.rules.InstructionValidation
+# the customer is told the outcome on this channel
+statusReport: channels.CustomerStatusOutbound
+# a possible duplicate (same debtor account, reference, amount and currency within five days) is held for a person
+# instead of being rejected; REJECT is the default. The check runs where the processing flow includes it.
+duplicates: HOLD
+# a payment held for a person and not decided within this many days is rejected as expired (leave out to keep holding)
+heldExpiryDays: 10
+# a larger file is rejected with SIZE_EXCEEDED
+maxBytes: 20000000
+# where messages for this channel arrive. A signed-in user can also post to /api/inbound.
+transport:
+  # files placed in <data>/inbound/corporate-iso
+  - type: folder
+    path: inbound/corporate-iso
+  # system-to-system push: POST /in/channels.CorporateIsoInbound with header X-Api-Key.
+  # Off until ORVANTA_CORPORATE_API_KEY is set to a key of at least 16 characters.
+  - type: rest
+    apiKey: ${env.ORVANTA_CORPORATE_API_KEY:-}
+  # a RabbitMQ queue. Off until ORVANTA_MQ_ENABLED=true.
+  - type: rabbitmq
+    uri: ${env.ORVANTA_MQ_URI:-amqp://guest:guest@localhost:5672}
+    queue: orvanta.in.corporate.pain001
+    enabled: ${env.ORVANTA_MQ_ENABLED:-false}

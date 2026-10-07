@@ -1,0 +1,146 @@
+# Orvanta Pay on Kubernetes: the console/API deployment and the engine deployment.
+# MongoDB and RabbitMQ are expected to exist already (managed services or their own charts);
+# their addresses go into the secret below.
+#
+#   kubectl create namespace orvanta
+#   kubectl -n orvanta create secret generic orvanta-secrets \
+#       --from-literal=ORVANTA_STORE_URI='mongodb://user:password@mongo:27017' \
+#       --from-literal=ORVANTA_BUS_URI='amqp://user:password@rabbitmq:5672' \
+#       --from-literal=ORVANTA_SECURITY_JWTSECRET='<long random text>' \
+#       --from-literal=ORVANTA_SECURITY_BOOTSTRAPPASSWORD='<first admin password, 12+ characters>'
+#   kubectl -n orvanta apply -f deploy/k8s/orvanta.yaml
+#
+# The shared volume is only needed for channels that use folder transports or folder destinations.
+# It must allow many writers (ReadWriteMany); with queue and HTTP transports only, remove the
+# volume and the claim.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: orvanta-config
+data:
+  ORVANTA_STORE_DATABASE: orvanta
+  ORVANTA_BUS_TYPE: rabbit
+  ORVANTA_SIMULATOR_ENABLED: "false"
+  ORVANTA_WORKSPACE_WRITEBACK: "false"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: orvanta-data
+spec:
+  accessModes: [ReadWriteMany]
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: orvanta-console
+  labels: {app: orvanta, component: console}
+spec:
+  # one replica while the inbound folder is used: two would race for the same files.
+  # With queue and API transports only, split api and ingest and scale the api.
+  replicas: 1
+  selector:
+    matchLabels: {app: orvanta, component: console}
+  template:
+    metadata:
+      labels: {app: orvanta, component: console}
+    spec:
+      # the process finishes the work in hand before it stops (shutdown.graceSeconds, 30 by default)
+      terminationGracePeriodSeconds: 45
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+      containers:
+        - name: orvanta
+          image: orvanta/orvanta-pay:0.1.0
+          env:
+            - {name: ORVANTA_UNITS, value: "api,ingest"}
+          envFrom:
+            - configMapRef: {name: orvanta-config}
+            - secretRef: {name: orvanta-secrets}
+          ports:
+            - {name: http, containerPort: 8480}
+          readinessProbe:
+            httpGet: {path: /api/health, port: http}
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          livenessProbe:
+            httpGet: {path: /api/health, port: http}
+            initialDelaySeconds: 30
+            periodSeconds: 15
+          resources:
+            requests: {cpu: 250m, memory: 512Mi}
+            limits: {memory: 1Gi}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities: {drop: [ALL]}
+          volumeMounts:
+            - {name: data, mountPath: /app/data}
+      volumes:
+        - name: data
+          persistentVolumeClaim: {claimName: orvanta-data}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: orvanta-engine
+  labels: {app: orvanta, component: engine}
+spec:
+  replicas: 2
+  selector:
+    matchLabels: {app: orvanta, component: engine}
+  template:
+    metadata:
+      labels: {app: orvanta, component: engine}
+    spec:
+      # the process finishes the work in hand before it stops (shutdown.graceSeconds, 30 by default)
+      terminationGracePeriodSeconds: 45
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+      containers:
+        - name: orvanta
+          image: orvanta/orvanta-pay:0.1.0
+          env:
+            - {name: ORVANTA_UNITS, value: "debulk,process,bulk,dispatch,acknowledge,cancel,return,report,recover,callback,post,reconcile,recall,notify"}
+            - {name: ORVANTA_HEALTH_PORT, value: "8081"}
+          envFrom:
+            - configMapRef: {name: orvanta-config}
+            - secretRef: {name: orvanta-secrets}
+          ports:
+            - {name: health, containerPort: 8081}
+          readinessProbe:
+            httpGet: {path: /health, port: health}
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          livenessProbe:
+            httpGet: {path: /health, port: health}
+            initialDelaySeconds: 30
+            periodSeconds: 15
+          resources:
+            requests: {cpu: 500m, memory: 512Mi}
+            limits: {memory: 1Gi}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities: {drop: [ALL]}
+          volumeMounts:
+            - {name: data, mountPath: /app/data}
+      volumes:
+        - name: data
+          persistentVolumeClaim: {claimName: orvanta-data}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: orvanta-console
+spec:
+  selector: {app: orvanta, component: console}
+  ports:
+    - {name: http, port: 80, targetPort: http}

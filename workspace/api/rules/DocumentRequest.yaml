@@ -1,0 +1,26 @@
+kind: RuleSet
+name: api.rules.DocumentRequest
+description: A document needs a name and content, and must not be larger than about 5 MB.
+rules:
+  - id: REFERENCE_FORMAT
+    assert: matches(request.path.reference, '[A-Za-z0-9._-]{1,35}')
+    code: FF01
+    message: Reference must be 1 to 35 letters, digits, dots, dashes or underscores
+  - id: NAME_PRESENT
+    assert: exists(request.body.name) and len(request.body.name) <= 200
+    code: DOC1
+    message: A document name of at most 200 characters is required
+  - id: CONTENT_PRESENT
+    assert: exists(request.body.content)
+    code: DOC2
+    message: The document content is required as base64 text
+  - id: CONTENT_SIZE
+    when: exists(request.body.content)
+    assert: len(request.body.content) <= 7000000
+    code: DOC3
+    message: The document is too large (limit about 5 MB)
+  - id: CONTENT_BASE64
+    when: exists(request.body.content)
+    assert: matches(request.body.content, '[A-Za-z0-9+/=\s]+')
+    code: DOC4
+    message: The document content must be base64 text

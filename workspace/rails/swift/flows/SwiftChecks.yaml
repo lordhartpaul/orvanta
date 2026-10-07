@@ -1,0 +1,15 @@
+kind: Flow
+name: rails.swift.flows.SwiftChecks
+description: "What the SWIFT route adds to processing: the choice between direct, cover and serial settlement."
+steps:
+  - id: settlementMethod
+    type: decide
+    ref: rails.swift.SettlementMethod
+    onNoMatch: reject
+    code: RR04
+    message: We have no correspondent for the currency of this payment
+  # relationship management: nothing leaves for a bank we have no RMA with, for that message type, today
+  - id: relationship
+    type: rules
+    ref: rails.swift.rules.Relationship
+    onViolation: reject

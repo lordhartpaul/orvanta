@@ -1,0 +1,20 @@
+kind: TestCase
+name: tests.Mt199SaysWhatBecameOfEachTransaction
+description: "Two transactions of an MT101: one accepted, one rejected with its reason. Each gets its own MT199."
+target: payments.outbound.CanonicalToMt199
+given:
+  report: {id: ORVOUT0000000070, originalMsgId: SUPPLIERS-1004, originalMessageType: MT101, senderBic: ORVAZAJJ, to: KAROZAJJ}
+  batches:
+    - batchRef: B1
+      txns:
+        - {id: ORVTXN0000000031, endToEndId: INV-88120, status: ACCEPTED, amount: 8300.40, currency: EUR, creditor: {name: Atelier Dubois SARL}}
+        - {id: ORVTXN0000000032, endToEndId: INV-55071, status: REJECTED_BY_EXTERNAL, reasonCode: AC04, reasonText: Closed account number, amount: 120.00, currency: USD, creditor: {name: Harbor Tools Inc}}
+expect:
+  - len(result.messages) == 2
+  - result.messages[0].type == '199'
+  - result.messages[0].receiver == 'KAROZAJJ'
+  - mtField(result.messages[0], '20') == 'ORVTXN0000000031'
+  - mtField(result.messages[0], '21') == 'INV-88120'
+  - startsWith(mtField(result.messages[0], '79'), '/ACCP/')
+  - startsWith(mtField(result.messages[1], '79'), '/RJCT/AC04')
+  - contains(mtField(result.messages[1], '79'), 'CLOSED ACCOUNT NUMBER') or contains(mtField(result.messages[1], '79'), 'Closed account number')

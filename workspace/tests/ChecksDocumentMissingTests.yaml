@@ -1,0 +1,17 @@
+kind: TestCase
+name: tests.RequiredDocumentMissingIsHeld
+description: When compliance asks for a supporting document and none is stored, the payment is held.
+target: payments.flows.TransactionProcessing
+given:
+  txn:
+    id: ORVTXN0000000007
+    endToEndId: CHK-1
+    amount: 250
+    currency: ZAR
+    debtor: {name: "Karoo Mining Supplies", account: "4051122334"}
+    creditor: {name: "Thandiwe Mokoena", account: "62011223344", agentBic: FIRNZAJJ}
+mocks:
+  connectors.ComplianceCheck: {status: PASS, documentRequired: true}
+expect:
+  - result.status == 'HOLD'
+  - result.code == 'DOCS'

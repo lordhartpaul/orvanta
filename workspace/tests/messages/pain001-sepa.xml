@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.09">
+  <CstmrCdtTrfInitn>
+    <GrpHdr>
+      <MsgId>SEPA-2026-10-001</MsgId>
+      <CreDtTm>2026-10-05T09:00:00</CreDtTm>
+      <NbOfTxs>5</NbOfTxs>
+      <CtrlSum>252455.40</CtrlSum>
+      <InitgPty><Nm>Rheinland Pumpen GmbH</Nm></InitgPty>
+    </GrpHdr>
+    <PmtInf>
+      <PmtInfId>SEPA-2026-10-001-SCT</PmtInfId>
+      <PmtMtd>TRF</PmtMtd>
+      <PmtTpInf><SvcLvl><Cd>SEPA</Cd></SvcLvl></PmtTpInf>
+      <ReqdExctnDt><Dt>2026-10-05</Dt></ReqdExctnDt>
+      <Dbtr><Nm>Rheinland Pumpen GmbH</Nm></Dbtr>
+      <DbtrAcct><Id><IBAN>DE89370400440532013000</IBAN></Id></DbtrAcct>
+      <DbtrAgt><FinInstnId><BICFI>DEUTDEFF</BICFI></FinInstnId></DbtrAgt>
+      <ChrgBr>SLEV</ChrgBr>
+      <CdtTrfTxInf>
+        <PmtId><EndToEndId>SEPA-0001</EndToEndId></PmtId>
+        <Amt><InstdAmt Ccy="EUR">1250.00</InstdAmt></Amt>
+        <CdtrAgt><FinInstnId><BICFI>BNPAFRPP</BICFI></FinInstnId></CdtrAgt>
+        <Cdtr><Nm>Atelier Lumiere SARL</Nm></Cdtr>
+        <CdtrAcct><Id><IBAN>FR1420041010050500013M02606</IBAN></Id></CdtrAcct>
+        <RmtInf><Ustrd>Invoice SEPA-0001</Ustrd></RmtInf>
+      </CdtTrfTxInf>
+      <CdtTrfTxInf>
+        <PmtId><EndToEndId>SEPA-0002</EndToEndId></PmtId>
+        <Amt><InstdAmt Ccy="EUR">980.40</InstdAmt></Amt>
+        <CdtrAgt><FinInstnId><BICFI>ABNANL2A</BICFI></FinInstnId></CdtrAgt>
+        <Cdtr><Nm>Van Dijk Logistiek BV</Nm></Cdtr>
+        <CdtrAcct><Id><IBAN>NL91ABNA0417164300</IBAN></Id></CdtrAcct>
+        <RmtInf><Ustrd>Invoice SEPA-0002</Ustrd></RmtInf>
+      </CdtTrfTxInf>
+      <CdtTrfTxInf>
+        <PmtId><EndToEndId>SEPA-0003</EndToEndId></PmtId>
+        <Amt><InstdAmt Ccy="EUR">75.00</InstdAmt></Amt>
+        <CdtrAgt><FinInstnId><BICFI>CAIXESBB</BICFI></FinInstnId></CdtrAgt>
+        <Cdtr><Nm>Señor Müller &amp; Søn</Nm></Cdtr>
+        <CdtrAcct><Id><IBAN>ES9121000418450200051332</IBAN></Id></CdtrAcct>
+        <RmtInf><Ustrd>Invoice SEPA-0003</Ustrd></RmtInf>
+      </CdtTrfTxInf>
+    </PmtInf>
+    <PmtInf>
+      <PmtInfId>SEPA-2026-10-001-INST</PmtInfId>
+      <PmtMtd>TRF</PmtMtd>
+      <PmtTpInf><SvcLvl><Cd>SEPA</Cd></SvcLvl><LclInstrm><Cd>INST</Cd></LclInstrm></PmtTpInf>
+      <ReqdExctnDt><Dt>2026-10-05</Dt></ReqdExctnDt>
+      <Dbtr><Nm>Rheinland Pumpen GmbH</Nm></Dbtr>
+      <DbtrAcct><Id><IBAN>DE89370400440532013000</IBAN></Id></DbtrAcct>
+      <DbtrAgt><FinInstnId><BICFI>DEUTDEFF</BICFI></FinInstnId></DbtrAgt>
+      <ChrgBr>SLEV</ChrgBr>
+      <CdtTrfTxInf>
+        <PmtId><EndToEndId>SEPA-0004</EndToEndId></PmtId>
+        <Amt><InstdAmt Ccy="EUR">150.00</InstdAmt></Amt>
+        <CdtrAgt><FinInstnId><BICFI>BPPIITRR</BICFI></FinInstnId></CdtrAgt>
+        <Cdtr><Nm>Trattoria Bella Srl</Nm></Cdtr>
+        <CdtrAcct><Id><IBAN>IT60X0542811101000000123456</IBAN></Id></CdtrAcct>
+        <RmtInf><Ustrd>Invoice SEPA-0004</Ustrd></RmtInf>
+      </CdtTrfTxInf>
+      <CdtTrfTxInf>
+        <PmtId><EndToEndId>SEPA-0005</EndToEndId></PmtId>
+        <Amt><InstdAmt Ccy="EUR">250000.00</InstdAmt></Amt>
+        <CdtrAgt><FinInstnId><BICFI>GKCCBEBB</BICFI></FinInstnId></CdtrAgt>
+        <Cdtr><Nm>Brouwerij De Molen NV</Nm></Cdtr>
+        <CdtrAcct><Id><IBAN>BE68539007547034</IBAN></Id></CdtrAcct>
+        <RmtInf><Ustrd>Invoice SEPA-0005</Ustrd></RmtInf>
+      </CdtTrfTxInf>
+    </PmtInf>
+  </CstmrCdtTrfInitn>
+</Document>

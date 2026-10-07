@@ -1,0 +1,18 @@
+kind: TestCase
+name: tests.ReleasedFraudAlertGoesOn
+description: After a reviewer released the hold, the same alert no longer stops the payment.
+target: payments.flows.TransactionProcessing
+given:
+  txn:
+    id: ORVTXN0000000007
+    endToEndId: CHK-1
+    amount: 250
+    currency: ZAR
+    debtor: {name: "Karoo Mining Supplies", account: "4051122334"}
+    creditor: {name: "Thandiwe Mokoena", account: "62011223344", agentBic: FIRNZAJJ}
+    overrides: [FRAUD]
+mocks:
+  connectors.FraudCheck: {status: REVIEW, score: 87}
+expect:
+  - result.status == 'ROUTED'
+  - txn.posting.status == 'POSTED'

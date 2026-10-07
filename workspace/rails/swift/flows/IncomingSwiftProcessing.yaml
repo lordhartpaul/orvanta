@@ -1,0 +1,131 @@
+kind: Flow
+name: rails.swift.flows.IncomingSwiftProcessing
+description: >
+  Processing of one MT103 received for a customer. It ends CREDITED when the account has been
+  credited: with the amount received, or with its value in the currency of the account at the quoted
+  rate, less our charge when the beneficiary bears it (SHA and BEN). With OUR the customer gets the
+  full amount and the charge is noted as a claim on the sending bank. A payment that fails a rule, is a duplicate, or is for an account that does not exist, is
+  closed or is blocked is sent back by the engine. A sender on a sanctions list stops the payment
+  for a person to decide.
+completeStatus: CREDITED
+steps:
+  - id: rules
+    type: rules
+    ref: rails.swift.rules.IncomingSwift
+    onViolation: reject
+
+  - id: duplicates
+    type: flow
+    ref: payments.flows.DuplicateCheck
+
+  - id: accountLookup
+    type: call
+    connector: connectors.AccountLookup
+    once: true
+    request:
+      account: txn.creditor.account
+    into: txn.checks.account
+
+  - id: accountStatus
+    type: rules
+    ref: rails.swift.rules.BeneficiaryAccountStatus
+    onViolation: reject
+
+  - id: screen
+    type: call
+    connector: connectors.SanctionsScreening
+    once: true
+    request:
+      reference: txn.id
+      name: txn.debtor.name
+      account: txn.debtor.account
+    into: txn.screening
+
+  - id: sanctionsReview
+    type: end
+    when: (txn.screening.status == 'HIT' or txn.screening.status == 'POSSIBLE') and not contains(txn.overrides, 'SANC')
+    status: HOLD
+    code: SANC
+    message: The sender matches a sanctions list entry; decide whether the payment may be credited
+
+  # an account in another currency is credited with the value at the quoted rate
+  - id: fxRate
+    type: call
+    when: txn.currency != txn.checks.account.currency
+    connector: connectors.FxRates
+    once: true
+    request:
+      from: txn.checks.account.currency
+      to: txn.currency
+    into: txn.fx
+
+  - id: fxAmount
+    type: set
+    when: exists(txn.fx.rate)
+    values:
+      txn.fx.creditCurrency: txn.checks.account.currency
+      txn.fx.creditAmount: round(txn.amount * txn.fx.rate, 2)
+
+  # ---- our charge, from the tariff for the currency of the account ----
+  - id: tariff
+    type: set
+    values:
+      gross: coalesce(txn.fx.creditAmount, txn.amount)
+      bookCurrency: coalesce(txn.fx.creditCurrency, txn.currency)
+      tariff: lookup('rails.swift.reference.IncomingCharges', coalesce(txn.fx.creditCurrency, txn.currency))
+
+  - id: chargeTooLarge
+    type: end
+    when: exists(tariff.fee) and txn.chargeBearer != 'DEBT' and tariff.fee >= gross and not contains(txn.overrides, 'CHRG')
+    status: HOLD
+    code: CHRG
+    message: Our charge is not less than the amount received; release the payment to credit it without a charge
+
+  # SHA and BEN: the beneficiary bears our charge, so it comes off the amount credited
+  - id: deduct
+    type: set
+    when: exists(tariff.fee) and txn.chargeBearer != 'DEBT' and not contains(txn.overrides, 'CHRG')
+    values:
+      txn.charges.deducted: tariff.fee
+      txn.charges.currency: bookCurrency
+      txn.charges.netAmount: gross - tariff.fee
+      txn.charges.feeAccount: tariff.feeAccount
+
+  # OUR: the payer bears it; the customer gets everything and we have a claim on the sending bank
+  - id: claim
+    type: set
+    when: exists(tariff.fee) and txn.chargeBearer == 'DEBT'
+    values:
+      txn.charges.claim: tariff.fee
+      txn.charges.currency: bookCurrency
+      txn.charges.claimFrom: txn.sendingAgentBic
+      txn.charges.claimStatus: "'OPEN'"
+
+  - id: credit
+    type: call
+    connector: connectors.AccountPosting
+    once: true
+    request:
+      idempotencyKey: concat(txn.id, '-CREDIT')
+      reference: txn.id
+      debitAccount: lookup('reference.SettlementAccounts', 'SWIFT').account
+      debitAccountType: lookup('reference.SettlementAccounts', 'SWIFT').type
+      creditAccount: txn.creditor.account
+      amount: coalesce(txn.charges.netAmount, gross)
+      currency: bookCurrency
+    into: txn.posting
+
+  # the charge goes from the same settlement account to our income account, as a booking of its own
+  - id: bookCharge
+    type: call
+    when: exists(txn.charges.deducted)
+    connector: connectors.AccountPosting
+    once: true
+    request:
+      idempotencyKey: concat(txn.id, '-FEE')
+      reference: txn.id
+      debitAccount: lookup('reference.SettlementAccounts', 'SWIFT').account
+      creditAccount: txn.charges.feeAccount
+      amount: txn.charges.deducted
+      currency: txn.charges.currency
+    into: txn.charges.posting

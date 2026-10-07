@@ -1,0 +1,12 @@
+kind: TestCase
+name: tests.ADutchAccountPassingTheElevenTestIsAccepted
+target: payments.rules.TransactionValidation
+given:
+  txn:
+    endToEndId: CR-6
+    amount: 10
+    currency: EUR
+    debtor: {account: "4051122334"}
+    creditor: {name: "Someone", account: "NL91ABNA0417164300", agentBic: ABNANL2AXXX, country: NL}
+expect:
+  - not ('AC03' in result.codes)

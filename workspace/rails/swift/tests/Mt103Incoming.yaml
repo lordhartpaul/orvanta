@@ -1,0 +1,21 @@
+kind: TestCase
+name: tests.ReceivedMt103IsReadIntoATransaction
+description: "The first message of the sample file: who sent it, for whom, how much, and the reference a return will quote."
+target: rails.swift.maps.Mt103ToCanonical
+givenMessage:
+  var: src
+  file: tests/messages/mt103-incoming.fin
+expect:
+  - result.msgId == 'CHASUS33-CHASE-REF-0001'
+  - result.batches[0].sendingAgentBic == 'CHASUS33'
+  - result.batches[0].settlementDate == '2026-10-06'
+  - result.batches[0].originalMessageType == 'MT103'
+  - result.batches[0].txns[0].originalTxId == 'CHASE-REF-0001'
+  - result.batches[0].txns[0].amount == 25000
+  - result.batches[0].txns[0].currency == 'ZAR'
+  - result.batches[0].txns[0].creditor.account == '62011223344'
+  - result.batches[0].txns[0].creditor.name == 'Thandiwe Mokoena'
+  - result.batches[0].txns[0].debtor.name == 'Atlas Drilling Equipment Inc'
+  - result.batches[0].txns[0].debtor.agentBic == 'CHASUS33'
+  - result.batches[0].txns[0].chargeBearer == 'SHAR'
+  - exists(result.batches[0].txns[0].uetr)

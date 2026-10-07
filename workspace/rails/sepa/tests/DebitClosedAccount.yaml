@@ -1,0 +1,26 @@
+kind: TestCase
+name: tests.IncomingCollectionForAClosedAccountGoesBack
+description: "The account is closed: sent back with AC04 before anything is debited."
+target: rails.sepa.flows.IncomingDebitProcessing
+given:
+  txn:
+    id: ORVTXN0000000950
+    paymentType: DD_IN
+    channelIn: rails.sepa.SddDebtorInbound
+    endToEndId: POWER-OCT
+    originalTxId: SNDDD-1
+    originalMsgId: SND-DD-MSG-1
+    originalMessageType: pacs.003.001.08
+    amount: 84.20
+    currency: EUR
+    sequenceType: RCUR
+    mandate: {id: MND-7001, signedOn: "2025-03-01"}
+    creditor: {name: "Nordlicht Energie GmbH", account: "DE89370400440532013000", agentBic: COBADEFF, schemeId: DE98ZZZ09999999999}
+    debtor: {name: "Lukas Schmidt", account: "DE08500105175400000042"}
+mocks:
+  connectors.AccountLookup: {status: CLOSED, currency: EUR}
+  connectors.AccountPosting: {status: POSTED, postingId: P-9}
+expect:
+  - result.status == 'REJECTED'
+  - result.code == 'AC04'
+  - not exists(txn.posting)

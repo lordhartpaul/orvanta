@@ -1,0 +1,12 @@
+kind: TestCase
+name: tests.AnAccountWithTheCountrysBankCodePasses
+target: payments.rules.TransactionValidation
+given:
+  txn:
+    endToEndId: CR-3
+    amount: 10
+    currency: INR
+    debtor: {account: "4051122334"}
+    creditor: {name: "Priya Sharma", account: "000401234567", agentCode: HDFC0000001, agentBic: HDFCINBBXXX, country: IN}
+expect:
+  - not ('RC01' in result.codes)

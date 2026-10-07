@@ -1,0 +1,32 @@
+kind: DecisionTable
+name: payments.routing.OutboundRouting
+description: Chooses the outbound channel of a transaction. The first matching row wins.
+rows:
+  - id: ZA_DOMESTIC
+    when: txn.currency == 'ZAR'
+    set:
+      txn.route.channel: "'channels.ZaRtcOutbound'"
+      txn.route.scheme: "'ZA-RTC'"
+      txn.route.methodOfPayment: "'RTC'"
+  # euro payments between two accounts in the SEPA area go over the SEPA rails; instant when the customer asked for it
+  - id: SEPA_INSTANT
+    when: txn.currency == 'EUR' and txn.localInstrument == 'INST' and exists(lookup('rails.sepa.Countries', left(txn.debtor.account, 2))) and exists(lookup('rails.sepa.Countries', left(txn.creditor.account, 2)))
+    set:
+      txn.route.channel: "'rails.sepa.SctInstOutbound'"
+      txn.route.scheme: "'SEPA-INST'"
+      txn.route.methodOfPayment: "'SCT_INST'"
+      txn.route.railFlow: "'rails.sepa.flows.SepaChecks'"
+  - id: SEPA_CREDIT_TRANSFER
+    when: txn.currency == 'EUR' and exists(lookup('rails.sepa.Countries', left(txn.debtor.account, 2))) and exists(lookup('rails.sepa.Countries', left(txn.creditor.account, 2)))
+    set:
+      txn.route.channel: "'rails.sepa.SctOutbound'"
+      txn.route.scheme: "'SEPA-SCT'"
+      txn.route.methodOfPayment: "'SCT'"
+      txn.route.railFlow: "'rails.sepa.flows.SepaChecks'"
+  - id: CROSS_BORDER_SWIFT
+    when: exists(txn.creditor.agentBic)
+    set:
+      txn.route.channel: "'channels.SwiftMtOutbound'"
+      txn.route.scheme: "'SWIFT'"
+      txn.route.methodOfPayment: "'SWIFT'"
+      txn.route.railFlow: "'rails.swift.flows.SwiftChecks'"

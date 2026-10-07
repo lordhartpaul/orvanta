@@ -1,0 +1,22 @@
+kind: Channel
+name: rails.sepa.SddDebtorInbound
+description: >
+  SEPA Core Direct Debit collections arriving from the clearing system against the accounts of our
+  customers (pacs.003). Each collection is debited from the customer's account, or sent back with the reason.
+direction: inbound
+purpose: instruction
+format: iso20022
+messageTypes: [pacs.003]
+mapping: rails.sepa.maps.Pacs003ToCanonical
+# these transactions are collections against our customers, processed by their own flow
+paymentType: DD_IN
+processingFlow: rails.sepa.flows.IncomingDebitProcessing
+returnChannel: rails.sepa.SddReturnOutbound
+# the customer is told of the debit, and of its reversal when the collection is refunded
+notificationChannel: channels.CustomerNotificationOutbound
+inherit: [settlementDate, sendingAgentBic, originalMsgId, originalMessageType]
+# how long after the debit the customer can have it refunded: eight weeks without giving a reason,
+# thirteen months for a collection that was never authorised (reason MD01)
+refund:
+  withinDays: 56
+  unauthorisedWithinDays: 395

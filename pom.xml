@@ -1,0 +1,335 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>io.orvanta</groupId>
+    <artifactId>orvanta-parent</artifactId>
+    <version>0.1.0</version>
+    <packaging>pom</packaging>
+    <name>Orvanta Platform</name>
+    <description>Low-code payment platform: Orvanta Core (runtime), Orvanta Forge (model compiler), Orvanta Pay (engine and console)</description>
+
+    <modules>
+        <module>orvanta-core</module>
+        <module>orvanta-forge</module>
+        <module>orvanta-pay</module>
+        <module>orvanta-dist</module>
+    </modules>
+
+    <properties>
+        <maven.compiler.release>17</maven.compiler.release>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <jackson.version>2.21.7</jackson.version>
+        <snakeyaml.version>2.2</snakeyaml.version>
+        <javalin.version>7.2.3</javalin.version>
+        <slf4j.version>2.0.20</slf4j.version>
+        <mongo.version>5.2.1</mongo.version>
+        <h2.version>2.1.214</h2.version>
+        <amqp.version>5.37.0</amqp.version>
+        <sshd.version>2.19.0</sshd.version>
+        <kafka.version>4.3.1</kafka.version>
+        <bouncycastle.version>1.86</bouncycastle.version>
+        <ibmmq.version>9.4.4.1</ibmmq.version>
+        <junit.version>5.10.2</junit.version>
+    </properties>
+
+    <!-- mvn -Prelease deploy: the artifacts (and with -Psign their signatures) go to the bank's Maven repository.
+         The repository ids below are matched by <server> entries with credentials in ~/.m2/settings.xml (a CI secret),
+         and the URLs are given on the command line or in settings.xml: -Dorvanta.releases.url=https://nexus.bank.example/repository/maven-releases
+         -Dorvanta.snapshots.url=... Nothing is published without them. -->
+    <distributionManagement>
+        <repository>
+            <id>orvanta-releases</id>
+            <url>${orvanta.releases.url}</url>
+        </repository>
+        <snapshotRepository>
+            <id>orvanta-snapshots</id>
+            <url>${orvanta.snapshots.url}</url>
+        </snapshotRepository>
+    </distributionManagement>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>io.orvanta</groupId>
+                <artifactId>orvanta-core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.orvanta</groupId>
+                <artifactId>orvanta-forge</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-databind</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.yaml</groupId>
+                <artifactId>snakeyaml</artifactId>
+                <version>${snakeyaml.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.javalin</groupId>
+                <artifactId>javalin</artifactId>
+                <version>${javalin.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-simple</artifactId>
+                <version>${slf4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.mongodb</groupId>
+                <artifactId>mongodb-driver-sync</artifactId>
+                <version>${mongo.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.h2database</groupId>
+                <artifactId>h2</artifactId>
+                <version>${h2.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.rabbitmq</groupId>
+                <artifactId>amqp-client</artifactId>
+                <version>${amqp.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.sshd</groupId>
+                <artifactId>sshd-sftp</artifactId>
+                <version>${sshd.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.kafka</groupId>
+                <artifactId>kafka-clients</artifactId>
+                <version>${kafka.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.bouncycastle</groupId>
+                <artifactId>bcpg-jdk18on</artifactId>
+                <version>${bouncycastle.version}</version>
+            </dependency>
+            <!-- IBM MQ client: IBM's own licence (International Program License Agreement), not open source -->
+            <dependency>
+                <groupId>com.ibm.mq</groupId>
+                <artifactId>com.ibm.mq.allclient</artifactId>
+                <version>${ibmmq.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.bouncycastle</groupId>
+                <artifactId>bcprov-jdk18on</artifactId>
+                <version>${bouncycastle.version}</version>
+            </dependency>
+            <!-- the IBM MQ client brings these two at 1.81, which has CVE-2026-5588 in bcpkix; the platform's version is used -->
+            <dependency>
+                <groupId>org.bouncycastle</groupId>
+                <artifactId>bcpkix-jdk18on</artifactId>
+                <version>${bouncycastle.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.bouncycastle</groupId>
+                <artifactId>bcutil-jdk18on</artifactId>
+                <version>${bouncycastle.version}</version>
+            </dependency>
+            <!-- comes with kafka-clients; 1.10.2 has CVE-2026-59949, fixed in 1.11.1 -->
+            <dependency>
+                <groupId>at.yawk.lz4</groupId>
+                <artifactId>lz4-java</artifactId>
+                <version>1.11.1</version>
+            </dependency>
+            <dependency>
+                <groupId>org.junit.jupiter</groupId>
+                <artifactId>junit-jupiter</artifactId>
+                <version>${junit.version}</version>
+                <scope>test</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <profiles>
+        <!-- mvn -Prelease install: adds the software bill of materials (target/bom.json, CycloneDX) -->
+        <profile>
+            <id>release</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.cyclonedx</groupId>
+                        <artifactId>cyclonedx-maven-plugin</artifactId>
+                        <version>2.8.1</version>
+                        <inherited>false</inherited>
+                        <executions>
+                            <execution>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>makeAggregateBom</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <outputName>bom</outputName>
+                            <outputFormat>json</outputFormat>
+                            <includeTestScope>false</includeTestScope>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <!-- mvn -Prelease,sign install -Dgpg.keyname=<key id>: every artifact (jars, POMs, the SBOM) signed with GPG, the
+             .asc files next to them, so a receiver can check what was built. The passphrase comes from the GPG agent
+             or -Dgpg.passphrase (a CI secret), never from this file. Without the profile nothing is signed. -->
+        <profile>
+            <id>sign</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>3.2.7</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                                <configuration>
+                                    <bestPractices>true</bestPractices>
+                                    <gpgArguments>
+                                        <arg>--pinentry-mode</arg>
+                                        <arg>loopback</arg>
+                                    </gpgArguments>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <!-- mvn -Pcoverage verify: the tests with JaCoCo measuring which lines of our code they run.
+             Reports: <module>/target/site/jacoco/index.html; the live tests count when their services are given. -->
+        <profile>
+            <id>coverage</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.jacoco</groupId>
+                        <artifactId>jacoco-maven-plugin</artifactId>
+                        <version>0.8.13</version>
+                        <executions>
+                            <execution>
+                                <id>prepare-agent</id>
+                                <goals>
+                                    <goal>prepare-agent</goal>
+                                </goals>
+                            </execution>
+                            <execution>
+                                <id>report</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>report</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <!-- mvn -Psecurity verify -DskipTests: static analysis of our code (SpotBugs with FindSecBugs).
+             The build fails on any finding the filter selects. Reports: <module>/target/spotbugsXml.xml -->
+        <profile>
+            <id>security</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>com.github.spotbugs</groupId>
+                        <artifactId>spotbugs-maven-plugin</artifactId>
+                        <version>4.8.6.6</version>
+                        <configuration>
+                            <effort>Max</effort>
+                            <threshold>Low</threshold>
+                            <includeFilterFile>${maven.multiModuleProjectDirectory}/config/security/spotbugs-include.xml</includeFilterFile>
+                            <excludeFilterFile>${maven.multiModuleProjectDirectory}/config/security/spotbugs-accepted.xml</excludeFilterFile>
+                            <plugins>
+                                <plugin>
+                                    <groupId>com.h3xstream.findsecbugs</groupId>
+                                    <artifactId>findsecbugs-plugin</artifactId>
+                                    <version>1.13.0</version>
+                                </plugin>
+                            </plugins>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>check</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <!-- mvn -Pdependency-scan verify -DskipTests: known vulnerabilities in the libraries we ship
+             (OWASP Dependency-Check). The first run downloads the vulnerability database and is slow;
+             set NVD_API_KEY to speed it up. The build fails on a CVSS score of 7 or more. -->
+        <profile>
+            <id>dependency-scan</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.owasp</groupId>
+                        <artifactId>dependency-check-maven</artifactId>
+                        <version>10.0.4</version>
+                        <inherited>false</inherited>
+                        <configuration>
+                            <failBuildOnCVSS>7</failBuildOnCVSS>
+                            <nvdApiKey>${env.NVD_API_KEY}</nvdApiKey>
+                            <formats>
+                                <format>HTML</format>
+                                <format>JSON</format>
+                            </formats>
+                            <skipTestScope>true</skipTestScope>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>aggregate</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.13.0</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>3.2.5</version>
+                    <configuration>
+                        <!-- Forge compiles generated sources against java.class.path, so tests need a real class path -->
+                        <useManifestOnlyJar>false</useManifestOnlyJar>
+                        <trimStackTrace>true</trimStackTrace>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-shade-plugin</artifactId>
+                    <version>3.5.3</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+</project>

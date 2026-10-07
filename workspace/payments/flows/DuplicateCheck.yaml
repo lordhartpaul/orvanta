@@ -1,0 +1,53 @@
+kind: Flow
+name: payments.flows.DuplicateCheck
+description: >
+  Rejects a payment that was already seen within the last five days with the same debtor account,
+  end-to-end id, amount and currency. Used as a step of a rail's checks. The first payment to store
+  its fingerprint wins, even when two arrive at the same moment.
+steps:
+  - id: fingerprint
+    type: set
+    values:
+      txn.fingerprint: join('|', txn.debtor.account, txn.endToEndId, str(txn.amount), txn.currency)
+
+  - id: remember
+    type: save
+    dataset: data.PaymentFingerprints
+    onlyIfAbsent: true
+    values:
+      fingerprint: txn.fingerprint
+      transactionId: txn.id
+      seenOn: today()
+
+  - id: earlier
+    type: find
+    dataset: data.PaymentFingerprints
+    where:
+      fingerprint: txn.fingerprint
+    first: true
+    into: earlier
+
+  # a channel with 'duplicates: HOLD' has a person decide; released, the payment goes on (override DUPL)
+  - id: possibleDuplicate
+    type: end
+    when: earlier.transactionId != txn.id and earlier.seenOn >= addDays(today(), -5) and txn.duplicates == 'HOLD' and not contains(txn.overrides, 'DUPL')
+    status: HOLD
+    code: DUPL
+    message: Possible duplicate; the same payment was received within the last five days
+
+  - id: duplicate
+    type: end
+    when: earlier.transactionId != txn.id and earlier.seenOn >= addDays(today(), -5) and txn.duplicates != 'HOLD'
+    status: REJECTED
+    code: AM05
+    message: Duplicate payment; the same payment was received within the last five days
+
+  # an older fingerprint of another payment has expired: this payment takes its place
+  - id: replace
+    type: save
+    when: earlier.transactionId != txn.id
+    dataset: data.PaymentFingerprints
+    values:
+      fingerprint: txn.fingerprint
+      transactionId: txn.id
+      seenOn: today()

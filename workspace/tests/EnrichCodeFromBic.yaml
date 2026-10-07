@@ -1,0 +1,11 @@
+kind: TestCase
+name: tests.TheNationalCodeIsFilledFromTheBic
+target: payments.enrich.TransactionEnrichment
+given:
+  txn:
+    id: ORVTXN0000000098
+    amount: 10
+    currency: ZAR
+    creditor: {name: "Thandiwe Mokoena", account: "62011223344", agentBic: FIRNZAJJ, country: ZA}
+expect:
+  - txn.creditor.agentCode == '250655'

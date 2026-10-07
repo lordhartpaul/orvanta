@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:camt.026.001.09">
+  <UblToApply>
+    <Assgnmt>
+      <Id>RFI-2026-10-06-001</Id>
+      <Assgnr><Agt><FinInstnId><BICFI>CHASUS33</BICFI></FinInstnId></Agt></Assgnr>
+      <Assgne><Agt><FinInstnId><BICFI>ORVAZAJJ</BICFI></FinInstnId></Agt></Assgne>
+      <CreDtTm>2026-10-06T14:00:00Z</CreDtTm>
+    </Assgnmt>
+    <Case><Id>CASE-RFI-1</Id><Cretr><Agt><FinInstnId><BICFI>CHASUS33</BICFI></FinInstnId></Agt></Cretr></Case>
+    <Undrlyg>
+      <IntrBk>
+        <OrgnlGrpInf><OrgnlMsgId>ORVOUT0000000001</OrgnlMsgId><OrgnlMsgNmId>pacs.008.001.08</OrgnlMsgNmId></OrgnlGrpInf>
+        <OrgnlEndToEndId>INV-RFI-1</OrgnlEndToEndId>
+        <OrgnlTxId>ORVTXN0000000001</OrgnlTxId>
+      </IntrBk>
+    </Undrlyg>
+    <Justfn><AnyInf>Please provide the full address of the debtor for our compliance review</AnyInf></Justfn>
+  </UblToApply>
+</Document>

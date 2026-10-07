@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.011.001.07">
+  <MndtCxlReq>
+    <GrpHdr>
+      <MsgId>MNDT-2026-10-06-003</MsgId>
+      <CreDtTm>2026-10-06T10:00:00Z</CreDtTm>
+      <InitgPty><Id><OrgId><AnyBIC>DEUTDEFF</AnyBIC></OrgId></Id></InitgPty>
+    </GrpHdr>
+    <UndrlygCxlDtls>
+      <OrgnlMsgInf><MsgId>MNDT-2026-10-06-001</MsgId><MsgNmId>pain.009.001.07</MsgNmId></OrgnlMsgInf>
+      <CxlRsn><Rsn><Cd>MD16</Cd></Rsn></CxlRsn>
+      <OrgnlMndt><OrgnlMndtId>MND-MSG-1001</OrgnlMndtId></OrgnlMndt>
+    </UndrlygCxlDtls>
+  </MndtCxlReq>
+</Document>

@@ -1,0 +1,66 @@
+kind: Mapping
+name: rails.sepa.maps.Pacs003ToCanonical
+description: >
+  Reads a pacs.003 received from the clearing system: direct debit collections against the accounts
+  of our customers, one transaction per DrctDbtTxInf. The ids of the sender are kept for a return.
+rules:
+  - let: msg
+    value: src.Document.FIToFICstmrDrctDbt
+  - set: msgId
+    value: msg.GrpHdr.MsgId
+  - set: createdAt
+    value: msg.GrpHdr.CreDtTm
+  - set: declaredCount
+    value: num(msg.GrpHdr.NbOfTxs)
+  - set: declaredSum
+    value: num(msg.GrpHdr.TtlIntrBkSttlmAmt)
+  - append: batches
+    rules:
+      - set: batchRef
+        value: msg.GrpHdr.MsgId
+      - set: originalMsgId
+        value: msg.GrpHdr.MsgId
+      - set: originalMessageType
+        value: "'pacs.003.001.08'"
+      - set: settlementDate
+        value: msg.GrpHdr.IntrBkSttlmDt
+      - set: sendingAgentBic
+        value: coalesce(msg.GrpHdr.InstgAgt.FinInstnId.BICFI, msg.GrpHdr.InstgAgt.FinInstnId.BIC)
+      - forEach: msg.DrctDbtTxInf
+        as: tx
+        append: txns
+        rules:
+          - set: endToEndId
+            value: tx.PmtId.EndToEndId
+          - set: instructionRef
+            value: tx.PmtId.InstrId
+          - set: originalTxId
+            value: tx.PmtId.TxId
+          - set: amount
+            value: num(tx.IntrBkSttlmAmt)
+          - set: currency
+            value: tx.IntrBkSttlmAmt.@Ccy
+          - set: requestedDate
+            value: tx.ReqdColltnDt
+          - set: sequenceType
+            value: coalesce(tx.PmtTpInf.SeqTp, msg.GrpHdr.PmtTpInf.SeqTp)
+          - set: mandate.id
+            value: tx.DrctDbtTx.MndtRltdInf.MndtId
+          - set: mandate.signedOn
+            value: tx.DrctDbtTx.MndtRltdInf.DtOfSgntr
+          - set: creditor.schemeId
+            value: tx.DrctDbtTx.CdtrSchmeId.Id.PrvtId.Othr.Id
+          - set: creditor.name
+            value: tx.Cdtr.Nm
+          - set: creditor.account
+            value: coalesce(tx.CdtrAcct.Id.IBAN, tx.CdtrAcct.Id.Othr.Id)
+          - set: creditor.agentBic
+            value: coalesce(tx.CdtrAgt.FinInstnId.BICFI, tx.CdtrAgt.FinInstnId.BIC)
+          - set: debtor.name
+            value: tx.Dbtr.Nm
+          - set: debtor.account
+            value: coalesce(tx.DbtrAcct.Id.IBAN, tx.DbtrAcct.Id.Othr.Id)
+          - set: debtor.agentBic
+            value: coalesce(tx.DbtrAgt.FinInstnId.BICFI, tx.DbtrAgt.FinInstnId.BIC)
+          - set: remittance
+            value: tx.RmtInf.Ustrd

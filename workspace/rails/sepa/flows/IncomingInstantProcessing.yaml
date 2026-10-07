@@ -1,0 +1,71 @@
+kind: Flow
+name: rails.sepa.flows.IncomingInstantProcessing
+description: >
+  Processing of one SEPA Instant Credit Transfer received for a customer. The sender waits for the
+  answer, so nothing here waits for a person: a payment whose sender matches a sanctions list is
+  refused, not held. It ends CREDITED, or is refused with the reason.
+completeStatus: CREDITED
+steps:
+  - id: schemeRules
+    type: rules
+    ref: rails.sepa.rules.IncomingCredit
+    onViolation: reject
+
+  - id: duplicates
+    type: flow
+    ref: payments.flows.DuplicateCheck
+
+  - id: accountLookup
+    type: call
+    connector: connectors.AccountLookup
+    once: true
+    request:
+      account: txn.creditor.account
+    into: txn.checks.account
+
+  - id: accountStatus
+    type: rules
+    ref: rails.sepa.rules.CreditorAccountStatus
+    onViolation: reject
+
+  - id: screen
+    type: call
+    connector: connectors.SanctionsScreening
+    once: true
+    onError: reject
+    request:
+      reference: txn.id
+      name: txn.debtor.name
+      account: txn.debtor.account
+      country: left(txn.debtor.account, 2)
+    into: txn.screening
+
+  - id: sanctionsRefusal
+    type: end
+    when: txn.screening.status == 'HIT' or txn.screening.status == 'POSSIBLE'
+    status: REJECTED
+    code: RR04
+    message: Refused for regulatory reasons
+
+  # the sender waits ten seconds at most: a payment that could not be finished in time is refused, never credited late
+  - id: tooLate
+    type: end
+    when: secondsSince(txn.createdAt) > 9
+    status: REJECTED
+    code: AB05
+    message: The payment could not be confirmed within the time an instant payment allows
+
+  - id: credit
+    type: call
+    connector: connectors.AccountPosting
+    once: true
+    onError: reject
+    request:
+      idempotencyKey: concat(txn.id, '-CREDIT')
+      reference: txn.id
+      debitAccount: lookup('reference.SettlementAccounts', 'SEPA-INST').account
+      debitAccountType: lookup('reference.SettlementAccounts', 'SEPA-INST').type
+      creditAccount: txn.creditor.account
+      amount: txn.amount
+      currency: txn.currency
+    into: txn.posting

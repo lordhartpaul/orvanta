@@ -1,0 +1,14 @@
+kind: Channel
+name: channels.RequestToPayAnswerOutbound
+description: >
+  Answers to requests to pay (pain.014): what the customer decided, or that the request expired.
+direction: outbound
+format: iso20022
+messageType: pain.014.001.07
+mapping: payments.outbound.CanonicalToPain014
+destination:
+  type: folder
+  path: outbound/requests-to-pay
+  extension: xml
+properties:
+  senderBic: ORVAZAJJ

@@ -1,0 +1,44 @@
+kind: Mapping
+name: payments.inbound.Camt053ToStatement
+description: >
+  Reads a bank-to-customer statement (camt.053) into canonical statements: account, opening and
+  closing balance (negative when in debit) and one entry per booked item with the reference we gave the payment.
+rules:
+  - forEach: src.Document.BkToCstmrStmt.Stmt
+    as: st
+    append: statements
+    rules:
+      - set: statementId
+        value: st.Id
+      - set: account
+        value: coalesce(st.Acct.Id.IBAN, st.Acct.Id.Othr.Id)
+      - set: currency
+        value: coalesce(st.Acct.Ccy, first(st.Bal).Amt.@Ccy)
+      - forEach: st.Bal
+        as: b
+        when: b.Tp.CdOrPrtry.Cd == 'OPBD'
+        rules:
+          - set: openingBalance
+            value: "b.CdtDbtInd == 'DBIT' ? -num(b.Amt) : num(b.Amt)"
+      - forEach: st.Bal
+        as: c
+        when: c.Tp.CdOrPrtry.Cd == 'CLBD'
+        rules:
+          - set: closingBalance
+            value: "c.CdtDbtInd == 'DBIT' ? -num(c.Amt) : num(c.Amt)"
+      - forEach: st.Ntry
+        as: n
+        append: entries
+        rules:
+          - set: reference
+            value: coalesce(n.NtryDtls.TxDtls.Refs.InstrId, n.NtryDtls.TxDtls.Refs.TxId, n.NtryDtls.TxDtls.Refs.EndToEndId, n.AcctSvcrRef)
+          - set: amount
+            value: num(n.Amt)
+          - set: currency
+            value: n.Amt.@Ccy
+          - set: creditDebit
+            value: n.CdtDbtInd
+          - set: valueDate
+            value: coalesce(n.ValDt.Dt, n.BookgDt.Dt)
+          - set: narrative
+            value: n.AddtlNtryInf

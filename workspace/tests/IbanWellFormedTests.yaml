@@ -1,0 +1,12 @@
+kind: TestCase
+name: tests.AWellFormedIbanPassesTheStructureCheck
+target: payments.rules.TransactionValidation
+given:
+  txn:
+    endToEndId: IBAN-2
+    amount: 10
+    currency: EUR
+    debtor: {account: "4051122334"}
+    creditor: {name: "Rheinland Pumpen GmbH", account: "DE89370400440532013000", agentBic: COBADEFFXXX}
+expect:
+  - not ('AC03' in result.codes)

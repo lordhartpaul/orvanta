@@ -1,0 +1,16 @@
+kind: TestCase
+name: tests.APaymentToABlockedDestinationIsRejected
+target: payments.flows.TransactionProcessing
+given:
+  txn:
+    id: ORVTXN0000000703
+    endToEndId: COR-1
+    amount: 100
+    currency: EUR
+    debtor: {name: "Karoo Mining Supplies", account: "4051122334", country: ZA}
+    creditor: {name: "Someone", account: "1234567890", agentBic: XXXXKPPYXXX, country: KP}
+mocks:
+  connectors.SanctionsScreening: {status: CLEAR}
+expect:
+  - result.status == 'REJECTED'
+  - result.code == 'RR04'

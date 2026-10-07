@@ -1,0 +1,19 @@
+kind: ReferenceTable
+name: rails.swift.Relationships
+description: >
+  Banks we exchange authenticated messages with directly (relationship management, RMA). A customer
+  transfer can be sent straight to such a bank, with the funds following through the correspondent (cover
+  method). messageTypes names what may be exchanged (empty: anything); validFrom and validTo bound the
+  relationship in time. rmaAllows('rails.swift.Relationships', bic, 'MT103') reads it. Sample data: load
+  the bank's RMA export into this table.
+key: bic
+rows:
+  - {bic: CHASUS33, name: JPMorgan Chase Bank, messageTypes: [MT103, MT202, MT192, MT196, MT199]}
+  - {bic: CITIUS33, name: Citibank, messageTypes: [MT103, MT202, MT199]}
+  - {bic: DEUTDEFF, name: Deutsche Bank, messageTypes: [MT103, MT202, MT192, MT196, MT199]}
+  - {bic: BNPAFRPP, name: BNP Paribas, messageTypes: [MT103, MT202]}
+  - {bic: BARCGB22, name: Barclays Bank, messageTypes: [MT103, MT202, MT199]}
+  # a relationship for bank transfers only: a customer transfer to this bank goes serial through the correspondent's RMA
+  - {bic: BOFAUS3N, name: Bank of America, messageTypes: [MT202]}
+  # a relationship that ended: treated as none
+  - {bic: WFBIUS6S, name: Wells Fargo Bank, messageTypes: [MT103, MT202], validTo: "2025-12-31"}

@@ -1,0 +1,17 @@
+kind: ReferenceTable
+name: reference.BicClearingCodes
+description: >
+  The national bank code of a bank by its BIC (8 or 11 characters, as the BIC is given), per country: key
+  "<bic>|<country>". clearingCodeFromBic(bic, country) reads it. Sample rows; load from the bank's directory.
+key: key
+rows:
+  - {key: "LOYDGB2LXXX|GB", code: "309617"}
+  - {key: "LOYDGB2L|GB", code: "309617"}
+  - {key: "CHASUS33XXX|US", code: "021000021"}
+  - {key: "CHASUS33|US", code: "021000021"}
+  - {key: "FIRNZAJJXXX|ZA", code: "250655"}
+  - {key: "FIRNZAJJ|ZA", code: "250655"}
+  - {key: "SBZAZAJJ|ZA", code: "051001"}
+  - {key: "ABSAZAJJ|ZA", code: "632005"}
+  - {key: "NEDSZAJJ|ZA", code: "198765"}
+  - {key: "CABLZAJJ|ZA", code: "470010"}

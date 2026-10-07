@@ -1,0 +1,64 @@
+kind: Mapping
+name: payments.outbound.CanonicalToPacs008
+description: >
+  Builds one ISO 20022 FI-to-FI customer credit transfer (pacs.008.001.08) for a bulk of
+  routed transactions. Rule order is element order in the message.
+rules:
+  - set: Document.@xmlns
+    value: "'urn:iso:std:iso:20022:tech:xsd:pacs.008.001.08'"
+  - set: Document.FIToFICstmrCdtTrf.GrpHdr.MsgId
+    value: bulk.msgId
+  - set: Document.FIToFICstmrCdtTrf.GrpHdr.CreDtTm
+    value: bulk.createdAt
+  - set: Document.FIToFICstmrCdtTrf.GrpHdr.NbOfTxs
+    value: str(bulk.count)
+  - set: Document.FIToFICstmrCdtTrf.GrpHdr.TtlIntrBkSttlmAmt.@Ccy
+    value: bulk.currency
+  - set: Document.FIToFICstmrCdtTrf.GrpHdr.TtlIntrBkSttlmAmt.#text
+    value: str(bulk.total)
+  - set: Document.FIToFICstmrCdtTrf.GrpHdr.IntrBkSttlmDt
+    value: today()
+  - set: Document.FIToFICstmrCdtTrf.GrpHdr.SttlmInf.SttlmMtd
+    value: "'CLRG'"
+  - set: Document.FIToFICstmrCdtTrf.GrpHdr.InstgAgt.FinInstnId.BICFI
+    value: bulk.senderBic
+  - forEach: txns
+    as: t
+    append: Document.FIToFICstmrCdtTrf.CdtTrfTxInf
+    rules:
+      - set: PmtId.InstrId
+        value: t.id
+      - set: PmtId.EndToEndId
+        value: t.endToEndId
+      - set: PmtId.TxId
+        value: t.id
+      - set: PmtId.UETR
+        value: t.uetr
+      - set: IntrBkSttlmAmt.@Ccy
+        value: t.currency
+      - set: IntrBkSttlmAmt.#text
+        value: str(t.amount)
+      - set: ChrgBr
+        value: t.chargeBearer
+      - set: Dbtr.Nm
+        value: t.debtor.name
+      - set: DbtrAcct.Id.IBAN
+        when: isIban(t.debtor.account)
+        value: t.debtor.account
+      - set: DbtrAcct.Id.Othr.Id
+        when: not isIban(t.debtor.account)
+        value: t.debtor.account
+      - set: DbtrAgt.FinInstnId.BICFI
+        value: coalesce(t.debtor.agentBic, bulk.senderBic)
+      - set: CdtrAgt.FinInstnId.BICFI
+        value: t.creditor.agentBic
+      - set: Cdtr.Nm
+        value: t.creditor.name
+      - set: CdtrAcct.Id.IBAN
+        when: isIban(t.creditor.account)
+        value: t.creditor.account
+      - set: CdtrAcct.Id.Othr.Id
+        when: not isIban(t.creditor.account)
+        value: t.creditor.account
+      - set: RmtInf.Ustrd
+        value: left(t.remittance, 140)

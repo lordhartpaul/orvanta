@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pacs.008.001.08">
+  <FIToFICstmrCdtTrf>
+    <GrpHdr>
+      <MsgId>CLEARING-IN-2026-10-06-001</MsgId>
+      <CreDtTm>2026-10-06T07:30:00</CreDtTm>
+      <NbOfTxs>4</NbOfTxs>
+      <TtlIntrBkSttlmAmt Ccy="EUR">3530.00</TtlIntrBkSttlmAmt>
+      <IntrBkSttlmDt>2026-10-06</IntrBkSttlmDt>
+      <SttlmInf><SttlmMtd>CLRG</SttlmMtd></SttlmInf>
+      <InstgAgt><FinInstnId><BICFI>BNPAFRPP</BICFI></FinInstnId></InstgAgt>
+    </GrpHdr>
+    <CdtTrfTxInf>
+      <PmtId><InstrId>SND-INSTR-1</InstrId><EndToEndId>RENT-OCT</EndToEndId><TxId>SNDTX-1</TxId><UETR>8a562c67-ca16-48ba-b074-65581be6f001</UETR></PmtId>
+      <IntrBkSttlmAmt Ccy="EUR">950.00</IntrBkSttlmAmt>
+      <ChrgBr>SLEV</ChrgBr>
+      <Dbtr><Nm>Camille Laurent</Nm></Dbtr>
+      <DbtrAcct><Id><IBAN>FR1420041010050500013M02606</IBAN></Id></DbtrAcct>
+      <DbtrAgt><FinInstnId><BICFI>BNPAFRPP</BICFI></FinInstnId></DbtrAgt>
+      <CdtrAgt><FinInstnId><BICFI>ORVADEFF</BICFI></FinInstnId></CdtrAgt>
+      <Cdtr><Nm>Rheinland Pumpen GmbH</Nm></Cdtr>
+      <CdtrAcct><Id><IBAN>DE08500105175400000042</IBAN></Id></CdtrAcct>
+      <RmtInf><Ustrd>Rent October</Ustrd></RmtInf>
+    </CdtTrfTxInf>
+    <CdtTrfTxInf>
+      <PmtId><InstrId>SND-INSTR-2</InstrId><EndToEndId>INV-2291</EndToEndId><TxId>SNDTX-2</TxId><UETR>8a562c67-ca16-48ba-b074-65581be6f002</UETR></PmtId>
+      <IntrBkSttlmAmt Ccy="EUR">1830.00</IntrBkSttlmAmt>
+      <ChrgBr>SLEV</ChrgBr>
+      <Dbtr><Nm>Marco Rossi</Nm></Dbtr>
+      <DbtrAcct><Id><IBAN>IT60X0542811101000000123456</IBAN></Id></DbtrAcct>
+      <DbtrAgt><FinInstnId><BICFI>BCITITMM</BICFI></FinInstnId></DbtrAgt>
+      <CdtrAgt><FinInstnId><BICFI>ORVADEFF</BICFI></FinInstnId></CdtrAgt>
+      <Cdtr><Nm>Nordlicht Energie GmbH</Nm></Cdtr>
+      <CdtrAcct><Id><IBAN>DE50500105179990000001</IBAN></Id></CdtrAcct>
+      <RmtInf><Ustrd>Invoice 2291</Ustrd></RmtInf>
+    </CdtTrfTxInf>
+    <CdtTrfTxInf>
+      <PmtId><InstrId>SND-INSTR-3</InstrId><EndToEndId>GIFT-1</EndToEndId><TxId>SNDTX-3</TxId><UETR>8a562c67-ca16-48ba-b074-65581be6f003</UETR></PmtId>
+      <IntrBkSttlmAmt Ccy="EUR">250.00</IntrBkSttlmAmt>
+      <ChrgBr>SLEV</ChrgBr>
+      <Dbtr><Nm>Sophie Peeters</Nm></Dbtr>
+      <DbtrAcct><Id><IBAN>BE68539007547034</IBAN></Id></DbtrAcct>
+      <DbtrAgt><FinInstnId><BICFI>GEBABEBB</BICFI></FinInstnId></DbtrAgt>
+      <CdtrAgt><FinInstnId><BICFI>ORVADEFF</BICFI></FinInstnId></CdtrAgt>
+      <Cdtr><Nm>Lukas Schmidt</Nm></Cdtr>
+      <CdtrAcct><Id><IBAN>DE00500105170000000042</IBAN></Id></CdtrAcct>
+      <RmtInf><Ustrd>Happy birthday</Ustrd></RmtInf>
+    </CdtTrfTxInf>
+    <CdtTrfTxInf>
+      <PmtId><InstrId>SND-INSTR-4</InstrId><EndToEndId>DONATION-7</EndToEndId><TxId>SNDTX-4</TxId><UETR>8a562c67-ca16-48ba-b074-65581be6f004</UETR></PmtId>
+      <IntrBkSttlmAmt Ccy="EUR">500.00</IntrBkSttlmAmt>
+      <ChrgBr>SLEV</ChrgBr>
+      <Dbtr><Nm>BLOCKED Holdings Ltd</Nm></Dbtr>
+      <DbtrAcct><Id><IBAN>FR7630006000011234567890189</IBAN></Id></DbtrAcct>
+      <DbtrAgt><FinInstnId><BICFI>AGRIFRPP</BICFI></FinInstnId></DbtrAgt>
+      <CdtrAgt><FinInstnId><BICFI>ORVADEFF</BICFI></FinInstnId></CdtrAgt>
+      <Cdtr><Nm>Rheinland Pumpen GmbH</Nm></Cdtr>
+      <CdtrAcct><Id><IBAN>DE08500105175400000042</IBAN></Id></CdtrAcct>
+      <RmtInf><Ustrd>Donation</Ustrd></RmtInf>
+    </CdtTrfTxInf>
+  </FIToFICstmrCdtTrf>
+</Document>

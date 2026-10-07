@@ -1,0 +1,16 @@
+kind: Channel
+name: rails.sepa.SddInbound
+description: >
+  Customers collecting by SEPA Core Direct Debit (pain.008). The creditor, the collection date and
+  the sequence type are batch level and apply to every transaction of the batch.
+direction: inbound
+purpose: instruction
+format: iso20022
+messageTypes: [pain.008]
+mapping: rails.sepa.maps.Pain008ToCanonical
+validation: payments.rules.InstructionValidation
+statusReport: channels.CustomerStatusOutbound
+# these transactions are collections, processed by their own flow
+paymentType: DD
+processingFlow: rails.sepa.flows.DirectDebitProcessing
+inherit: [requestedDate, creditor, sequenceType, localInstrument]

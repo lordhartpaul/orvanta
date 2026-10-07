@@ -1,0 +1,19 @@
+kind: TestCase
+name: tests.ClosedDebtorAccountIsRejected
+description: A closed debtor account is rejected with the reason code, before any other system is asked.
+target: payments.flows.TransactionProcessing
+given:
+  txn:
+    id: ORVTXN0000000007
+    endToEndId: CHK-1
+    amount: 250
+    currency: ZAR
+    debtor: {name: "Karoo Mining Supplies", account: "4051122334"}
+    creditor: {name: "Thandiwe Mokoena", account: "62011223344", agentBic: FIRNZAJJ}
+mocks:
+  connectors.AccountLookup: {status: CLOSED}
+  connectors.SanctionsScreening: {error: must not be called}
+expect:
+  - result.status == 'REJECTED'
+  - result.code == 'AC04'
+  - not exists(txn.screening)

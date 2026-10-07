@@ -1,0 +1,53 @@
+kind: TestCase
+name: tests.StatementHasBalancesAndTheEntriesOfTheDay
+description: "A camt.053 from the ledger: opening and closing balance, a payment sent and cash paid in."
+target: payments.outbound.CanonicalToCamt053
+given:
+  report: {id: ORVSTM202610064070000001, createdAt: "2026-10-07T00:01:00Z", account: "4070000001", owner: Karoo Mining Supplies, currency: ZAR,
+           senderBic: ORVADEFF, date: "2026-10-06", from: "2026-10-06T00:00:00Z", to: "2026-10-07T00:00:00Z",
+           count: 2, creditCount: 1, creditSum: "1000.00", debitCount: 1, debitSum: "900.00"}
+  balances:
+    - {code: OPBD, amount: "250.00", currency: ZAR, creditDebit: DBIT, date: "2026-10-06"}
+    - {code: CLBD, amount: "-150.00", currency: ZAR, creditDebit: DBIT, date: "2026-10-06"}
+  entries:
+    - creditDebit: CRDT
+      reversal: false
+      collection: false
+      domain: ACMT
+      family: MCOP
+      subFamily: OTHR
+      reference: LP-MANUAL-ORVAPR0000000004
+      bookedOn: "2026-10-06"
+      amount: "1000.00"
+      currency: ZAR
+      text: Cash paid in
+    - creditDebit: DBIT
+      reversal: false
+      collection: false
+      domain: PMNT
+      family: ICDT
+      subFamily: ESCT
+      reference: LP-ORVTXN0000000012-DEBIT
+      bookedOn: "2026-10-06"
+      amount: "900.00"
+      currency: ZAR
+      txn:
+        id: ORVTXN0000000012
+        endToEndId: INV-4411
+        amount: 900.00
+        currency: ZAR
+        debtor: {name: Karoo Mining Supplies, account: "4070000001"}
+        creditor: {name: Normal Supplier, account: "62011223344"}
+expect:
+  - result.Document.BkToCstmrStmt.Stmt.Acct.Id.Othr.Id == '4070000001'
+  - result.Document.BkToCstmrStmt.Stmt.Bal[0].Tp.CdOrPrtry.Cd == 'OPBD'
+  - result.Document.BkToCstmrStmt.Stmt.Bal[0].CdtDbtInd == 'DBIT'
+  - result.Document.BkToCstmrStmt.Stmt.Bal[1].Tp.CdOrPrtry.Cd == 'CLBD'
+  - result.Document.BkToCstmrStmt.Stmt.Bal[1].Dt.Dt == '2026-10-06'
+  - result.Document.BkToCstmrStmt.Stmt.Ntry[0].BkTxCd.Domn.Cd == 'ACMT'
+  - result.Document.BkToCstmrStmt.Stmt.Ntry[0].AddtlNtryInf == 'Cash paid in'
+  - not exists(result.Document.BkToCstmrStmt.Stmt.Ntry[0].NtryDtls.TxDtls.Refs.EndToEndId)
+  - result.Document.BkToCstmrStmt.Stmt.Ntry[1].CdtDbtInd == 'DBIT'
+  - result.Document.BkToCstmrStmt.Stmt.Ntry[1].AcctSvcrRef == 'LP-ORVTXN0000000012-DEBIT'
+  - result.Document.BkToCstmrStmt.Stmt.Ntry[1].NtryDtls.TxDtls.Refs.EndToEndId == 'INV-4411'
+  - result.Document.BkToCstmrStmt.Stmt.Ntry[1].NtryDtls.TxDtls.RltdPties.Cdtr.Pty.Nm == 'Normal Supplier'

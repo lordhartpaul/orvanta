@@ -1,0 +1,25 @@
+kind: DecisionTable
+name: rails.swift.SettlementMethod
+description: >
+  How a cross-border payment reaches the creditor's bank.
+  DIRECT: the creditor's bank is our correspondent for the currency; one MT103 to it.
+  COVER: we have a direct relationship with the creditor's bank; the MT103 goes to it and an
+  MT202 COV to our correspondent moves the funds.
+  SERIAL: no direct relationship; the MT103 goes to our correspondent, which passes it on.
+  No correspondent for the currency: no row matches and the payment is rejected.
+rows:
+  - id: DIRECT
+    when: txn.creditor.agentBic == lookup('rails.swift.Correspondents', txn.currency).correspondentBic
+    set:
+      txn.route.settlementMethod: "'DIRECT'"
+      txn.route.correspondentBic: lookup('rails.swift.Correspondents', txn.currency).correspondentBic
+  - id: COVER
+    when: exists(lookup('rails.swift.Correspondents', txn.currency)) and rmaAllows('rails.swift.Relationships', txn.creditor.agentBic, 'MT103')
+    set:
+      txn.route.settlementMethod: "'COVER'"
+      txn.route.correspondentBic: lookup('rails.swift.Correspondents', txn.currency).correspondentBic
+  - id: SERIAL
+    when: exists(lookup('rails.swift.Correspondents', txn.currency))
+    set:
+      txn.route.settlementMethod: "'SERIAL'"
+      txn.route.correspondentBic: lookup('rails.swift.Correspondents', txn.currency).correspondentBic

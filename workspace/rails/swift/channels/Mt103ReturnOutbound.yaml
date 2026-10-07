@@ -1,0 +1,20 @@
+kind: Channel
+name: rails.swift.Mt103ReturnOutbound
+description: >
+  Returns of MT103 payments we received: a new MT103 back to the sending bank, marked as a return in
+  field 72 with the reason and the reference of the original. A payment sent here is RETURNED.
+direction: outbound
+format: swift.mt
+messageType: MT103
+mapping: rails.swift.maps.CanonicalToMt103Return
+sentStatus: RETURNED
+bulking:
+  maxTransactions: 20
+  maxWaitSeconds: 3
+destination:
+  type: folder
+  path: outbound/swift-returns
+  extension: fin
+properties:
+  senderBic: ORVAZAJJ
+  scheme: SWIFT

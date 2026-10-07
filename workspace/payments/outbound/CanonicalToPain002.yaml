@@ -1,0 +1,62 @@
+kind: Mapping
+name: payments.outbound.CanonicalToPain002
+description: >
+  Builds the customer payment status report (pain.002.001.10) for an instruction. A rejected file
+  is reported at group level; otherwise each reported transaction carries its own status:
+  ACCP accepted, RJCT rejected or returned, CANC cancelled, PDNG still in progress.
+rules:
+  - set: Document.@xmlns
+    value: "'urn:iso:std:iso:20022:tech:xsd:pain.002.001.10'"
+  - set: Document.CstmrPmtStsRpt.GrpHdr.MsgId
+    value: report.id
+  - set: Document.CstmrPmtStsRpt.GrpHdr.CreDtTm
+    value: report.createdAt
+  - set: Document.CstmrPmtStsRpt.GrpHdr.InitgPty.Id.OrgId.AnyBIC
+    value: report.senderBic
+  - set: Document.CstmrPmtStsRpt.OrgnlGrpInfAndSts.OrgnlMsgId
+    value: report.originalMsgId
+  - set: Document.CstmrPmtStsRpt.OrgnlGrpInfAndSts.OrgnlMsgNmId
+    value: report.originalMessageType
+  - set: Document.CstmrPmtStsRpt.OrgnlGrpInfAndSts.GrpSts
+    value: report.groupStatus
+  # an ISO reason code has four characters; anything else is carried as proprietary
+  - set: Document.CstmrPmtStsRpt.OrgnlGrpInfAndSts.StsRsnInf.Rsn.Cd
+    when: len(report.reasonCode) == 4
+    value: report.reasonCode
+  - set: Document.CstmrPmtStsRpt.OrgnlGrpInfAndSts.StsRsnInf.Rsn.Prtry
+    when: exists(report.reasonCode) and len(report.reasonCode) != 4
+    value: report.reasonCode
+  # the reason in the customer's language when the channel names one (property 'language'); else what the engine said
+  - set: Document.CstmrPmtStsRpt.OrgnlGrpInfAndSts.StsRsnInf.AddtlInf
+    value: "left(exists(report.language) ? text(report.reasonCode, report.language) : report.reasonText, 105)"
+  - forEach: batches
+    as: b
+    append: Document.CstmrPmtStsRpt.OrgnlPmtInfAndSts
+    rules:
+      - set: OrgnlPmtInfId
+        value: b.batchRef
+      - forEach: b.txns
+        as: t
+        append: TxInfAndSts
+        rules:
+          - let: st
+            value: "t.status == 'ACCEPTED' ? 'ACCP' : t.status == 'CANCELLED' ? 'CANC' : t.status in ['REJECTED_BY_APPLICATION', 'REJECTED_BY_EXTERNAL', 'RETURNED'] ? 'RJCT' : 'PDNG'"
+          - let: explain
+            value: st in ['RJCT', 'CANC']
+          - set: OrgnlEndToEndId
+            value: t.endToEndId
+          - set: TxSts
+            value: st
+          - set: StsRsnInf.Rsn.Cd
+            when: explain and len(t.reasonCode) == 4
+            value: t.reasonCode
+          - set: StsRsnInf.Rsn.Prtry
+            when: explain and exists(t.reasonCode) and len(t.reasonCode) != 4
+            value: t.reasonCode
+          - set: StsRsnInf.AddtlInf
+            when: explain
+            value: "left(concat(t.status == 'RETURNED' ? 'Returned after acceptance. ' : '', exists(report.language) ? text(t.reasonCode, report.language) : t.reasonText), 105)"
+          - set: OrgnlTxRef.Amt.InstdAmt.@Ccy
+            value: t.currency
+          - set: OrgnlTxRef.Amt.InstdAmt.#text
+            value: str(t.amount)

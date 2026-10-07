@@ -1,0 +1,22 @@
+kind: RuleSet
+name: api.rules.NotificationPreferenceRequest
+description: A preference names an account and says ALL or NONE.
+rules:
+  - id: ACCOUNT_FORMAT
+    assert: matches(request.path.account, '[A-Za-z0-9]{5,34}')
+    code: AC01
+    message: Account must be 5 to 34 letters or digits
+  - id: CHOICE
+    assert: request.body.notifications in ['ALL', 'NONE']
+    code: AG02
+    message: notifications must be ALL or NONE
+  - id: REPORT_CHOICE
+    when: exists(request.body.accountReport)
+    assert: request.body.accountReport in ['NONE', 'DAILY', 'STATEMENT', 'STATEMENT_MT']
+    code: AG02
+    message: accountReport must be NONE, DAILY, STATEMENT or STATEMENT_MT
+  - id: CHANNEL_NAME
+    when: exists(request.body.channel)
+    assert: matches(request.body.channel, '[A-Za-z][A-Za-z0-9_.]{2,80}')
+    code: AG02
+    message: channel must be the dotted name of an outbound channel

@@ -1,0 +1,10 @@
+kind: Channel
+name: channels.CustomerCancellationInbound
+description: Cancellation requests from customers (camt.055) for payments they submitted earlier.
+direction: inbound
+purpose: cancellation
+format: iso20022
+messageTypes: [camt.055]
+mapping: payments.inbound.Camt055ToCancellation
+# the customer is told what became of the request
+answerChannel: channels.CustomerCancellationAnswerOutbound

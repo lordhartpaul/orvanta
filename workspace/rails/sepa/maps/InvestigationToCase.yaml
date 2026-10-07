@@ -1,0 +1,36 @@
+kind: Mapping
+name: rails.sepa.maps.InvestigationToCase
+description: >
+  Reads an investigation from another bank, whichever of the three it is: a request for information
+  (camt.026, unable to apply), a claim that a payment was not received (camt.027), or a request to modify
+  a payment (camt.087). One case: who asks, which payment, and what for.
+rules:
+  - let: body
+    value: coalesce(src.Document.UblToApply, src.Document.ClmNonRct, src.Document.ReqToModfyPmt)
+  - set: kind
+    value: "exists(src.Document.UblToApply) ? 'RFI' : exists(src.Document.ClmNonRct) ? 'CLAIM_NON_RECEIPT' : 'MODIFY'"
+  - set: msgId
+    value: body.Assgnmt.Id
+  - set: caseId
+    value: coalesce(body.Case.Id, body.Assgnmt.Id)
+  - set: assignerBic
+    value: coalesce(body.Assgnmt.Assgnr.Agt.FinInstnId.BICFI, body.Assgnmt.Assgnr.Pty.Id.OrgId.AnyBIC)
+  - let: ref
+    value: coalesce(body.Undrlyg.IntrBk, body.Undrlyg.Initn)
+  - set: originalMsgId
+    value: ref.OrgnlGrpInf.OrgnlMsgId
+  - set: originalInstrId
+    value: ref.OrgnlInstrId
+  - set: originalEndToEndId
+    value: ref.OrgnlEndToEndId
+  - set: originalTxId
+    value: ref.OrgnlTxId
+  - set: uetr
+    value: ref.OrgnlUETR
+  # what is asked: the missing or incorrect information, the instruction to us, or the change wanted
+  - set: text
+    value: "coalesce(body.Justfn.AnyInf, body.InstrForAssgnee.Instr, body.Mod.RmtInf.Ustrd, body.Justfn.MssngOrIncrrctInf.MssngInf[0].Tp.Cd, body.Justfn.MssngOrIncrrctInf.IncrrctInf[0].Tp.Cd)"
+  - set: requestedAmount
+    value: body.Mod.Amt.InstdAmt.#text
+  - set: requestedExecutionDate
+    value: coalesce(body.Mod.ReqdExctnDt.Dt, body.Mod.ReqdExctnDt)

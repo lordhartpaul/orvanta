@@ -1,0 +1,17 @@
+kind: TestCase
+name: tests.PossibleSanctionsMatchIsHeld
+description: A possible match is not rejected outright; a person decides.
+target: payments.flows.TransactionProcessing
+given:
+  txn:
+    id: ORVTXN0000000007
+    endToEndId: CHK-1
+    amount: 250
+    currency: ZAR
+    debtor: {name: "Karoo Mining Supplies", account: "4051122334"}
+    creditor: {name: "Thandiwe Mokoena", account: "62011223344", agentBic: FIRNZAJJ}
+mocks:
+  connectors.SanctionsScreening: {status: POSSIBLE}
+expect:
+  - result.status == 'HOLD'
+  - result.code == 'SANC'

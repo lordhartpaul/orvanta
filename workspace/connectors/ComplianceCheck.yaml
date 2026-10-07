@@ -1,0 +1,7 @@
+kind: Connector
+name: connectors.ComplianceCheck
+description: Regulatory compliance check. Answers status PASS or REVIEW, and whether a supporting document is required.
+type: http
+url: ${env.ORVANTA_SIM_URL:-http://localhost:8480/sim}/compliance/check
+timeoutMs: 3000
+testReply: {status: PASS, documentRequired: false}

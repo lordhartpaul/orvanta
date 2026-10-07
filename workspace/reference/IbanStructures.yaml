@@ -1,0 +1,46 @@
+kind: ReferenceTable
+name: reference.IbanStructures
+description: >
+  How an IBAN of each country is built: its total length and where the bank identifier sits (1-based position
+  and length within the IBAN). Read by ibanProblem() to refuse an IBAN of the wrong length for its country,
+  and by bicFromIban() to find the bank code that reference.IbanBankCodes maps to a BIC. Written from the
+  commonly published IBAN registry lengths, not from the registry file itself: compare with the current
+  SWIFT IBAN Registry before relying on it, and add the countries you pay to.
+key: country
+rows:
+  - {country: AT, length: 20, bankCodeStart: 5, bankCodeLength: 5, sepa: true}
+  - {country: BE, length: 16, bankCodeStart: 5, bankCodeLength: 3, sepa: true}
+  - {country: BG, length: 22, bankCodeStart: 5, bankCodeLength: 4, sepa: true}
+  - {country: CH, length: 21, bankCodeStart: 5, bankCodeLength: 5, sepa: true}
+  - {country: CY, length: 28, bankCodeStart: 5, bankCodeLength: 3, sepa: true}
+  - {country: CZ, length: 24, bankCodeStart: 5, bankCodeLength: 4, sepa: true}
+  - {country: DE, length: 22, bankCodeStart: 5, bankCodeLength: 8, accountStart: 13, accountLength: 10, sepa: true}
+  - {country: DK, length: 18, bankCodeStart: 5, bankCodeLength: 4, sepa: true}
+  - {country: EE, length: 20, bankCodeStart: 5, bankCodeLength: 2, sepa: true}
+  - {country: ES, length: 24, bankCodeStart: 5, bankCodeLength: 4, sepa: true}
+  - {country: FI, length: 18, bankCodeStart: 5, bankCodeLength: 3, sepa: true}
+  - {country: FR, length: 27, bankCodeStart: 5, bankCodeLength: 5, sepa: true}
+  - {country: GB, length: 22, bankCodeStart: 5, bankCodeLength: 4, branchStart: 9, branchLength: 6, accountStart: 15, accountLength: 8, sepa: true}
+  - {country: GR, length: 27, bankCodeStart: 5, bankCodeLength: 3, sepa: true}
+  - {country: HR, length: 21, bankCodeStart: 5, bankCodeLength: 7, sepa: true}
+  - {country: HU, length: 28, bankCodeStart: 5, bankCodeLength: 3, branchStart: 8, branchLength: 5, accountStart: 13, accountLength: 16, sepa: true}
+  - {country: IE, length: 22, bankCodeStart: 5, bankCodeLength: 4, branchStart: 9, branchLength: 6, accountStart: 15, accountLength: 8, sepa: true}
+  - {country: IS, length: 26, bankCodeStart: 5, bankCodeLength: 4, sepa: true}
+  - {country: IT, length: 27, bankCodeStart: 6, bankCodeLength: 5, sepa: true}
+  - {country: LI, length: 21, bankCodeStart: 5, bankCodeLength: 5, sepa: true}
+  - {country: LT, length: 20, bankCodeStart: 5, bankCodeLength: 5, sepa: true}
+  - {country: LU, length: 20, bankCodeStart: 5, bankCodeLength: 3, sepa: true}
+  - {country: LV, length: 21, bankCodeStart: 5, bankCodeLength: 4, sepa: true}
+  - {country: MT, length: 31, bankCodeStart: 5, bankCodeLength: 4, sepa: true}
+  - {country: NL, length: 18, bankCodeStart: 5, bankCodeLength: 4, accountStart: 9, accountLength: 10, sepa: true}
+  - {country: NO, length: 15, bankCodeStart: 5, bankCodeLength: 4, sepa: true}
+  - {country: PL, length: 28, bankCodeStart: 5, bankCodeLength: 8, sepa: true}
+  - {country: PT, length: 25, bankCodeStart: 5, bankCodeLength: 4, sepa: true}
+  - {country: RO, length: 24, bankCodeStart: 5, bankCodeLength: 4, sepa: true}
+  - {country: SE, length: 24, bankCodeStart: 5, bankCodeLength: 3, sepa: true}
+  - {country: SI, length: 19, bankCodeStart: 5, bankCodeLength: 5, sepa: true}
+  - {country: SK, length: 24, bankCodeStart: 5, bankCodeLength: 4, sepa: true}
+  - {country: AE, length: 23, bankCodeStart: 5, bankCodeLength: 3, sepa: false}
+  - {country: SA, length: 24, bankCodeStart: 5, bankCodeLength: 2, sepa: false}
+  - {country: TR, length: 26, bankCodeStart: 5, bankCodeLength: 5, sepa: false}
+  - {country: MU, length: 30, bankCodeStart: 5, bankCodeLength: 6, sepa: false}

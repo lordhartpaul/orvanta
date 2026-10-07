@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.008.001.08">
+  <CstmrDrctDbtInitn>
+    <GrpHdr>
+      <MsgId>COLLECT-2026-10-001</MsgId>
+      <CreDtTm>2026-10-06T09:00:00</CreDtTm>
+      <NbOfTxs>5</NbOfTxs>
+      <CtrlSum>279.90</CtrlSum>
+      <InitgPty><Nm>Nordlicht Energie GmbH</Nm></InitgPty>
+    </GrpHdr>
+    <PmtInf>
+      <PmtInfId>COLLECT-2026-10-001-RCUR</PmtInfId>
+      <PmtMtd>DD</PmtMtd>
+      <PmtTpInf><SvcLvl><Cd>SEPA</Cd></SvcLvl><LclInstrm><Cd>CORE</Cd></LclInstrm><SeqTp>RCUR</SeqTp></PmtTpInf>
+      <ReqdColltnDt>2026-10-07</ReqdColltnDt>
+      <Cdtr><Nm>Nordlicht Energie GmbH</Nm></Cdtr>
+      <CdtrAcct><Id><IBAN>DE89370400440532013000</IBAN></Id></CdtrAcct>
+      <CdtrAgt><FinInstnId><BICFI>ORVADEFF</BICFI></FinInstnId></CdtrAgt>
+      <ChrgBr>SLEV</ChrgBr>
+      <CdtrSchmeId><Id><PrvtId><Othr><Id>DE98ZZZ09999999999</Id><SchmeNm><Prtry>SEPA</Prtry></SchmeNm></Othr></PrvtId></Id></CdtrSchmeId>
+      <DrctDbtTxInf>
+        <PmtId><EndToEndId>DD-0001</EndToEndId></PmtId>
+        <InstdAmt Ccy="EUR">49.90</InstdAmt>
+        <DrctDbtTx><MndtRltdInf><MndtId>MND-1001</MndtId><DtOfSgntr>2026-01-15</DtOfSgntr></MndtRltdInf></DrctDbtTx>
+        <DbtrAgt><FinInstnId><BICFI>BNPAFRPP</BICFI></FinInstnId></DbtrAgt>
+        <Dbtr><Nm>Camille Laurent</Nm></Dbtr>
+        <DbtrAcct><Id><IBAN>FR1420041010050500013M02606</IBAN></Id></DbtrAcct>
+        <RmtInf><Ustrd>Energy October 2026</Ustrd></RmtInf>
+      </DrctDbtTxInf>
+      <DrctDbtTxInf>
+        <PmtId><EndToEndId>DD-0002</EndToEndId></PmtId>
+        <InstdAmt Ccy="EUR">120.00</InstdAmt>
+        <DrctDbtTx><MndtRltdInf><MndtId>MND-1002</MndtId><DtOfSgntr>2026-01-15</DtOfSgntr></MndtRltdInf></DrctDbtTx>
+        <DbtrAgt><FinInstnId><BICFI>ABNANL2A</BICFI></FinInstnId></DbtrAgt>
+        <Dbtr><Nm>REJECTME Jansen</Nm></Dbtr>
+        <DbtrAcct><Id><IBAN>NL91ABNA0417164300</IBAN></Id></DbtrAcct>
+        <RmtInf><Ustrd>Energy October 2026</Ustrd></RmtInf>
+      </DrctDbtTxInf>
+      <DrctDbtTxInf>
+        <PmtId><EndToEndId>DD-0003</EndToEndId></PmtId>
+        <InstdAmt Ccy="EUR">35.00</InstdAmt>
+        <DrctDbtTx><MndtRltdInf><MndtId>MND-9999</MndtId><DtOfSgntr>2026-01-15</DtOfSgntr></MndtRltdInf></DrctDbtTx>
+        <DbtrAgt><FinInstnId><BICFI>CAIXESBB</BICFI></FinInstnId></DbtrAgt>
+        <Dbtr><Nm>Lucia Fernandez</Nm></Dbtr>
+        <DbtrAcct><Id><IBAN>ES9121000418450200051332</IBAN></Id></DbtrAcct>
+        <RmtInf><Ustrd>Energy October 2026</Ustrd></RmtInf>
+      </DrctDbtTxInf>
+      <DrctDbtTxInf>
+        <PmtId><EndToEndId>DD-0004</EndToEndId></PmtId>
+        <InstdAmt Ccy="EUR">60.00</InstdAmt>
+        <DrctDbtTx><MndtRltdInf><MndtId>MND-1004</MndtId><DtOfSgntr>2026-01-15</DtOfSgntr></MndtRltdInf></DrctDbtTx>
+        <DbtrAgt><FinInstnId><BICFI>BPPIITRR</BICFI></FinInstnId></DbtrAgt>
+        <Dbtr><Nm>Marco Rossi</Nm></Dbtr>
+        <DbtrAcct><Id><IBAN>IT60X0542811101000000123456</IBAN></Id></DbtrAcct>
+        <RmtInf><Ustrd>Energy October 2026</Ustrd></RmtInf>
+      </DrctDbtTxInf>
+      <DrctDbtTxInf>
+        <PmtId><EndToEndId>DD-0005</EndToEndId></PmtId>
+        <InstdAmt Ccy="EUR">15.00</InstdAmt>
+        <DrctDbtTx><MndtRltdInf><MndtId>MND-1005</MndtId><DtOfSgntr>2026-01-15</DtOfSgntr></MndtRltdInf></DrctDbtTx>
+        <DbtrAgt><FinInstnId><BICFI>GKCCBEBB</BICFI></FinInstnId></DbtrAgt>
+        <Dbtr><Nm>Sophie Peeters</Nm></Dbtr>
+        <DbtrAcct><Id><IBAN>BE68539007547034</IBAN></Id></DbtrAcct>
+        <RmtInf><Ustrd>Energy October 2026</Ustrd></RmtInf>
+      </DrctDbtTxInf>
+    </PmtInf>
+  </CstmrDrctDbtInitn>
+</Document>

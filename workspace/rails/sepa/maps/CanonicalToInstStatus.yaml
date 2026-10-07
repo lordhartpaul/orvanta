@@ -1,0 +1,48 @@
+kind: Mapping
+name: rails.sepa.maps.CanonicalToInstStatus
+description: >
+  Builds the status report (pacs.002.001.10) about a payment we received: the confirmation of an instant
+  payment, or the answer to a status enquiry. Rejected with the reason when the payment went back,
+  accepted when it was booked, pending while it is still on its way.
+rules:
+  - set: Document.@xmlns
+    value: "'urn:iso:std:iso:20022:tech:xsd:pacs.002.001.10'"
+  - set: Document.FIToFIPmtStsRpt.GrpHdr.MsgId
+    value: bulk.msgId
+  - set: Document.FIToFIPmtStsRpt.GrpHdr.CreDtTm
+    value: bulk.createdAt
+  - set: Document.FIToFIPmtStsRpt.GrpHdr.InstgAgt.FinInstnId.BICFI
+    value: bulk.senderBic
+  - forEach: txns
+    as: t
+    append: Document.FIToFIPmtStsRpt.TxInfAndSts
+    rules:
+      - set: StsId
+        value: t.id
+      - set: OrgnlGrpInf.OrgnlMsgId
+        value: t.originalMsgId
+      - set: OrgnlGrpInf.OrgnlMsgNmId
+        value: "'pacs.008.001.08'"
+      - set: OrgnlInstrId
+        value: t.instructionRef
+      - set: OrgnlEndToEndId
+        value: t.endToEndId
+      - set: OrgnlTxId
+        value: t.originalTxId
+      - set: OrgnlUETR
+        value: t.uetr
+      # RJCT with the reason when it went or goes back; ACCP when booked; PDNG while still on its way
+      - set: TxSts
+        value: "exists(t.return) ? 'RJCT' : t.status in ['CREDITED', 'DEBITED', 'ACCEPTED'] ? 'ACCP' : 'PDNG'"
+      - set: StsRsnInf.Orgtr.Id.OrgId.AnyBIC
+        when: exists(t.return)
+        value: bulk.senderBic
+      - set: StsRsnInf.Rsn.Cd
+        when: exists(t.return)
+        value: t.return.reasonCode
+      - set: StsRsnInf.AddtlInf
+        when: exists(t.return)
+        value: left(t.return.reasonText, 105)
+      - set: AccptncDtTm
+        when: not exists(t.return)
+        value: t.creditedAt

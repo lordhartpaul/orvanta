@@ -1,0 +1,15 @@
+kind: TestCase
+name: tests.APaymentOnACorridorUnderReviewIsHeldForAPerson
+target: payments.rules.Compliance
+given:
+  txn:
+    amount: 100
+    currency: EUR
+    debtor: {name: "Karoo Mining Supplies", account: "4051122334", agentBic: ORVAZAJJ, country: ZA}
+    creditor: {name: "Someone", account: "1234567890", agentBic: XXXXRUMMXXX, country: RU}
+    overrides: []
+expect:
+  - "'CORR' in result.codes"
+  - corridorRestriction('ZA', 'RU', 'EUR') == 'REVIEW'
+  - corridorRestriction('ZA', 'US', 'KPW') == 'BLOCKED'
+  - not exists(corridorRestriction('ZA', 'US', 'USD'))

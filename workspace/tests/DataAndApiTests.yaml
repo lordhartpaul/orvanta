@@ -1,0 +1,22 @@
+kind: TestCase
+name: tests.AccountLimitRejectsLargerPayments
+description: A debtor account with a limit rejects a payment above it; the data set is seeded for the run.
+target: payments.flows.TransactionProcessing
+given:
+  txn:
+    id: ORVTXN0000000006
+    endToEndId: LIM-1
+    amount: 1500
+    currency: ZAR
+    debtor: {name: "Karoo Mining Supplies", account: "4051122334"}
+    creditor: {name: "Thandiwe Mokoena", account: "62011223344", agentBic: FIRNZAJJ}
+data:
+  data.AccountLimits:
+    - {account: "4051122334", perTransaction: 1000}
+    - {account: "9999999999", perTransaction: 5}
+mocks:
+  connectors.SanctionsScreening: {status: CLEAR}
+expect:
+  - result.status == 'REJECTED'
+  - result.code == 'AM02'
+  - not exists(txn.route)

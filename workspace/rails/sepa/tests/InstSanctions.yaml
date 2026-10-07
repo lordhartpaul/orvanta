@@ -1,0 +1,25 @@
+kind: TestCase
+name: tests.IncomingInstantPaymentFromASanctionedSenderIsRefusedNotHeld
+description: "The sender waits for the answer, so a sanctions match refuses the payment at once instead of holding it."
+target: rails.sepa.flows.IncomingInstantProcessing
+given:
+  txn:
+    id: ORVTXN0000000995
+    paymentType: IN
+    channelIn: rails.sepa.SctInstInbound
+    localInstrument: INST
+    endToEndId: DINNER-SPLIT
+    originalTxId: INSTTX-1
+    originalMsgId: INST-IN-1
+    amount: 64.90
+    currency: EUR
+    debtor: {name: "Camille Laurent", account: "FR1420041010050500013M02606", agentBic: BNPAFRPP}
+    creditor: {name: "Lukas Schmidt", account: "DE08500105175400000042"}
+mocks:
+  connectors.AccountLookup: {status: ACTIVE, currency: EUR}
+  connectors.SanctionsScreening: {status: HIT}
+  connectors.AccountPosting: {status: POSTED, postingId: P-I}
+expect:
+  - result.status == 'REJECTED'
+  - result.code == 'RR04'
+  - not exists(txn.posting)

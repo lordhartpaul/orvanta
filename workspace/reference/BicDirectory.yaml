@@ -1,0 +1,15 @@
+kind: ReferenceTable
+name: reference.BicDirectory
+description: >
+  Financial institutions known to the platform. Used to enrich a payment with the creditor agent's
+  name and to warn when a BIC is well-formed but unknown. Sample data: replace with a real directory.
+key: bic
+rows:
+  - {bic: ORVAZAJJ, name: Orvanta Bank, country: ZA}
+  - {bic: FIRNZAJJ, name: FirstRand Bank, country: ZA}
+  - {bic: ABSAZAJJ, name: Absa Bank, country: ZA}
+  - {bic: NEDSZAJJ, name: Nedbank, country: ZA}
+  - {bic: CABLZAJJ, name: Capitec Bank, country: ZA}
+  - {bic: SBZAZAJJ, name: Standard Bank of South Africa, country: ZA}
+  - {bic: CHASUS33, name: JPMorgan Chase Bank, country: US}
+  - {bic: DEUTDEFF, name: Deutsche Bank, country: DE}

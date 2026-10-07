@@ -1,0 +1,52 @@
+kind: TestCase
+name: tests.NotificationHasOneEntryPerBookingAndMarksReversals
+description: "A camt.054 for one account: a credit, and the reversal of an earlier credit with the reason it went back."
+target: payments.outbound.CanonicalToCamt054
+given:
+  notification: {id: ORVOUT0000000090, createdAt: "2026-10-07T10:00:00Z", account: "DE08500105175400000042", owner: Rheinland Pumpen GmbH, senderBic: ORVADEFF, count: 2}
+  entries:
+    - kind: CREDIT
+      creditDebit: CRDT
+      reversal: false
+      collection: false
+      reference: ORVTXN0000000900
+      bookedOn: "2026-10-06"
+      txn:
+        id: ORVTXN0000000900
+        endToEndId: RENT-OCT
+        amount: 950.00
+        currency: EUR
+        settlementDate: "2026-10-06"
+        remittance: Rent October
+        debtor: {name: Camille Laurent, account: FR1420041010050500013M02606}
+        creditor: {name: Rheinland Pumpen GmbH, account: DE08500105175400000042}
+    - kind: DEBIT_REVERSAL
+      creditDebit: CRDT
+      reversal: true
+      collection: true
+      reference: ORVTXN0000000950-R
+      bookedOn: "2026-10-07"
+      txn:
+        id: ORVTXN0000000950
+        endToEndId: POWER-OCT
+        amount: 84.20
+        currency: EUR
+        mandate: {id: MND-7001}
+        debtor: {name: Rheinland Pumpen GmbH, account: DE08500105175400000042}
+        creditor: {name: Nordlicht Energie GmbH, account: DE89370400440532013000, schemeId: DE98ZZZ09999999999}
+        return: {reasonCode: MD06, reasonText: The customer did not agree}
+expect:
+  - result.Document.BkToCstmrDbtCdtNtfctn.Ntfctn.Acct.Id.IBAN == 'DE08500105175400000042'
+  - result.Document.BkToCstmrDbtCdtNtfctn.Ntfctn.Acct.Ownr.Nm == 'Rheinland Pumpen GmbH'
+  - result.Document.BkToCstmrDbtCdtNtfctn.Ntfctn.Ntry[0].CdtDbtInd == 'CRDT'
+  - not exists(result.Document.BkToCstmrDbtCdtNtfctn.Ntfctn.Ntry[0].RvslInd)
+  - result.Document.BkToCstmrDbtCdtNtfctn.Ntfctn.Ntry[0].BookgDt.Dt == '2026-10-06'
+  - result.Document.BkToCstmrDbtCdtNtfctn.Ntfctn.Ntry[0].BkTxCd.Domn.Fmly.SubFmlyCd == 'ESCT'
+  - result.Document.BkToCstmrDbtCdtNtfctn.Ntfctn.Ntry[0].NtryDtls.TxDtls.RltdPties.Dbtr.Pty.Nm == 'Camille Laurent'
+  - not exists(result.Document.BkToCstmrDbtCdtNtfctn.Ntfctn.Ntry[0].NtryDtls.TxDtls.RtrInf)
+  - result.Document.BkToCstmrDbtCdtNtfctn.Ntfctn.Ntry[1].RvslInd == 'true'
+  - result.Document.BkToCstmrDbtCdtNtfctn.Ntfctn.Ntry[1].NtryRef == 'ORVTXN0000000950-R'
+  - result.Document.BkToCstmrDbtCdtNtfctn.Ntfctn.Ntry[1].BkTxCd.Domn.Fmly.Cd == 'RDDT'
+  - result.Document.BkToCstmrDbtCdtNtfctn.Ntfctn.Ntry[1].NtryDtls.TxDtls.Refs.MndtId == 'MND-7001'
+  - result.Document.BkToCstmrDbtCdtNtfctn.Ntfctn.Ntry[1].NtryDtls.TxDtls.RtrInf.Rsn.Cd == 'MD06'
+  - result.Document.BkToCstmrDbtCdtNtfctn.Ntfctn.Ntry[1].ValDt.Dt == '2026-10-07'

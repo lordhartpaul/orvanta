@@ -1,0 +1,28 @@
+kind: Mapping
+name: payments.inbound.Camt055ToCancellation
+description: >
+  Reads a customer payment cancellation request (camt.055) into the canonical request: one entry
+  per transaction, identified by the original message id and the end-to-end id.
+rules:
+  - let: req
+    value: src.Document.CstmrPmtCxlReq
+  - set: msgId
+    value: req.Assgnmt.Id
+  - forEach: req.Undrlyg
+    as: u
+    rules:
+      - forEach: u.OrgnlPmtInfAndCxl
+        as: pi
+        rules:
+          - forEach: pi.TxInf
+            as: tx
+            append: entries
+            rules:
+              - set: originalMsgId
+                value: u.OrgnlGrpInfAndCxl.OrgnlMsgId
+              - set: endToEndId
+                value: tx.OrgnlEndToEndId
+              - set: reasonCode
+                value: coalesce(tx.CxlRsnInf.Rsn.Cd, tx.CxlRsnInf.Rsn.Prtry)
+              - set: reasonText
+                value: tx.CxlRsnInf.AddtlInf

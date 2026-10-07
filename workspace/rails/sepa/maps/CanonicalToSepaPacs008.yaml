@@ -1,0 +1,65 @@
+kind: Mapping
+name: rails.sepa.maps.CanonicalToSepaPacs008
+description: >
+  Builds the pacs.008.001.08 of the SEPA rails. Used by both channels: SEPA Credit Transfer sends a
+  bulk, SEPA Instant one transaction per message with local instrument INST and the acceptance time.
+rules:
+  - set: Document.@xmlns
+    value: "'urn:iso:std:iso:20022:tech:xsd:pacs.008.001.08'"
+  - set: Document.FIToFICstmrCdtTrf.GrpHdr.MsgId
+    value: bulk.msgId
+  - set: Document.FIToFICstmrCdtTrf.GrpHdr.CreDtTm
+    value: bulk.createdAt
+  - set: Document.FIToFICstmrCdtTrf.GrpHdr.NbOfTxs
+    value: str(bulk.count)
+  - set: Document.FIToFICstmrCdtTrf.GrpHdr.TtlIntrBkSttlmAmt.@Ccy
+    value: "'EUR'"
+  - set: Document.FIToFICstmrCdtTrf.GrpHdr.TtlIntrBkSttlmAmt.#text
+    value: str(bulk.total)
+  - set: Document.FIToFICstmrCdtTrf.GrpHdr.IntrBkSttlmDt
+    value: todayIn('Europe/Berlin')
+  - set: Document.FIToFICstmrCdtTrf.GrpHdr.SttlmInf.SttlmMtd
+    value: "'CLRG'"
+  - set: Document.FIToFICstmrCdtTrf.GrpHdr.PmtTpInf.SvcLvl.Cd
+    value: "'SEPA'"
+  - set: Document.FIToFICstmrCdtTrf.GrpHdr.PmtTpInf.LclInstrm.Cd
+    value: bulk.localInstrument
+  - set: Document.FIToFICstmrCdtTrf.GrpHdr.InstgAgt.FinInstnId.BICFI
+    value: bulk.senderBic
+  - forEach: txns
+    as: t
+    append: Document.FIToFICstmrCdtTrf.CdtTrfTxInf
+    rules:
+      - set: PmtId.InstrId
+        value: t.id
+      - set: PmtId.EndToEndId
+        value: t.endToEndId
+      - set: PmtId.TxId
+        value: t.id
+      - set: PmtId.UETR
+        value: t.uetr
+      - set: IntrBkSttlmAmt.@Ccy
+        value: "'EUR'"
+      - set: IntrBkSttlmAmt.#text
+        value: str(t.amount)
+      - set: AccptncDtTm
+        when: exists(bulk.localInstrument)
+        value: now()
+      - set: ChrgBr
+        value: "'SLEV'"
+      - set: Dbtr.Nm
+        value: t.debtor.name
+      - set: DbtrAcct.Id.IBAN
+        value: t.debtor.account
+      - set: DbtrAgt.FinInstnId.BICFI
+        value: coalesce(t.debtor.agentBic, bulk.senderBic)
+      - set: CdtrAgt.FinInstnId.BICFI
+        value: t.creditor.agentBic
+      - set: Cdtr.Nm
+        value: t.creditor.name
+      - set: CdtrAcct.Id.IBAN
+        value: t.creditor.account
+      - set: Purp.Cd
+        value: t.purposeCode
+      - set: RmtInf.Ustrd
+        value: t.remittance

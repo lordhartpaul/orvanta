@@ -1,0 +1,17 @@
+kind: TestCase
+name: tests.ScreeningOutageGoesToRepair
+description: When the screening system is unreachable the transaction is parked for repair, not rejected.
+target: payments.flows.TransactionProcessing
+given:
+  txn:
+    id: ORVTXN0000000003
+    endToEndId: INV-88120
+    amount: 12500
+    currency: USD
+    debtor: {name: "Karoo Mining Supplies", account: "4051122334"}
+    creditor: {name: "Atlas Drilling Equipment Inc", account: "000123456789", agentBic: CHASUS33}
+mocks:
+  connectors.SanctionsScreening: {error: "connection refused"}
+expect:
+  - result.status == 'REPAIR'
+  - result.code == 'CONNECTOR_ERROR'

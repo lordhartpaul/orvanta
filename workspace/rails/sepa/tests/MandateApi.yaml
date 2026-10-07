@@ -1,0 +1,18 @@
+kind: TestCase
+name: tests.MandateRegistrationKeepsTheCollectionCount
+description: Changing a mandate keeps the collections already made under it; a new mandate starts at zero.
+target: api.flows.MandateRegister
+given:
+  request:
+    path: {mandateId: MND-1001}
+    body: {creditorId: DE98ZZZ09999999999, creditorName: Nordlicht Energie GmbH, debtorName: Camille Laurent, debtorAccount: "FR1420041010050500013M02606", debtorAgentBic: BNPAFRPP, signedOn: "2026-01-15", type: RCUR}
+    user: operator1
+data:
+  data.Mandates:
+    - {mandateId: MND-1001, creditorId: DE98ZZZ09999999999, debtorAccount: "NL91ABNA0417164300", type: RCUR, status: CANCELLED, collections: 7}
+expect:
+  - result.status == 'COMPLETED'
+  - response.status == 'ACTIVE'
+  - response.collections == 7
+  - response.debtorAccount == 'FR1420041010050500013M02606'
+  - response.registeredBy == 'operator1'

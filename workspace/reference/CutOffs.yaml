@@ -1,0 +1,10 @@
+kind: ReferenceTable
+name: reference.CutOffs
+description: >
+  Operating hours per scheme, in the scheme's own time zone. A payment arriving after the cut-off,
+  or on a day the calendar is closed, is warehoused until the scheme opens on its next business day.
+  A scheme without a row here runs around the clock. Sample values.
+key: scheme
+rows:
+  - {scheme: SEPA-SDD, calendar: TARGET2, zone: Europe/Berlin, opens: "07:00", cutOff: "15:00"}
+  - {scheme: SEPA-SCT, calendar: TARGET2, zone: Europe/Berlin, opens: "07:00", cutOff: "15:00"}

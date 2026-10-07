@@ -1,0 +1,30 @@
+kind: Mapping
+name: payments.enrich.TransactionEnrichment
+description: Derives the values later steps rely on. Writes into the transaction itself.
+target: txn
+rules:
+  # a requested date in the past is executed today
+  - set: valueDate
+    value: "exists(txn.requestedDate) and txn.requestedDate > today() ? txn.requestedDate : today()"
+  - set: chargeBearer
+    value: coalesce(txn.chargeBearer, 'SHAR')
+  - set: uetr
+    value: uuid()
+  # the creditor's country: given, else from the IBAN, else from the BIC
+  - set: creditor.country
+    value: "coalesce(txn.creditor.country, isIban(txn.creditor.account) ? left(txn.creditor.account, 2) : null, exists(txn.creditor.agentBic) ? substr(txn.creditor.agentBic, 4, 6) : null)"
+  # the national bank code (sort code, branch code) inside an IBAN, where the country's IBAN carries one
+  - set: creditor.agentCode
+    value: "coalesce(txn.creditor.agentCode, isIban(txn.creditor.account) and lookup('reference.CountryRouting', txn.creditor.country).bankCodeInIban == true ? coalesce(decomposeIban(txn.creditor.account).branchCode, decomposeIban(txn.creditor.account).bankCode) : null)"
+  # a creditor given by IBAN alone: the bank's BIC from the bank code inside the IBAN (reference.IbanBankCodes), or from the
+  # national bank code (reference.ClearingCodes); and the national code from the BIC where the country uses one
+  - set: creditor.agentBic
+    value: coalesce(txn.creditor.agentBic, bicFromIban(txn.creditor.account), bicFromClearingCode(txn.creditor.country, txn.creditor.agentCode))
+  - set: creditor.agentCode
+    value: coalesce(txn.creditor.agentCode, clearingCodeFromBic(txn.creditor.agentBic, txn.creditor.country))
+  - set: creditor.country
+    value: substr(txn.creditor.agentBic, 4, 6)
+  - set: creditor.agentName
+    value: lookup('reference.BicDirectory', txn.creditor.agentBic).name
+  - set: domestic
+    value: txn.currency == 'ZAR'

@@ -1,0 +1,21 @@
+kind: TestCase
+name: tests.ABankTheSchemeCannotReachIsNotSentTo
+description: "A euro payment to a bank listed as not reachable in SEPA Credit Transfer is rejected with RR04."
+target: rails.sepa.flows.SepaChecks
+clock: "2026-10-06T10:00:00Z"
+given:
+  txn:
+    id: ORVTXN0000000700
+    amount: 100.00
+    currency: EUR
+    endToEndId: INV-1
+    chargeBearer: SLEV
+    remittance: Invoice 1
+    requestedDate: "2026-10-06"
+    debtor: {name: Karoo Mining Supplies, account: "DE89370400440532013000", agentBic: ORVADEFF}
+    creditor: {name: Nobody, account: "FR1420041010050500013M02606", agentBic: NOSEDEFFXXX}
+    route: {scheme: SEPA-SCT, channel: rails.sepa.SctOutbound}
+    rail: {today: "2026-10-06", time: "10:00"}
+expect:
+  - result.status == 'REJECTED'
+  - result.code == 'RR04'

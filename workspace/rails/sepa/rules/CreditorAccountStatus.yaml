@@ -1,0 +1,16 @@
+kind: RuleSet
+name: rails.sepa.rules.CreditorAccountStatus
+description: What the account system said about the account the collection will be credited to.
+rules:
+  - id: ACCOUNT_KNOWN
+    assert: txn.checks.account.status != 'UNKNOWN'
+    code: AC01
+    message: Creditor account does not exist
+  - id: ACCOUNT_OPEN
+    assert: txn.checks.account.status != 'CLOSED'
+    code: AC04
+    message: Creditor account is closed
+  - id: ACCOUNT_NOT_BLOCKED
+    assert: txn.checks.account.status != 'BLOCKED'
+    code: AC06
+    message: Creditor account is blocked

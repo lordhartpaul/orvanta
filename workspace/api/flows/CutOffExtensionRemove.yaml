@@ -1,0 +1,14 @@
+kind: Flow
+name: api.flows.CutOffExtensionRemove
+description: Removes an extension; the usual cut-off applies again.
+steps:
+  - id: remove
+    type: remove
+    dataset: data.CutOffExtensions
+    key: request.path.scheme
+
+  - id: answer
+    type: set
+    values:
+      response.scheme: request.path.scheme
+      response.removed: "true"

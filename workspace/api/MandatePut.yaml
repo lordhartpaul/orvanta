@@ -1,0 +1,10 @@
+kind: Api
+name: api.MandatePut
+description: >
+  Registers or changes a direct debit mandate. Body: {"creditorId": "DE98ZZZ09999999999", "creditorName": "...",
+  "debtorName": "...", "debtorAccount": "<IBAN>", "debtorAgentBic": "...", "signedOn": "2026-01-15", "type": "RCUR"}.
+  type is RCUR (recurrent) or OOFF (one-off). The count of collections already made is kept.
+method: PUT
+path: /mandates/{mandateId}
+permission: payments.submit
+target: api.flows.MandateRegister

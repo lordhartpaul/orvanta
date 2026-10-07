@@ -1,0 +1,11 @@
+kind: Channel
+name: channels.NostroStatementIsoInbound
+description: >
+  Statements of our accounts at correspondents, as camt.053. A matched debit proves that a SWIFT
+  payment still waiting as SENT went through, so it becomes ACCEPTED.
+direction: inbound
+purpose: statement
+format: iso20022
+messageTypes: [camt.053]
+mapping: payments.inbound.Camt053ToStatement
+settles: true

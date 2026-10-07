@@ -1,0 +1,43 @@
+kind: Mapping
+name: payments.inbound.Pain013ToRequests
+description: >
+  Reads a request to pay (pain.013, creditor payment activation request): one request per transaction,
+  with the creditor who asks, the customer who is asked, the amount and the day by which an answer is wanted.
+rules:
+  - let: req
+    value: src.Document.CdtrPmtActvtnReq
+  - set: msgId
+    value: req.GrpHdr.MsgId
+  - forEach: req.PmtInf
+    as: pi
+    rules:
+      - forEach: pi.CdtTrfTx
+        as: tx
+        append: requests
+        rules:
+          - set: paymentInfoId
+            value: pi.PmtInfId
+          - set: endToEndId
+            value: tx.PmtId.EndToEndId
+          - set: requestedExecutionDate
+            value: coalesce(pi.ReqdExctnDt.Dt, pi.ReqdExctnDt)
+          - set: expiryDate
+            value: coalesce(pi.XpryDt.Dt, pi.XpryDt)
+          - set: debtor.name
+            value: pi.Dbtr.Nm
+          - set: debtor.account
+            value: coalesce(pi.DbtrAcct.Id.IBAN, pi.DbtrAcct.Id.Othr.Id)
+          - set: debtor.agentBic
+            value: pi.DbtrAgt.FinInstnId.BICFI
+          - set: amount
+            value: num(tx.Amt.InstdAmt.#text)
+          - set: currency
+            value: tx.Amt.InstdAmt.@Ccy
+          - set: creditor.name
+            value: tx.Cdtr.Nm
+          - set: creditor.account
+            value: coalesce(tx.CdtrAcct.Id.IBAN, tx.CdtrAcct.Id.Othr.Id)
+          - set: creditor.agentBic
+            value: tx.CdtrAgt.FinInstnId.BICFI
+          - set: remittance
+            value: tx.RmtInf.Ustrd

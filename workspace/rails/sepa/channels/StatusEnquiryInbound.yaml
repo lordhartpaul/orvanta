@@ -1,0 +1,14 @@
+kind: Channel
+name: rails.sepa.StatusEnquiryInbound
+description: >
+  Status enquiries (pacs.028) from other banks about payments they sent us. Each is answered with a
+  pacs.002 on the answer channel: where the payment stands, or NOOR when nothing with these references arrived.
+direction: inbound
+purpose: statusEnquiry
+format: iso20022
+messageTypes: [pacs.028]
+mapping: rails.sepa.maps.Pacs028ToEnquiry
+answerChannel: rails.sepa.SctInstStatusOutbound
+transport:
+  - type: folder
+    path: inbound/sepa-enquiries

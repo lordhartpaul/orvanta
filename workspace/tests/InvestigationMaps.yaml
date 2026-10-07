@@ -1,0 +1,18 @@
+kind: TestCase
+name: tests.AnInvestigationIsReadWhicheverOfTheThreeItIs
+description: "A camt.027 claim of non-receipt: kind, case, the sender's ids and the instruction to us."
+target: rails.sepa.maps.InvestigationToCase
+given:
+  src:
+    Document:
+      ClmNonRct:
+        Assgnmt: {Id: CNR-1, Assgnr: {Agt: {FinInstnId: {BICFI: BNPAFRPP}}}, CreDtTm: "2026-10-06T14:30:00Z"}
+        Case: {Id: CASE-CNR-1}
+        Undrlyg: {IntrBk: {OrgnlGrpInf: {OrgnlMsgId: CLEARING-1}, OrgnlEndToEndId: RENT-OCT, OrgnlTxId: SNDTX-1}}
+        InstrForAssgnee: {Instr: The beneficiary has not received the funds}
+expect:
+  - result.kind == 'CLAIM_NON_RECEIPT'
+  - result.caseId == 'CASE-CNR-1'
+  - result.assignerBic == 'BNPAFRPP'
+  - result.originalTxId == 'SNDTX-1'
+  - result.text == 'The beneficiary has not received the funds'

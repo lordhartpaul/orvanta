@@ -1,0 +1,21 @@
+kind: TestCase
+name: tests.RequiredDocumentPresentPasses
+description: With the document stored under the end-to-end id the payment goes on; the content is not copied onto the payment.
+target: payments.flows.TransactionProcessing
+given:
+  txn:
+    id: ORVTXN0000000007
+    endToEndId: CHK-1
+    amount: 250
+    currency: ZAR
+    debtor: {name: "Karoo Mining Supplies", account: "4051122334"}
+    creditor: {name: "Thandiwe Mokoena", account: "62011223344", agentBic: FIRNZAJJ}
+data:
+  data.Documents:
+    - {reference: CHK-1, name: invoice.pdf, content: QUJD, uploadedBy: operator1}
+mocks:
+  connectors.ComplianceCheck: {status: PASS, documentRequired: true}
+expect:
+  - result.status == 'ROUTED'
+  - txn.checks.document.name == 'invoice.pdf'
+  - not exists(txn.checks.document.content)

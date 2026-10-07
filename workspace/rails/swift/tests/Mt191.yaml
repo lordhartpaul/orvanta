@@ -1,0 +1,15 @@
+kind: TestCase
+name: tests.ChargeClaimNamesThePaymentAndTheAmount
+description: "The MT191 for a payment received with charges OUR: to the sending bank, quoting its reference, asking for our charge."
+target: rails.swift.maps.CanonicalToMt191
+given:
+  claim: {id: ORVOUT0000000101, senderBic: ORVAZAJJ, from: CHASUS33, amount: 125.00, currency: ZAR}
+  txn: {id: ORVTXN0000000990, originalTxId: CHASE-REF-0004}
+expect:
+  - result.type == '191'
+  - result.receiver == 'CHASUS33'
+  - mtField(result, '20') == 'ORVOUT0000000101'
+  - mtField(result, '21') == 'CHASE-REF-0004'
+  - startsWith(mtField(result, '32B'), 'ZAR125,')
+  - startsWith(mtLine(mtField(result, '71B'), 1), '/COMM/ZAR125,')
+  - mtLine(mtField(result, '71B'), 3) == 'REF CHASE-REF-0004'

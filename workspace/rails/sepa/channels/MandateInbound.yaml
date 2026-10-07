@@ -1,0 +1,15 @@
+kind: Channel
+name: rails.sepa.MandateInbound
+description: >
+  Mandate messages from the creditor's side: a new mandate (pain.009), an amendment (pain.010), a
+  cancellation (pain.011). Each is applied to the mandate register and answered with a pain.012 on the
+  answer channel: accepted, or refused when the mandate is unknown or the debtor has blocked the creditor.
+direction: inbound
+purpose: mandate
+format: iso20022
+messageTypes: [pain.009, pain.010, pain.011]
+mapping: rails.sepa.maps.MandateMessageToMandate
+answerChannel: rails.sepa.MandateAcceptanceOutbound
+transport:
+  - type: folder
+    path: inbound/sepa-mandates

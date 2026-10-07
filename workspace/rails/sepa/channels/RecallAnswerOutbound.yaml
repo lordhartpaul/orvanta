@@ -1,0 +1,15 @@
+kind: Channel
+name: rails.sepa.RecallAnswerOutbound
+description: >
+  Negative answers to recall requests (camt.029): the payment is not sent back, with the reason.
+  An accepted recall needs no answer of its own; the return of the payment is the answer.
+direction: outbound
+format: iso20022
+messageType: camt.029.001.09
+mapping: rails.sepa.maps.CanonicalToRecallAnswer
+destination:
+  type: folder
+  path: outbound/sepa-recall-answers
+  extension: xml
+properties:
+  senderBic: ORVADEFF

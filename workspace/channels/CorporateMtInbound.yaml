@@ -1,0 +1,10 @@
+kind: Channel
+name: channels.CorporateMtInbound
+description: Corporate customers sending SWIFT MT101 requests for transfer.
+direction: inbound
+purpose: instruction
+format: swift.mt
+messageTypes: [MT101]
+mapping: payments.inbound.Mt101ToCanonical
+validation: payments.rules.InstructionValidation
+statusReport: channels.CorporateMtStatusOutbound

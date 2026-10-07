@@ -1,0 +1,26 @@
+kind: TestCase
+name: tests.RefusedRecallIsAnsweredWithTheReason
+description: "The camt.029 that refuses a recall: status RJCR, the reason, and the ids the sender asked with."
+target: rails.sepa.maps.CanonicalToRecallAnswer
+given:
+  answer:
+    id: ORVOUT0000000088
+    createdAt: "2026-10-07T10:00:00Z"
+    senderBic: ORVADEFF
+    assignerBic: BNPAFRPP
+    caseId: CASE-7781
+    cancellationId: CXL-1
+    originalMsgId: SND-MSG-1
+    originalTxId: SNDTX-1
+    status: RJCR
+    reasonCode: CUST
+    reasonText: The beneficiary does not agree to give the money back
+  txn: {id: ORVTXN0000000900, endToEndId: RENT-OCT, originalTxId: SNDTX-1}
+expect:
+  - result.Document.RsltnOfInvstgtn.Assgnmt.Assgne.Agt.FinInstnId.BICFI == 'BNPAFRPP'
+  - result.Document.RsltnOfInvstgtn.RslvdCase.Id == 'CASE-7781'
+  - result.Document.RsltnOfInvstgtn.Sts.Conf == 'RJCR'
+  - result.Document.RsltnOfInvstgtn.CxlDtls.TxInfAndSts.OrgnlTxId == 'SNDTX-1'
+  - result.Document.RsltnOfInvstgtn.CxlDtls.TxInfAndSts.OrgnlEndToEndId == 'RENT-OCT'
+  - result.Document.RsltnOfInvstgtn.CxlDtls.TxInfAndSts.TxCxlSts == 'RJCR'
+  - result.Document.RsltnOfInvstgtn.CxlDtls.TxInfAndSts.CxlStsRsnInf.Rsn.Cd == 'CUST'

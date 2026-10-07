@@ -1,0 +1,39 @@
+kind: ReferenceTable
+name: reference.CountryRouting
+description: >
+  How a creditor account is identified in each country: IBAN, or an account number with a national bank
+  code (sort code, IFSC, ABA routing number, BSB, branch code), or with a BIC. 'identifier' is what the
+  country needs: IBAN | BANK_CODE | BIC. 'bankCodeName' and 'bankCodeFormat' (a regular expression) say
+  what the national code is called and how it looks; 'bankCodeInIban' whether the IBAN carries it (so the two
+  must agree when both are given). Written from general knowledge of the schemes, not from a licensed
+  directory: compare with the bank's routing guide and add the countries you pay to.
+key: country
+rows:
+  - {country: GB, identifier: IBAN, bankCodeName: sort code, bankCodeFormat: "[0-9]{6}", bankCodeInIban: true, accountFormat: "[0-9]{8}"}
+  - {country: IE, identifier: IBAN, bankCodeName: sort code, bankCodeFormat: "[0-9]{6}", bankCodeInIban: true}
+  - {country: DE, identifier: IBAN, bankCodeName: Bankleitzahl, bankCodeFormat: "[0-9]{8}", bankCodeInIban: true}
+  - {country: NL, identifier: IBAN, bankCodeName: bank code, bankCodeFormat: "[A-Z]{4}", bankCodeInIban: true}
+  - {country: FR, identifier: IBAN, bankCodeName: code banque, bankCodeFormat: "[0-9]{5}", bankCodeInIban: true}
+  - {country: ES, identifier: IBAN, bankCodeName: codigo de entidad, bankCodeFormat: "[0-9]{4}", bankCodeInIban: true}
+  - {country: IT, identifier: IBAN, bankCodeName: ABI, bankCodeFormat: "[0-9]{5}", bankCodeInIban: true}
+  - {country: BE, identifier: IBAN, bankCodeName: bank code, bankCodeFormat: "[0-9]{3}", bankCodeInIban: true}
+  - {country: AT, identifier: IBAN, bankCodeName: Bankleitzahl, bankCodeFormat: "[0-9]{5}", bankCodeInIban: true}
+  - {country: CH, identifier: IBAN, bankCodeName: clearing number, bankCodeFormat: "[0-9]{3,5}", bankCodeInIban: true}
+  - {country: PT, identifier: IBAN, bankCodeName: bank code, bankCodeFormat: "[0-9]{4}", bankCodeInIban: true}
+  - {country: PL, identifier: IBAN, bankCodeName: bank code, bankCodeFormat: "[0-9]{8}", bankCodeInIban: true}
+  - {country: HU, identifier: IBAN, bankCodeName: bank branch code, bankCodeFormat: "[0-9]{8}", bankCodeInIban: true}
+  - {country: AE, identifier: IBAN, bankCodeName: bank code, bankCodeFormat: "[0-9]{3}", bankCodeInIban: true}
+  - {country: SA, identifier: IBAN, bankCodeName: bank code, bankCodeFormat: "[0-9]{2}", bankCodeInIban: true}
+  - {country: TR, identifier: IBAN, bankCodeName: bank code, bankCodeFormat: "[0-9]{5}", bankCodeInIban: true}
+  - {country: US, identifier: BANK_CODE, bankCodeName: ABA routing number, bankCodeFormat: "[0-9]{9}", bankCodeInIban: false}
+  - {country: IN, identifier: BANK_CODE, bankCodeName: IFSC, bankCodeFormat: "[A-Z]{4}0[A-Z0-9]{6}", bankCodeInIban: false}
+  - {country: AU, identifier: BANK_CODE, bankCodeName: BSB, bankCodeFormat: "[0-9]{6}", bankCodeInIban: false}
+  - {country: CA, identifier: BANK_CODE, bankCodeName: transit number, bankCodeFormat: "0[0-9]{8}", bankCodeInIban: false}
+  - {country: ZA, identifier: BANK_CODE, bankCodeName: branch code, bankCodeFormat: "[0-9]{6}", bankCodeInIban: false}
+  - {country: NZ, identifier: BANK_CODE, bankCodeName: bank and branch code, bankCodeFormat: "[0-9]{6}", bankCodeInIban: false}
+  - {country: HK, identifier: BANK_CODE, bankCodeName: bank code, bankCodeFormat: "[0-9]{3}", bankCodeInIban: false}
+  - {country: SG, identifier: BANK_CODE, bankCodeName: bank code, bankCodeFormat: "[0-9]{4}", bankCodeInIban: false}
+  - {country: JP, identifier: BANK_CODE, bankCodeName: bank and branch code, bankCodeFormat: "[0-9]{7}", bankCodeInIban: false}
+  - {country: KE, identifier: BIC, bankCodeInIban: false}
+  - {country: NG, identifier: BANK_CODE, bankCodeName: bank code, bankCodeFormat: "[0-9]{3}", bankCodeInIban: false}
+  - {country: CN, identifier: BIC, bankCodeInIban: false}

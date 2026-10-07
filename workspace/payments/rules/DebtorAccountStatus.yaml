@@ -1,0 +1,16 @@
+kind: RuleSet
+name: payments.rules.DebtorAccountStatus
+description: What the account system said about the debtor account, turned into rejection reasons.
+rules:
+  - id: ACCOUNT_KNOWN
+    assert: txn.checks.account.status != 'UNKNOWN'
+    code: AC01
+    message: Debtor account does not exist
+  - id: ACCOUNT_OPEN
+    assert: txn.checks.account.status != 'CLOSED'
+    code: AC04
+    message: Debtor account is closed
+  - id: ACCOUNT_NOT_BLOCKED
+    assert: txn.checks.account.status != 'BLOCKED'
+    code: AC06
+    message: Debtor account is blocked

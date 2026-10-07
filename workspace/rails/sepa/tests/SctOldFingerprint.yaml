@@ -1,0 +1,24 @@
+kind: TestCase
+name: tests.SepaOldFingerprintHasExpired
+description: "The same payment details a month ago are not a duplicate; this payment takes over the fingerprint."
+target: payments.flows.TransactionProcessing
+clock: "2026-10-05T08:00:00Z"
+given:
+  txn:
+    id: ORVTXN0000000008
+    endToEndId: SEPA-T1
+    amount: 1250
+    currency: EUR
+    requestedDate: "2026-10-05"
+    chargeBearer: SLEV
+    debtor: {name: "Rheinland Pumpen GmbH", account: "DE89370400440532013000", agentBic: DEUTDEFF}
+    creditor: {name: "Atelier Lumiere SARL", account: "FR1420041010050500013M02606", agentBic: BNPAFRPP}
+data:
+  data.PaymentFingerprints:
+    - {fingerprint: "DE89370400440532013000|SEPA-T1|1250|EUR", transactionId: ORVTXN0000000001, seenOn: "2026-09-01"}
+mocks:
+  connectors.AccountLookup: {status: ACTIVE, currency: EUR}
+expect:
+  - result.status == 'ROUTED'
+  - stored.data.PaymentFingerprints[0].transactionId == 'ORVTXN0000000008'
+  - stored.data.PaymentFingerprints[0].seenOn == '2026-10-05'

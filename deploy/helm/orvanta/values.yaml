@@ -1,0 +1,78 @@
+# Orvanta Pay. Secrets are never values of this chart: they come from a Kubernetes secret you create
+# (see existingSecret), so a values file can live in git.
+#
+#   kubectl -n orvanta create secret generic orvanta-secrets \
+#       --from-literal=ORVANTA_STORE_URI='mongodb://user:password@mongo:27017/?tls=true' \
+#       --from-literal=ORVANTA_BUS_URI='amqps://user:password@rabbitmq:5671' \
+#       --from-literal=ORVANTA_SECURITY_JWTSECRET='<at least 32 random characters>' \
+#       --from-literal=ORVANTA_SECURITY_INTEGRITYKEY='<at least 32 random characters>' \
+#       --from-literal=ORVANTA_SECURITY_BOOTSTRAPPASSWORD='<first administrator password, 12+ characters; remove after the first start>'
+#   helm install orvanta deploy/helm/orvanta -n orvanta
+
+image:
+  repository: orvanta/orvanta-pay
+  tag: ""                 # empty: the chart's appVersion
+  pullPolicy: IfNotPresent
+
+# the secret with ORVANTA_STORE_URI, ORVANTA_BUS_URI, ORVANTA_SECURITY_JWTSECRET, ... (every ORVANTA_* that is secret)
+existingSecret: orvanta-secrets
+
+# settings that are not secret, as ORVANTA_* environment variables (any setting of orvanta.yaml, upper case, dots as underscores)
+config:
+  ORVANTA_STORE_DATABASE: orvanta
+  ORVANTA_BUS_TYPE: rabbit
+  ORVANTA_SIMULATOR_ENABLED: "false"
+  ORVANTA_WORKSPACE_WRITEBACK: "false"
+  ORVANTA_SECURITY_REQUIREMFA: "true"
+  ORVANTA_SECURITY_TOKENMINUTES: "30"
+  # the hosts models may call, comma separated; set it for the installation
+  ORVANTA_SECURITY_CONNECTORHOSTS: ""
+
+console:
+  # one replica while an inbound folder is used (two would race for the same files); with queue and API transports only,
+  # move "ingest" to the engine units and scale the console
+  replicas: 1
+  units: "api,ingest"
+  resources:
+    requests: {cpu: 250m, memory: 512Mi}
+    limits: {memory: 1Gi}
+
+engine:
+  replicas: 2
+  units: "debulk,process,bulk,dispatch,acknowledge,cancel,return,report,recover,callback,post,reconcile,recall,notify"
+  healthPort: 8081
+  resources:
+    requests: {cpu: 500m, memory: 512Mi}
+    limits: {memory: 1Gi}
+
+service:
+  type: ClusterIP
+  port: 80
+
+# TLS ends at the ingress; the chart then tells the server it is behind a TLS proxy (HSTS, X-Forwarded-For)
+ingress:
+  enabled: false
+  className: ""
+  host: orvanta.example.com
+  annotations: {}
+  tls:
+    enabled: true
+    secretName: orvanta-tls
+
+# the shared data volume: only for folder transports and folder destinations; it must allow many writers
+dataVolume:
+  enabled: true
+  storageClassName: ""
+  size: 10Gi
+  accessModes: [ReadWriteMany]
+
+# ISO 20022 schemas (XSD per message type) from a config map you create, mounted read-only; empty: no schema validation
+schemasConfigMap: ""
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 10001
+  runAsGroup: 10001
+  fsGroup: 10001
+
+terminationGracePeriodSeconds: 45

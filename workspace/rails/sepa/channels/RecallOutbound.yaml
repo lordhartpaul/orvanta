@@ -1,0 +1,14 @@
+kind: Channel
+name: rails.sepa.RecallOutbound
+description: Recall of a SEPA Credit Transfer already sent (camt.056). The answer arrives as camt.029.
+direction: outbound
+format: iso20022
+messageType: camt.056.001.08
+mapping: payments.outbound.CanonicalToCamt056
+destination:
+  type: folder
+  path: outbound/sepa-recall
+  extension: xml
+properties:
+  senderBic: ORVADEFF
+simulator: clearing-cancellation

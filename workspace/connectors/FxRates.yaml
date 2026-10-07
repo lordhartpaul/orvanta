@@ -1,0 +1,9 @@
+kind: Connector
+name: connectors.FxRates
+description: The rate sheet. Answers the rate as units of the "from" currency per one unit of the "to" currency.
+type: http
+method: GET
+url: ${env.ORVANTA_SIM_URL:-http://localhost:8480/sim}/fx/{from}/{to}
+timeoutMs: 3000
+retries: 1
+testReply: {rate: 18.50}

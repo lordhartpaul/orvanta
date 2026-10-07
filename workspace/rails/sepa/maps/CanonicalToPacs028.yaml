@@ -1,0 +1,32 @@
+kind: Mapping
+name: rails.sepa.maps.CanonicalToPacs028
+description: >
+  Asks the rail what became of a payment we sent (pacs.028.001.03): the ids the payment had when it
+  went out, and the file it went out in.
+rules:
+  - set: Document.@xmlns
+    value: "'urn:iso:std:iso:20022:tech:xsd:pacs.028.001.03'"
+  - set: Document.FIToFIPmtStsReq.GrpHdr.MsgId
+    value: enquiry.id
+  - set: Document.FIToFIPmtStsReq.GrpHdr.CreDtTm
+    value: enquiry.createdAt
+  - set: Document.FIToFIPmtStsReq.GrpHdr.InstgAgt.FinInstnId.BICFI
+    value: enquiry.senderBic
+  - set: Document.FIToFIPmtStsReq.TxInf.StsReqId
+    value: enquiry.id
+  - set: Document.FIToFIPmtStsReq.TxInf.OrgnlGrpInf.OrgnlMsgId
+    value: enquiry.originalMsgId
+  - set: Document.FIToFIPmtStsReq.TxInf.OrgnlGrpInf.OrgnlMsgNmId
+    value: enquiry.originalMessageType
+  - set: Document.FIToFIPmtStsReq.TxInf.OrgnlInstrId
+    value: txn.id
+  - set: Document.FIToFIPmtStsReq.TxInf.OrgnlEndToEndId
+    value: txn.endToEndId
+  - set: Document.FIToFIPmtStsReq.TxInf.OrgnlTxId
+    value: txn.id
+  - set: Document.FIToFIPmtStsReq.TxInf.OrgnlUETR
+    value: txn.uetr
+  - set: Document.FIToFIPmtStsReq.TxInf.InstgAgt.FinInstnId.BICFI
+    value: enquiry.senderBic
+  - set: Document.FIToFIPmtStsReq.TxInf.InstdAgt.FinInstnId.BICFI
+    value: txn.creditor.agentBic

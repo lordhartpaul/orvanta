@@ -1,0 +1,18 @@
+kind: Mapping
+name: payments.inbound.FraudResultToAnswer
+description: Turns a fraud result message into an answer for the waiting transaction.
+rules:
+  - append: entries
+    rules:
+      - set: transactionId
+        value: src.transactionId
+      - set: field
+        value: "'checks.fraud'"
+      - set: value.status
+        value: src.status
+      - set: value.score
+        value: src.score
+      - set: value.reason
+        value: src.reason
+      - set: value.answeredAt
+        value: now()

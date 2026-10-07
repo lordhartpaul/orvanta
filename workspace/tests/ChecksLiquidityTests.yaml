@@ -1,0 +1,20 @@
+kind: TestCase
+name: tests.ShortLiquidityWaitsAndRetries
+description: Without liquidity on the route the payment waits and asks to be tried again; it is not posted.
+target: payments.flows.TransactionProcessing
+given:
+  txn:
+    id: ORVTXN0000000007
+    endToEndId: CHK-1
+    amount: 250
+    currency: ZAR
+    debtor: {name: "Karoo Mining Supplies", account: "4051122334"}
+    creditor: {name: "Thandiwe Mokoena", account: "62011223344", agentBic: FIRNZAJJ}
+mocks:
+  connectors.LiquidityCheck: {status: INSUFFICIENT}
+expect:
+  - result.status == 'WAIT'
+  - result.code == 'LIQD'
+  - txn.wait.retrySeconds == 5
+  - exists(txn.route.channel)
+  - not exists(txn.posting)

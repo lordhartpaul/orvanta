@@ -1,0 +1,20 @@
+kind: TestCase
+name: tests.Pain001IsDebulked
+description: The sample salary file becomes one batch with five transactions.
+target: payments.inbound.Pain001ToCanonical
+givenMessage:
+  var: src
+  file: tests/messages/pain001-salaries.xml
+expect:
+  - result.msgId == 'SALARY-2026-10-001'
+  - result.declaredCount == 5
+  - result.declaredSum == 48550.75
+  - count(result.batches) == 1
+  - result.batches[0].requestedDate == '2026-10-05'
+  - result.batches[0].debtor.account == '4051122334'
+  - count(result.batches[0].txns) == 5
+  - result.batches[0].txns[0].amount == 18250
+  - result.batches[0].txns[0].currency == 'ZAR'
+  - result.batches[0].txns[1].creditor.agentBic == 'ABSAZAJJ'
+  - result.batches[0].txns[0].chargeBearer == 'SLEV'
+  - sumOf(collect(result.batches, 'txns'), 'amount') == 48550.75

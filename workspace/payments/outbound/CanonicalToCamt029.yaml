@@ -1,0 +1,42 @@
+kind: Mapping
+name: payments.outbound.CanonicalToCamt029
+description: >
+  Builds the resolution of investigation (camt.029.001.09) that answers a customer's cancellation
+  request. Per payment: CNCL cancelled, RJCR refused with the reason, PDCR still with the receiving side.
+rules:
+  - set: Document.@xmlns
+    value: "'urn:iso:std:iso:20022:tech:xsd:camt.029.001.09'"
+  - set: Document.RsltnOfInvstgtn.Assgnmt.Id
+    value: answer.id
+  - set: Document.RsltnOfInvstgtn.Assgnmt.Assgnr.Agt.FinInstnId.BICFI
+    value: answer.senderBic
+  - set: Document.RsltnOfInvstgtn.Assgnmt.CreDtTm
+    value: answer.createdAt
+  - set: Document.RsltnOfInvstgtn.RslvdCase.Id
+    value: answer.caseId
+  - set: Document.RsltnOfInvstgtn.Sts.Conf
+    value: answer.status
+  - forEach: entries
+    as: e
+    append: Document.RsltnOfInvstgtn.CxlDtls.TxInfAndSts
+    rules:
+      - set: CxlStsId
+        value: coalesce(e.transactionId, answer.id)
+      - set: OrgnlGrpInf.OrgnlMsgId
+        value: e.originalMsgId
+      - set: OrgnlEndToEndId
+        value: e.endToEndId
+      - set: TxCxlSts
+        value: e.status
+      - set: CxlStsRsnInf.Orgtr.Id.OrgId.AnyBIC
+        when: e.status == 'RJCR'
+        value: answer.senderBic
+      - set: CxlStsRsnInf.Rsn.Cd
+        when: e.status == 'RJCR' and len(e.reasonCode) == 4
+        value: e.reasonCode
+      - set: CxlStsRsnInf.Rsn.Prtry
+        when: e.status == 'RJCR' and len(e.reasonCode) != 4
+        value: e.reasonCode
+      - set: CxlStsRsnInf.AddtlInf
+        when: e.status == 'RJCR'
+        value: left(e.reasonText, 105)

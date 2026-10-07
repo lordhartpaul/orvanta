@@ -1,0 +1,23 @@
+kind: TestCase
+name: tests.Mt940IsRead
+description: "The sample MT940: balances with their sign, three lines with direction, amount and our reference, narrative from field 86."
+target: payments.inbound.Mt940ToStatement
+givenMessage:
+  var: src
+  file: tests/messages/mt940-nostro.fin
+expect:
+  - count(result.statements) == 1
+  - result.statements[0].account == 'NOSTRO-USD'
+  - result.statements[0].statementId == 'STMT-20261005/278/1'
+  - result.statements[0].currency == 'USD'
+  - result.statements[0].openingBalance == 5000000
+  - result.statements[0].closingBalance == 4989487.50
+  - count(result.statements[0].entries) == 3
+  - result.statements[0].entries[0].reference == 'ORVTXN0000000002'
+  - result.statements[0].entries[0].bankReference == 'CHASREF0001'
+  - result.statements[0].entries[0].amount == 12500
+  - result.statements[0].entries[0].creditDebit == 'DBIT'
+  - result.statements[0].entries[0].valueDate == '2026-10-05'
+  - result.statements[0].entries[0].narrative == 'Payment INV-88120 Atlas Drilling Equipment Inc'
+  - result.statements[0].entries[2].creditDebit == 'CRDT'
+  - result.statements[0].openingBalance - 12500 - 12.50 + 2000 == result.statements[0].closingBalance

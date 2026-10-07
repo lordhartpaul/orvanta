@@ -1,0 +1,18 @@
+kind: TestCase
+name: tests.DirectDebitInstructionIsDebulked
+description: "The sample pain.008: the creditor, collection date and sequence type are per batch; each transaction has its debtor and mandate."
+target: rails.sepa.maps.Pain008ToCanonical
+givenMessage:
+  var: src
+  file: tests/messages/pain008-collections.xml
+expect:
+  - result.msgId == 'COLLECT-2026-10-001'
+  - result.declaredSum == 279.90
+  - sumOf(collect(result.batches, 'txns'), 'amount') == 279.90
+  - result.batches[0].sequenceType == 'RCUR'
+  - result.batches[0].requestedDate == '2026-10-07'
+  - result.batches[0].creditor.schemeId == 'DE98ZZZ09999999999'
+  - count(result.batches[0].txns) == 5
+  - result.batches[0].txns[0].mandate.id == 'MND-1001'
+  - result.batches[0].txns[0].debtor.account == 'FR1420041010050500013M02606'
+  - not exists(result.batches[0].txns[0].creditor)

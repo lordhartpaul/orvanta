@@ -1,0 +1,11 @@
+kind: Channel
+name: channels.CorporateMtCancellationInbound
+description: >
+  Requests for cancellation from customers who send MT101 (MT192). A request names the message it
+  cancels by its reference and means every transaction of that message. It is answered with an MT196.
+direction: inbound
+purpose: cancellation
+format: swift.mt
+messageTypes: [MT192]
+mapping: payments.inbound.Mt192ToCancellation
+answerChannel: channels.CorporateMtAnswerOutbound

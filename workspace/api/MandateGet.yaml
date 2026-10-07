@@ -1,0 +1,7 @@
+kind: Api
+name: api.MandateGet
+description: A mandate with its status and the collections made under it.
+method: GET
+path: /mandates/{mandateId}
+permission: payments.view
+target: api.flows.MandateRead

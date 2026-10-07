@@ -1,0 +1,17 @@
+kind: RuleSet
+name: api.rules.AccountLimitRequest
+description: A limit request needs a plausible account and a positive amount.
+rules:
+  - id: ACCOUNT_FORMAT
+    assert: matches(request.path.account, '[A-Za-z0-9]{5,34}')
+    code: AC01
+    message: Account must be 5 to 34 letters or digits
+  - id: LIMIT_POSITIVE
+    assert: exists(request.body.perTransaction) and num(request.body.perTransaction) > 0
+    code: AM01
+    message: perTransaction must be a number greater than zero
+  - id: DAILY_LIMIT_POSITIVE
+    when: exists(request.body.perDay)
+    assert: num(request.body.perDay) >= num(request.body.perTransaction)
+    code: AM01
+    message: perDay must be a number no smaller than perTransaction

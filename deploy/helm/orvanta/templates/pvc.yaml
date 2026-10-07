@@ -1,0 +1,17 @@
+{{- if .Values.dataVolume.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "orvanta.fullname" . }}-data
+  labels:
+    {{- include "orvanta.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    {{- toYaml .Values.dataVolume.accessModes | nindent 4 }}
+  {{- if .Values.dataVolume.storageClassName }}
+  storageClassName: {{ .Values.dataVolume.storageClassName }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.dataVolume.size }}
+{{- end }}

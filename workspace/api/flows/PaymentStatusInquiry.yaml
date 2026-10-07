@@ -1,0 +1,23 @@
+kind: Flow
+name: api.flows.PaymentStatusInquiry
+description: Looks a transaction up and answers with a reduced view of it. Account numbers are not returned.
+steps:
+  - id: lookup
+    type: find
+    dataset: data.Transactions
+    where:
+      id: request.path.id
+    first: true
+    into: txn
+
+  - id: unknown
+    type: end
+    when: not exists(txn)
+    status: NOT_FOUND
+    code: NOT_FOUND
+    message: No transaction with this id
+
+  - id: view
+    type: map
+    ref: api.maps.PaymentStatusView
+    into: response

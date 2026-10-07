@@ -1,0 +1,20 @@
+kind: Channel
+name: channels.ZaRtcReturnOutbound
+description: >
+  Returns of domestic rand payments we received (pacs.004): payments that could not be credited, and
+  refunds. A payment sent on this channel has reached its end: it is RETURNED.
+direction: outbound
+format: iso20022
+messageType: pacs.004.001.09
+mapping: payments.outbound.CanonicalToPacs004
+sentStatus: RETURNED
+bulking:
+  maxTransactions: 50
+  maxWaitSeconds: 3
+destination:
+  type: folder
+  path: outbound/za-rtc-returns
+  extension: xml
+properties:
+  senderBic: ORVAZAJJ
+  scheme: ZA-RTC

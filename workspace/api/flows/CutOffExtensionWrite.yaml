@@ -1,0 +1,27 @@
+kind: Flow
+name: api.flows.CutOffExtensionWrite
+description: Stores a scheme's extended cut-off for one day.
+steps:
+  - id: check
+    type: rules
+    ref: api.rules.CutOffExtensionRequest
+    onViolation: reject
+
+  - id: store
+    type: save
+    dataset: data.CutOffExtensions
+    values:
+      scheme: request.path.scheme
+      date: request.body.date
+      until: request.body.until
+      note: request.body.note
+      updatedBy: request.user
+      updatedAt: now()
+
+  - id: answer
+    type: find
+    dataset: data.CutOffExtensions
+    where:
+      scheme: request.path.scheme
+    first: true
+    into: response

@@ -1,0 +1,13 @@
+kind: TestCase
+name: tests.AnIbanAndASortCodeThatNameDifferentBanksAreRefused
+description: "The sort code inside a UK IBAN must be the sort code given with it."
+target: payments.rules.TransactionValidation
+given:
+  txn:
+    endToEndId: CR-4
+    amount: 10
+    currency: GBP
+    debtor: {account: "4051122334"}
+    creditor: {name: "Someone", account: "GB19LOYD30961700709943", agentCode: "40-05-15", agentBic: LOYDGB2LXXX, country: GB}
+expect:
+  - "'RC01' in result.codes"

@@ -1,0 +1,79 @@
+# Orvanta Pay configuration.
+# Every setting can be overridden per process:
+#   command line   --server.port=8481
+#   environment    ORVANTA_SERVER_PORT=8481
+
+server:
+  port: 8480
+  # HTTPS on the server port from a keystore (PKCS12 or JKS). Without it the server speaks plain HTTP
+  # and TLS must end at a proxy in front; then set behindTlsProxy so that browsers are told to use HTTPS only
+  # and the caller's address is taken from X-Forwarded-For.
+  # tls:
+  #   keystore: config/server.p12
+  #   password: set ORVANTA_SERVER_TLS_PASSWORD instead of writing it here
+  behindTlsProxy: false
+
+# Which services this process runs: all, or a list of
+# api, ingest, debulk, process, bulk, dispatch, acknowledge, cancel, return, report, recover
+units: all
+
+store:
+  type: mongo              # mongo | memory (memory is not durable; for a quick try without a database)
+  uri: mongodb://localhost:27017
+  database: orvanta
+
+bus:
+  type: memory             # memory: all services in one process | rabbit: services in separate processes
+  uri: amqp://localhost:5672
+  consumers: 4             # with rabbit: messages of one service handled in parallel by each process
+
+workspace:
+  dir: workspace           # low-code models; seeds the first deployment
+  syncOnStart: false       # true redeploys the directory at start when it differs (development only: skips maker-checker)
+  writeBack: true          # write an approved model change back to the directory so git matches what is deployed
+
+data:
+  dir: data                # inbound folder (data/inbound), outbound files (data/outbound/...)
+
+schemas:
+  dir: schemas/iso20022    # optional: put <messageType>.xsd here (for example pain.001.001.09.xsd) to enforce schema validation
+
+engine:
+  processingFlow: payments.flows.TransactionProcessing
+
+# single sign-on with an OpenID Connect provider (Keycloak, Entra ID, Okta, ...). The provider authenticates the
+# person; the user, roles and limits stay Orvanta's: a user by the name in the token must exist here and be active.
+sso:
+  enabled: ${env.ORVANTA_SSO_ENABLED:-false}
+  issuer: ${env.ORVANTA_SSO_ISSUER:-}             # discovery at <issuer>/.well-known/openid-configuration
+  clientId: ${env.ORVANTA_SSO_CLIENT_ID:-orvanta-console}
+  clientSecret: ${env.ORVANTA_SSO_CLIENT_SECRET:-}
+  redirectUri: ${env.ORVANTA_SSO_REDIRECT_URI:-http://localhost:8480/api/auth/sso/callback}
+  usernameClaim: preferred_username              # the claim that names the Orvanta user
+  label: Sign in with single sign-on             # the button on the sign-in page
+
+security:
+  # jwtSecret: set ORVANTA_SECURITY_JWTSECRET in every process when running more than one process
+  tokenMinutes: 60
+  maxFailedLogins: 5       # wrong passwords before a user is locked
+  lockMinutes: 15          # how long that lock lasts
+  loginAttempts: 10        # failed sign-ins from one address, or for one user name, ...
+  loginWindowSeconds: 300  # ... within this time before further attempts are refused
+  seedFile: config/seed-users.yaml
+  # hosts that Connector models and HTTP destinations may call, comma separated ("*.bank.example" covers sub-domains).
+  # Empty allows any host except cloud metadata addresses. Set it outside development.
+  connectorHosts: ""
+  # integrityKey: set ORVANTA_SECURITY_INTEGRITYKEY to seal deployments; a deployment changed directly in the
+  # database is then refused. Existing deployments must be redeployed once after the key is first set.
+
+simulator:
+  enabled: true            # built-in stand-ins for the external systems. Turn off outside development.
+  allowRemote: false       # the simulator has no authentication, so it answers only this machine
+
+# relational data sources for DataSet models that name a 'table' and a 'datasource'. The JDBC driver is put on the
+# classpath: java -cp orvanta-pay-0.1.0-all.jar;lib/mysql-connector-j.jar io.orvanta.pay.OrvantaServer ...
+# The password is best set in the environment as ORVANTA_DATASOURCES_<NAME>_PASSWORD (upper case name).
+# datasources:
+#   customers:
+#     url: jdbc:mysql://db.bank.example:3306/customers
+#     username: orvanta

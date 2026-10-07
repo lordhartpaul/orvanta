@@ -1,0 +1,30 @@
+kind: Flow
+name: api.flows.DebitBlockWrite
+description: >
+  Stores what a customer wants for one creditor: with maxAmount the creditor may collect up to that
+  amount at a time, without it the creditor may not collect at all.
+steps:
+  - id: check
+    type: rules
+    ref: api.rules.DebitBlockRequest
+    onViolation: reject
+
+  - id: store
+    type: save
+    dataset: data.DebitBlocks
+    values:
+      id: concat(request.path.account, ':', request.path.creditorId)
+      debtorAccount: request.path.account
+      creditorId: request.path.creditorId
+      maxAmount: num(request.body.maxAmount)
+      note: request.body.note
+      updatedBy: request.user
+      updatedAt: now()
+
+  - id: answer
+    type: find
+    dataset: data.DebitBlocks
+    where:
+      id: concat(request.path.account, ':', request.path.creditorId)
+    first: true
+    into: response

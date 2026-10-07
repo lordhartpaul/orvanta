@@ -1,0 +1,19 @@
+kind: TestCase
+name: tests.AnEarlierAnswerIsNotAskedAgain
+description: A check that was already answered is reused when the flow runs again; the mock would now say REVIEW.
+target: payments.flows.TransactionProcessing
+given:
+  txn:
+    id: ORVTXN0000000007
+    endToEndId: CHK-1
+    amount: 250
+    currency: ZAR
+    debtor: {name: "Karoo Mining Supplies", account: "4051122334"}
+    creditor: {name: "Thandiwe Mokoena", account: "62011223344", agentBic: FIRNZAJJ}
+    checks:
+      fraud: {status: CLEAR, score: 12}
+mocks:
+  connectors.FraudCheck: {status: REVIEW}
+expect:
+  - result.status == 'ROUTED'
+  - txn.checks.fraud.score == 12

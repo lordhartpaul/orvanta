@@ -1,0 +1,24 @@
+kind: TestCase
+name: tests.IncomingDomesticPaymentInAnotherCurrencyGoesBack
+description: "The domestic rail carries rand only: a payment in euro goes back with AM03 before the account is asked about."
+target: payments.flows.IncomingDomesticProcessing
+given:
+  txn:
+    id: ORVTXN0000000997
+    paymentType: IN
+    channelIn: channels.ZaRtcInbound
+    endToEndId: SCHOOL-FEES-T4
+    originalTxId: RTCTX-1
+    originalMsgId: RTC-IN-1
+    amount: 6100.00
+    currency: EUR
+    debtor: {name: "Nomsa Zulu", account: "62077889900", agentBic: FIRNZAJJ}
+    creditor: {name: "Karoo Mining Supplies (Pty) Ltd", account: "4051122334"}
+mocks:
+  connectors.AccountLookup: {status: ACTIVE, currency: ZAR}
+  connectors.SanctionsScreening: {status: CLEAR}
+  connectors.AccountPosting: {status: POSTED, postingId: P-Z}
+expect:
+  - result.status == 'REJECTED'
+  - result.code == 'AM03'
+  - not exists(txn.checks.account)

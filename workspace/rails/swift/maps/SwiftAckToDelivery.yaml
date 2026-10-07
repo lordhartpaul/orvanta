@@ -1,0 +1,16 @@
+kind: Mapping
+name: rails.swift.maps.SwiftAckToDelivery
+description: >
+  Reads the network's acknowledgement of a message we sent, as the codec hands it over: whether it was
+  accepted, the error code of a NAK, the network time, and the reference (field 20) of our message.
+rules:
+  - set: accepted
+    value: src.accepted
+  - set: code
+    value: src.code
+  - set: at
+    value: src.at
+  - set: reference
+    value: src.reference
+  - set: copyType
+    value: src.copyType

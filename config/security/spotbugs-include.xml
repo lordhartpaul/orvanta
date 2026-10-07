@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- What the security build looks for: security weaknesses (FindSecBugs) and outright bugs.
+     Style, performance and "exposes internal representation" hints are left to code review:
+     records of this platform carry mutable data by design. -->
+<FindBugsFilter>
+    <Match>
+        <Bug category="SECURITY"/>
+    </Match>
+    <Match>
+        <Bug category="CORRECTNESS"/>
+    </Match>
+    <Match>
+        <Bug category="MT_CORRECTNESS"/>
+    </Match>
+</FindBugsFilter>

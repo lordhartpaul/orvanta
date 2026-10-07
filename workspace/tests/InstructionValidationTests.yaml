@@ -1,0 +1,16 @@
+kind: TestCase
+name: tests.InstructionControlSumMismatchIsRejected
+description: A declared control sum that differs from the transactions is reported.
+target: payments.rules.InstructionValidation
+given:
+  instr:
+    msgId: M-1
+    declaredCount: 2
+    declaredSum: 300
+    batches:
+      - txns:
+          - {amount: 100}
+          - {amount: 150}
+expect:
+  - result.count == 1
+  - result.codes[0] == 'IN04'

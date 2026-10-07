@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.009.001.07">
+  <MndtInitnReq>
+    <GrpHdr>
+      <MsgId>MNDT-2026-10-06-001</MsgId>
+      <CreDtTm>2026-10-06T08:00:00Z</CreDtTm>
+      <InitgPty><Id><OrgId><AnyBIC>DEUTDEFF</AnyBIC></OrgId></Id></InitgPty>
+    </GrpHdr>
+    <Mndt>
+      <MndtId>MND-MSG-1001</MndtId>
+      <MndtReqId>REQ-1001</MndtReqId>
+      <Tp><SvcLvl><Cd>SEPA</Cd></SvcLvl><LclInstrm><Cd>CORE</Cd></LclInstrm></Tp>
+      <Ocrncs><SeqTp>RCUR</SeqTp><Frqcy><Tp>MNTH</Tp></Frqcy></Ocrncs>
+      <DtOfSgntr>2026-10-01</DtOfSgntr>
+      <Cdtr><Nm>Nordlicht Energie GmbH</Nm></Cdtr>
+      <CdtrAcct><Id><IBAN>DE89370400440532013000</IBAN></Id></CdtrAcct>
+      <CdtrAgt><FinInstnId><BICFI>DEUTDEFF</BICFI></FinInstnId></CdtrAgt>
+      <CdtrSchmeId><Id><PrvtId><Othr><Id>DE98ZZZ09999999999</Id><SchmeNm><Prtry>SEPA</Prtry></SchmeNm></Othr></PrvtId></Id></CdtrSchmeId>
+      <Dbtr><Nm>Lukas Schmidt</Nm></Dbtr>
+      <DbtrAcct><Id><IBAN>DE08500105175400000042</IBAN></Id></DbtrAcct>
+      <DbtrAgt><FinInstnId><BICFI>ORVADEFF</BICFI></FinInstnId></DbtrAgt>
+    </Mndt>
+  </MndtInitnReq>
+</Document>

@@ -1,0 +1,26 @@
+kind: RuleSet
+name: rails.sepa.rules.IncomingDebit
+description: >
+  What a received direct debit collection must have before the account is looked at. A collection
+  that fails is sent back with the code of the first rule that failed (ISO 20022 return reasons).
+rules:
+  - id: DEBTOR_ACCOUNT_IS_IBAN
+    assert: isIban(txn.debtor.account)
+    code: AC01
+    message: The debtor account is missing or is not a valid IBAN
+  - id: AMOUNT_POSITIVE
+    assert: exists(txn.amount) and txn.amount > 0
+    code: AM02
+    message: The amount is missing or not greater than zero
+  - id: CURRENCY_EURO
+    assert: txn.currency == 'EUR'
+    code: AM03
+    message: A SEPA Direct Debit is in euro
+  - id: MANDATE_NAMED
+    assert: exists(txn.mandate.id) and exists(txn.creditor.schemeId)
+    code: MD02
+    message: The mandate reference or the creditor identifier is missing
+  - id: SEQUENCE_TYPE_KNOWN
+    assert: txn.sequenceType in ['FRST', 'RCUR', 'FNAL', 'OOFF']
+    code: FF01
+    message: The sequence type must be FRST, RCUR, FNAL or OOFF

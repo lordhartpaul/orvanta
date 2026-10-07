@@ -1,0 +1,12 @@
+{
+  "name": "orvanta-console-tests",
+  "private": true,
+  "description": "Browser tests of the Orvanta Console. They start their own server on port 8590 with an in-memory store.",
+  "scripts": {
+    "test": "playwright test"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
+    "@playwright/test": "^1.48.0"
+  }
+}

@@ -1,0 +1,10 @@
+kind: ReferenceTable
+name: rails.swift.reference.IncomingCharges
+description: >
+  What we charge for a payment received over SWIFT, by the currency of the account it is credited to,
+  and the income account the charge is booked on. A currency without a row is not charged. Sample data.
+key: currency
+rows:
+  - {currency: ZAR, fee: 125.00, feeAccount: "9200000001"}
+  - {currency: EUR, fee: 7.50, feeAccount: "9200000002"}
+  - {currency: USD, fee: 8.00, feeAccount: "9200000003"}

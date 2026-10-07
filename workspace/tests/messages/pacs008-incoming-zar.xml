@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pacs.008.001.08">
+  <FIToFICstmrCdtTrf>
+    <GrpHdr>
+      <MsgId>RTC-IN-2026-10-06-001</MsgId>
+      <CreDtTm>2026-10-06T09:00:00</CreDtTm>
+      <NbOfTxs>2</NbOfTxs>
+      <TtlIntrBkSttlmAmt Ccy="ZAR">7350.00</TtlIntrBkSttlmAmt>
+      <IntrBkSttlmDt>2026-10-06</IntrBkSttlmDt>
+      <SttlmInf><SttlmMtd>CLRG</SttlmMtd><ClrSys><Prtry>ZA-RTC</Prtry></ClrSys></SttlmInf>
+      <InstgAgt><FinInstnId><BICFI>FIRNZAJJ</BICFI></FinInstnId></InstgAgt>
+    </GrpHdr>
+    <CdtTrfTxInf>
+      <PmtId><InstrId>RTCINS-1</InstrId><EndToEndId>SCHOOL-FEES-T4</EndToEndId><TxId>RTCTX-1</TxId></PmtId>
+      <IntrBkSttlmAmt Ccy="ZAR">6100.00</IntrBkSttlmAmt>
+      <ChrgBr>SLEV</ChrgBr>
+      <Dbtr><Nm>Nomsa Zulu</Nm></Dbtr>
+      <DbtrAcct><Id><Othr><Id>62077889900</Id></Othr></Id></DbtrAcct>
+      <DbtrAgt><FinInstnId><BICFI>FIRNZAJJ</BICFI></FinInstnId></DbtrAgt>
+      <CdtrAgt><FinInstnId><BICFI>ORVAZAJJ</BICFI></FinInstnId></CdtrAgt>
+      <Cdtr><Nm>Karoo Mining Supplies (Pty) Ltd</Nm></Cdtr>
+      <CdtrAcct><Id><Othr><Id>4051122334</Id></Othr></Id></CdtrAcct>
+      <RmtInf><Ustrd>School fees term 4</Ustrd></RmtInf>
+    </CdtTrfTxInf>
+    <CdtTrfTxInf>
+      <PmtId><InstrId>RTCINS-2</InstrId><EndToEndId>DEPOSIT-BACK</EndToEndId><TxId>RTCTX-2</TxId></PmtId>
+      <IntrBkSttlmAmt Ccy="ZAR">1250.00</IntrBkSttlmAmt>
+      <ChrgBr>SLEV</ChrgBr>
+      <Dbtr><Nm>David Naidoo</Nm></Dbtr>
+      <DbtrAcct><Id><Othr><Id>62033445566</Id></Othr></Id></DbtrAcct>
+      <DbtrAgt><FinInstnId><BICFI>FIRNZAJJ</BICFI></FinInstnId></DbtrAgt>
+      <CdtrAgt><FinInstnId><BICFI>ORVAZAJJ</BICFI></FinInstnId></CdtrAgt>
+      <Cdtr><Nm>Closed Account Trading</Nm></Cdtr>
+      <CdtrAcct><Id><Othr><Id>99911223344</Id></Othr></Id></CdtrAcct>
+      <RmtInf><Ustrd>Deposit</Ustrd></RmtInf>
+    </CdtTrfTxInf>
+  </FIToFICstmrCdtTrf>
+</Document>

@@ -1,0 +1,75 @@
+kind: Mapping
+name: payments.outbound.CanonicalToMt103
+description: >
+  Builds the SWIFT messages of a routed cross-border transaction. Field order is the order of the rules.
+  DIRECT and COVER: the MT103 goes to the creditor's bank. SERIAL: it goes to our correspondent and
+  names the creditor's bank in field 57A. COVER adds an MT202 COV to the correspondent, with the same
+  UETR and the customer details in its second sequence.
+rules:
+  - forEach: txns
+    as: t
+    rules:
+      - let: serial
+        value: t.route.settlementMethod == 'SERIAL'
+      - let: cover
+        value: t.route.settlementMethod == 'COVER'
+      - append: messages
+        rules:
+          - set: type
+            value: "'103'"
+          - set: sender
+            value: bulk.senderBic
+          - set: receiver
+            value: "serial ? t.route.correspondentBic : t.creditor.agentBic"
+          - set: b3.121
+            value: t.uetr
+          - field: 20
+            value: t.id
+          - field: 23B
+            value: "'CRED'"
+          - field: 32A
+            value: concat(fmtDate(t.valueDate, 'yyMMdd'), t.currency, mtAmount(t.amount))
+          - field: 50K
+            value: concat('/', t.debtor.account, '\n', left(t.debtor.name, 35))
+          # cover: the bank through which we reimburse the receiver
+          - field: 53A
+            when: cover
+            value: t.route.correspondentBic
+          # serial: the creditor's bank, for the correspondent to pass the payment on to
+          - field: 57A
+            when: serial
+            value: t.creditor.agentBic
+          - field: 59
+            value: concat('/', t.creditor.account, '\n', left(t.creditor.name, 35))
+          - field: 70
+            value: left(t.remittance, 35)
+          - field: 71A
+            value: "t.chargeBearer == 'DEBT' ? 'OUR' : t.chargeBearer == 'CRED' ? 'BEN' : 'SHA'"
+      - append: messages
+        when: cover
+        rules:
+          - set: type
+            value: "'202'"
+          - set: sender
+            value: bulk.senderBic
+          - set: receiver
+            value: t.route.correspondentBic
+          - set: b3.119
+            value: "'COV'"
+          - set: b3.121
+            value: t.uetr
+          # a reference of its own (16 characters); field 21 ties it to the MT103
+          - field: 20
+            value: concat('C', substr(t.id, 1))
+          - field: 21
+            value: t.id
+          - field: 32A
+            value: concat(fmtDate(t.valueDate, 'yyMMdd'), t.currency, mtAmount(t.amount))
+          - field: 58A
+            value: t.creditor.agentBic
+          - field: 50K
+            value: concat('/', t.debtor.account, '\n', left(t.debtor.name, 35))
+          - field: 59
+            value: concat('/', t.creditor.account, '\n', left(t.creditor.name, 35))
+          - field: 70
+            value: left(t.remittance, 35)

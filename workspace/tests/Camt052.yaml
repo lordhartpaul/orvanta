@@ -1,0 +1,73 @@
+kind: TestCase
+name: tests.AccountReportListsBookingsWithTheirSums
+description: "A camt.052 for one account and a day: a payment received, a payment sent, and that payment coming back."
+target: payments.outbound.CanonicalToCamt052
+given:
+  report: {id: ORVRPT0000000001, createdAt: "2026-10-07T00:01:00Z", account: "DE08500105175400000042", owner: Rheinland Pumpen GmbH, currency: EUR,
+           senderBic: ORVADEFF, from: "2026-10-06T00:00:00Z", to: "2026-10-07T00:00:00Z", count: 3, creditCount: 2, creditSum: 1150.00, debitCount: 1, debitSum: "200.00"}
+  entries:
+    - kind: CREDIT
+      creditDebit: CRDT
+      reversal: false
+      collection: false
+      family: RCDT
+      subFamily: ESCT
+      reference: ORVTXN0000000900
+      bookedOn: "2026-10-06"
+      amount: 950.00
+      currency: EUR
+      txn:
+        id: ORVTXN0000000900
+        endToEndId: RENT-OCT
+        amount: 950.00
+        currency: EUR
+        remittance: Rent October
+        debtor: {name: Camille Laurent, account: FR1420041010050500013M02606}
+        creditor: {name: Rheinland Pumpen GmbH, account: DE08500105175400000042}
+    - kind: PAYMENT
+      creditDebit: DBIT
+      reversal: false
+      collection: false
+      family: ICDT
+      subFamily: ESCT
+      reference: ORVTXN0000000910
+      bookedOn: "2026-10-06"
+      amount: 200.00
+      currency: EUR
+      txn:
+        id: ORVTXN0000000910
+        endToEndId: INV-4411
+        amount: 200.00
+        currency: EUR
+        debtor: {name: Rheinland Pumpen GmbH, account: DE08500105175400000042}
+        creditor: {name: Atelier Dubois, account: FR7630006000011234567890189}
+    - kind: PAYMENT_REVERSAL
+      creditDebit: CRDT
+      reversal: true
+      collection: false
+      family: ICDT
+      subFamily: ESCT
+      reference: ORVTXN0000000910-R
+      bookedOn: "2026-10-06"
+      amount: 200.00
+      currency: EUR
+      txn:
+        id: ORVTXN0000000910
+        endToEndId: INV-4411
+        amount: 200.00
+        currency: EUR
+        debtor: {name: Rheinland Pumpen GmbH, account: DE08500105175400000042}
+        creditor: {name: Atelier Dubois, account: FR7630006000011234567890189}
+        return: {reasonCode: AC04, reasonText: Account closed}
+expect:
+  - result.Document.BkToCstmrAcctRpt.Rpt.Acct.Id.IBAN == 'DE08500105175400000042'
+  - result.Document.BkToCstmrAcctRpt.Rpt.FrToDt.FrDtTm == '2026-10-06T00:00:00Z'
+  - result.Document.BkToCstmrAcctRpt.Rpt.TxsSummry.TtlCdtNtries.NbOfNtries == '2'
+  - result.Document.BkToCstmrAcctRpt.Rpt.TxsSummry.TtlDbtNtries.Sum == '200.00'
+  - not exists(result.Document.BkToCstmrAcctRpt.Rpt.Bal)
+  - result.Document.BkToCstmrAcctRpt.Rpt.Ntry[0].CdtDbtInd == 'CRDT'
+  - result.Document.BkToCstmrAcctRpt.Rpt.Ntry[1].CdtDbtInd == 'DBIT'
+  - result.Document.BkToCstmrAcctRpt.Rpt.Ntry[1].BkTxCd.Domn.Fmly.Cd == 'ICDT'
+  - result.Document.BkToCstmrAcctRpt.Rpt.Ntry[1].NtryDtls.TxDtls.RltdPties.Cdtr.Pty.Nm == 'Atelier Dubois'
+  - result.Document.BkToCstmrAcctRpt.Rpt.Ntry[2].RvslInd == 'true'
+  - result.Document.BkToCstmrAcctRpt.Rpt.Ntry[2].NtryDtls.TxDtls.RtrInf.Rsn.Cd == 'AC04'

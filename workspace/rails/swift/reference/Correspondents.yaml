@@ -1,0 +1,10 @@
+kind: ReferenceTable
+name: rails.swift.Correspondents
+description: >
+  Our correspondent per currency: the bank where we hold the nostro account through which
+  payments in that currency are settled. Sample data.
+key: currency
+rows:
+  - {currency: USD, correspondentBic: CHASUS33, nostroAccount: NOSTRO-USD}
+  - {currency: EUR, correspondentBic: DEUTDEFF, nostroAccount: NOSTRO-EUR}
+  - {currency: GBP, correspondentBic: BARCGB22, nostroAccount: NOSTRO-GBP}

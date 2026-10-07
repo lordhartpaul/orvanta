@@ -1,0 +1,48 @@
+kind: RuleSet
+name: rails.sepa.rules.DirectDebit
+description: Scheme rules of SEPA Core Direct Debit that a collection must meet before it is sent.
+rules:
+  - id: CURRENCY_EURO
+    assert: txn.currency == 'EUR'
+    code: AM03
+    message: SEPA direct debits are in euro
+  - id: AMOUNT_RANGE
+    assert: exists(txn.amount) and txn.amount >= 0.01 and txn.amount <= 999999999.99
+    code: AM02
+    message: Amount must be between 0.01 and 999,999,999.99 euro
+  - id: CREDITOR_IBAN
+    assert: isIban(txn.creditor.account) and len(txn.creditor.account) == lookup('rails.sepa.Countries', left(txn.creditor.account, 2)).ibanLength
+    code: AC03
+    message: Creditor account is not a valid IBAN of a SEPA country
+  - id: DEBTOR_IBAN
+    assert: isIban(txn.debtor.account) and len(txn.debtor.account) == lookup('rails.sepa.Countries', left(txn.debtor.account, 2)).ibanLength
+    code: AC02
+    message: Debtor account is not a valid IBAN of a SEPA country
+  - id: CREDITOR_IDENTIFIER
+    assert: matches(txn.creditor.schemeId, '[A-Z]{2}[0-9]{2}[A-Z0-9]{3}[A-Z0-9]{1,28}')
+    code: BE16
+    message: The creditor identifier is missing or malformed
+  - id: MANDATE_REFERENCE
+    assert: exists(txn.mandate.id) and len(txn.mandate.id) <= 35 and isSepaText(txn.mandate.id)
+    code: MD02
+    message: The mandate reference is missing, longer than 35 characters or uses characters outside the SEPA character set
+  - id: SEQUENCE_TYPE
+    assert: txn.sequenceType in ['FRST', 'RCUR', 'FNAL', 'OOFF']
+    code: AG02
+    message: Sequence type must be FRST, RCUR, FNAL or OOFF
+  - id: COLLECTION_DATE
+    assert: isDate(txn.requestedDate)
+    code: DT01
+    message: The requested collection date is missing or not a date
+  - id: END_TO_END_ID
+    assert: exists(txn.endToEndId) and len(txn.endToEndId) <= 35 and isSepaText(txn.endToEndId)
+    code: CH16
+    message: End-to-end id is missing, longer than 35 characters or uses characters outside the SEPA character set
+  - id: NAMES
+    assert: exists(txn.debtor.name) and exists(txn.creditor.name) and len(txn.debtor.name) <= 70 and isSepaText(txn.debtor.name) and isSepaText(txn.creditor.name)
+    code: CH16
+    message: Debtor and creditor names are required, limited to 70 characters and to the SEPA character set
+  - id: REMITTANCE
+    assert: len(txn.remittance) <= 140 and isSepaText(txn.remittance)
+    code: CH16
+    message: Remittance information is longer than 140 characters or uses characters outside the SEPA character set

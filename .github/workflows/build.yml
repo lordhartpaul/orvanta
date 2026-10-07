@@ -1,0 +1,127 @@
+# Build, test and package on every push and pull request; build the container image as well.
+# A tag like v0.1.0 additionally publishes the packages as a release.
+name: build
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    services:
+      # the queue transport test runs against a real broker
+      rabbitmq:
+        image: rabbitmq:3.13
+        ports: ["5672:5672"]
+        options: >-
+          --health-cmd "rabbitmq-diagnostics -q ping"
+          --health-interval 10s --health-timeout 10s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: maven
+
+      # compiles, runs every Java test and every model test, builds the packages, checksums and the SBOM
+      - name: Build and test
+        run: ./mvnw -B -Prelease install -Dorvanta.it.rabbit=amqp://guest:guest@localhost:5672
+
+      # fails on any security or correctness finding of SpotBugs with FindSecBugs that was not reviewed and accepted
+      - name: Static security analysis
+        run: ./mvnw -B -Psecurity verify -DskipTests
+
+      # fails on any known vulnerability in a library we ship (the SBOM against the OSV database)
+      - name: Dependency scan (OSV)
+        run: python3 bin/osv-scan.py target/bom.json
+
+      # fails on a private key, a cloud or API token, or a password written out in configuration or a model
+      - name: Secret scan
+        run: python3 bin/secret-scan.py .
+
+      # fails on a known vulnerability with a CVSS score of 7 or more in a library we ship
+      - name: Dependency scan (NVD)
+        env:
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+        run: ./mvnw -B -Pdependency-scan verify -DskipTests
+
+      - name: Model tests through the packaged command line
+        run: java -cp orvanta-pay/target/orvanta-pay-*-all.jar io.orvanta.forge.ForgeCli test workspace
+
+      - name: Container image
+        run: docker build -t orvanta/orvanta-pay:${{ github.sha }} .
+
+      # fails on a known vulnerability of high or critical severity in the image's operating system packages or
+      # the libraries it ships, with a fix available; the SBOM scan above covers the Java libraries already
+      - name: Image scan (Trivy)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: orvanta/orvanta-pay:${{ github.sha }}
+          format: table
+          exit-code: "1"
+          ignore-unfixed: true
+          severity: HIGH,CRITICAL
+
+      # passive scan of the running application for missing headers, cookie and content problems
+      - name: Dynamic scan (OWASP ZAP baseline)
+        env:
+          ORVANTA_SECURITY_BOOTSTRAPPASSWORD: ${{ secrets.CI_ADMIN_PASSWORD }}
+        run: |
+          java -jar orvanta-pay/target/orvanta-pay-*-all.jar --config=config/orvanta.yaml --store.type=memory --simulator.enabled=false &
+          for i in $(seq 1 60); do curl -fsS http://localhost:8480/api/health && break; sleep 1; done
+          docker run --rm --network host -v "$PWD/target:/zap/wrk:rw" ghcr.io/zaproxy/zaproxy:stable \
+            zap-baseline.py -t http://localhost:8480 -J zap-baseline.json -r zap-baseline.html
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Browser tests of the Console
+        working-directory: console-tests
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+          npx playwright test
+
+      # every use case of the catalogue must be proven by passing tests, and every test must belong to a use case
+      - name: Use-case report
+        run: |
+          pip install pyyaml
+          python3 bin/test-report.py
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: orvanta-packages
+          path: |
+            orvanta-dist/target/orvanta-*.zip
+            orvanta-dist/target/orvanta-*.tar.gz
+            orvanta-dist/target/*.sha256
+            target/bom.json
+            target/test-report.md
+          if-no-files-found: error
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: orvanta-packages
+          path: packages
+      - name: Publish the packages as a release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          gh release create "${{ github.ref_name }}" --repo "${{ github.repository }}" --generate-notes
+          $(find packages -type f)

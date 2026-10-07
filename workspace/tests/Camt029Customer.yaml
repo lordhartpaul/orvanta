@@ -1,0 +1,18 @@
+kind: TestCase
+name: tests.CancellationAnswerSaysWhatBecameOfEachPayment
+description: "The camt.029 to the customer: one payment cancelled, one refused with the reason, and one status for the whole request."
+target: payments.outbound.CanonicalToCamt029
+given:
+  answer: {id: ORVOUT0000000130, createdAt: "2026-10-06T10:00:00Z", caseId: CXL-2026-10-001, status: PACR, senderBic: ORVAZAJJ, count: 2}
+  entries:
+    - {status: CNCL, endToEndId: SAL-0001, originalMsgId: SALARY-2026-10-001, transactionId: ORVTXN0000000001}
+    - {status: RJCR, endToEndId: SAL-0009, originalMsgId: SALARY-2026-10-001, reasonCode: NOOR, reasonText: no transaction SAL-0009 in message SALARY-2026-10-001}
+expect:
+  - result.Document.RsltnOfInvstgtn.RslvdCase.Id == 'CXL-2026-10-001'
+  - result.Document.RsltnOfInvstgtn.Sts.Conf == 'PACR'
+  - result.Document.RsltnOfInvstgtn.CxlDtls.TxInfAndSts[0].TxCxlSts == 'CNCL'
+  - result.Document.RsltnOfInvstgtn.CxlDtls.TxInfAndSts[0].OrgnlEndToEndId == 'SAL-0001'
+  - not exists(result.Document.RsltnOfInvstgtn.CxlDtls.TxInfAndSts[0].CxlStsRsnInf)
+  - result.Document.RsltnOfInvstgtn.CxlDtls.TxInfAndSts[1].TxCxlSts == 'RJCR'
+  - result.Document.RsltnOfInvstgtn.CxlDtls.TxInfAndSts[1].CxlStsRsnInf.Rsn.Cd == 'NOOR'
+  - result.Document.RsltnOfInvstgtn.CxlDtls.TxInfAndSts[1].CxlStsId == 'ORVOUT0000000130'

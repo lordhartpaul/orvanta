@@ -1,0 +1,13 @@
+kind: TestCase
+name: tests.Mt192NamesTheMessageToCancel
+description: "An MT192 from a customer: the reference of the MT101 it cancels, who asks, and why."
+target: payments.inbound.Mt192ToCancellation
+givenMessage:
+  var: src
+  file: tests/messages/mt192-cancel-suppliers.fin
+expect:
+  - result.msgId == 'CXL-SUPPLIERS-1'
+  - result.senderBic == 'KAROZAJJ'
+  - result.entries[0].originalMsgId == 'SUPPLIERS-1004'
+  - not exists(result.entries[0].endToEndId)
+  - result.entries[0].reasonText == 'PLEASE CANCEL, SENT IN ERROR'

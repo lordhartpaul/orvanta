@@ -1,0 +1,24 @@
+kind: TestCase
+name: tests.IncomingPaymentIsCreditedToTheCustomer
+description: "A received credit transfer for an open account: the account is credited against the settlement account."
+target: rails.sepa.flows.IncomingCreditProcessing
+given:
+  txn:
+    id: ORVTXN0000000900
+    paymentType: IN
+    channelIn: rails.sepa.SctInbound
+    endToEndId: RENT-OCT
+    originalTxId: SNDTX-1
+    originalMsgId: SND-MSG-1
+    amount: 950.00
+    currency: EUR
+    debtor: {name: "Camille Laurent", account: "FR1420041010050500013M02606", agentBic: BNPAFRPP}
+    creditor: {name: "Rheinland Pumpen GmbH", account: "DE08500105175400000042"}
+mocks:
+  connectors.AccountLookup: {status: ACTIVE, currency: EUR}
+  connectors.SanctionsScreening: {status: CLEAR}
+  connectors.AccountPosting: {status: POSTED, postingId: P-1}
+expect:
+  - result.status == 'CREDITED'
+  - txn.posting.postingId == 'P-1'
+  - txn.checks.account.status == 'ACTIVE'

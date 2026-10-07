@@ -1,0 +1,16 @@
+kind: Channel
+name: channels.ConsoleInitiation
+description: >
+  Payments a signed-in person initiates from the Console form (JSON, message type payment.initiation).
+  A payment arrives here only once a second person has approved it; nothing arrives from outside, so
+  the channel has no transport and a file posted to /api/inbound cannot name it.
+direction: inbound
+purpose: instruction
+format: json
+messageTypes: [payment.initiation]
+mapping: payments.inbound.ConsoleInitiationToCanonical
+validation: payments.rules.InstructionValidation
+# only the Console form (through an approved request) delivers to this channel
+consoleOnly: true
+duplicates: HOLD
+heldExpiryDays: 10

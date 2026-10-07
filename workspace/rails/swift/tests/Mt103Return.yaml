@@ -1,0 +1,27 @@
+kind: TestCase
+name: tests.Mt103ReturnSwapsThePartiesAndSaysWhy
+description: "The return of a received MT103: back to the sending bank, parties swapped, field 72 with the reason and the original reference."
+target: rails.swift.maps.CanonicalToMt103Return
+clock: "2026-10-07T08:00:00Z"
+given:
+  bulk: {msgId: ORVOUT0000000099, senderBic: ORVAZAJJ, count: 1}
+  txns:
+    - id: ORVTXN0000000971
+      originalTxId: CHASE-REF-0003
+      sendingAgentBic: CHASUS33
+      amount: 9100.50
+      currency: ZAR
+      debtor: {name: "Overseas Supplier Inc", account: "000987654321"}
+      creditor: {name: "Closed Account Trading", account: "99911223344"}
+      return: {reasonCode: AC04, reasonText: The beneficiary account is closed, requestedBy: application}
+expect:
+  - result.messages[0].type == '103'
+  - result.messages[0].receiver == 'CHASUS33'
+  - result.messages[0].sender == 'ORVAZAJJ'
+  - mtField(result.messages[0], '20') == 'ORVTXN0000000971'
+  - startsWith(mtField(result.messages[0], '32A'), '261007ZAR9100,5')
+  - mtName(mtField(result.messages[0], '50K')) == 'Closed Account Trading'
+  - mtAccount(mtField(result.messages[0], '59')) == '000987654321'
+  - mtLine(mtField(result.messages[0], '72'), 1) == '/RETN/59/'
+  - mtLine(mtField(result.messages[0], '72'), 2) == '/AC04/'
+  - mtLine(mtField(result.messages[0], '72'), 3) == '/MREF/CHASE-REF-0003'

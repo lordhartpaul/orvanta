@@ -1,0 +1,25 @@
+kind: TestCase
+name: tests.IncomingSwiftPaymentInTheAccountsCurrencyIsCreditedAsReceived
+description: "The account is in rand and so is the payment: credited as received, no rate asked for."
+target: rails.swift.flows.IncomingSwiftProcessing
+given:
+  txn:
+    id: ORVTXN0000000970
+    paymentType: IN
+    channelIn: rails.swift.Mt103Inbound
+    endToEndId: CHASE-REF-0002
+    originalTxId: CHASE-REF-0002
+    sendingAgentBic: CHASUS33
+    amount: 1200.00
+    currency: ZAR
+    debtor: {name: "Atlas Drilling Equipment Inc", account: "000123456789", agentBic: CHASUS33}
+    creditor: {name: "Pieter van der Merwe", account: "62055667788"}
+mocks:
+  connectors.AccountLookup: {status: ACTIVE, currency: ZAR}
+  connectors.SanctionsScreening: {status: CLEAR}
+  connectors.AccountPosting: {status: POSTED, postingId: P-5}
+  connectors.FxRates: {rate: 18.50}
+expect:
+  - result.status == 'CREDITED'
+  - not exists(txn.fx)
+  - txn.posting.postingId == 'P-5'

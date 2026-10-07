@@ -1,0 +1,16 @@
+kind: TestCase
+name: tests.Mt196AnswersWithOneStatusAndACount
+description: "The MT196 to the customer: the reference of the request, the status as a code word, and how many transactions it covers."
+target: payments.outbound.CanonicalToMt196
+given:
+  answer: {id: ORVOUT0000000131, caseId: CXL-SUPPLIERS-1, status: CNCL, count: 2, senderBic: ORVAZAJJ, to: KAROZAJJ}
+  entries:
+    - {status: CNCL, endToEndId: INV-88120, originalMsgId: SUPPLIERS-1004}
+    - {status: CNCL, endToEndId: INV-55071, originalMsgId: SUPPLIERS-1004}
+expect:
+  - result.type == '196'
+  - result.receiver == 'KAROZAJJ'
+  - mtField(result, '21') == 'CXL-SUPPLIERS-1'
+  - mtLine(mtField(result, '76'), 1) == '/CNCL/'
+  - mtLine(mtField(result, '76'), 2) == '2 TRANSACTION(S) OF SUPPLIERS-1004'
+  - not exists(mtField(result, '77A'))

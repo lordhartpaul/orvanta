@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Findings that were reviewed and accepted, each with the reason. Nothing is excluded without one.
+     Reviewed 2026-10-04. Review again when the code a finding points at changes. -->
+<FindBugsFilter>
+
+    <!-- REDOS. Each flagged expression is a list of segments separated by a fixed character that the
+         segment itself cannot contain (dotted names, slash-separated paths, ${env.NAME} placeholders),
+         so there is one way to match and no backtracking blow-up. The input is model text, which only
+         users holding studio.edit can submit and which is size-limited by the API. -->
+    <Match>
+        <Bug pattern="REDOS"/>
+        <Or>
+            <Class name="io.orvanta.forge.Generator"/>
+            <Class name="io.orvanta.forge.ModelSource"/>
+            <Class name="io.orvanta.forge.Forge"/>
+        </Or>
+    </Match>
+
+    <!-- PATH_TRAVERSAL_IN. The file name is "<messageType>.xsd" inside the configured schema directory.
+         IsoXml.validate returns before building the name unless the type matches
+         four letters, dot, three digits, dot, three digits, dot, two digits; no separator can get through. -->
+    <Match>
+        <Bug pattern="PATH_TRAVERSAL_IN"/>
+        <Class name="io.orvanta.core.format.IsoXml"/>
+        <Method name="validate"/>
+    </Match>
+
+    <!-- PATH_TRAVERSAL_IN. The key store and trust store of a connector's mutual TLS settings come from a model,
+         which only users holding studio.edit can change and a second person approves. ClientTls.load refuses a path
+         with ".." and resolves the rest against the working directory, so a model can name a file of the installation
+         (its own certificates) and nothing above it; a file that is not a key store fails to load. Reviewed 2026-10-06. -->
+    <Match>
+        <Bug pattern="PATH_TRAVERSAL_IN"/>
+        <Class name="io.orvanta.core.flow.ClientTls"/>
+    </Match>
+
+    <!-- CRLF_INJECTION_LOGS. What these statements log is produced by the platform (ids, counts, channel
+         and model names that passed name validation), comes from configuration, or is exception text.
+         The two places that log text chosen by a caller clean it first: SecurityLog.clean and the
+         request path in ApiServer. Residual risk: exception text can quote input. An installation that
+         feeds logs to a monitoring system should use a structured (JSON) log encoder. -->
+    <Match>
+        <Bug pattern="CRLF_INJECTION_LOGS"/>
+    </Match>
+
+    <!-- IMPROPER_UNICODE. Case-insensitive comparison and case conversion of protocol constants
+         (HTTP methods, status words, host names, currency codes), always with Locale.ROOT.
+         Fn.toSepaText normalises on purpose: that is the function's job. -->
+    <Match>
+        <Bug pattern="IMPROPER_UNICODE"/>
+    </Match>
+
+    <!-- SQL_INJECTION_JDBC, SQL_PREPARED_STATEMENT_GENERATED_FROM_NONCONSTANT_STRING. JdbcDataAccess builds the SQL of a data set
+         on a relational table from the table and column names of the model and the find conditions; every such name passes
+         JdbcDataAccess.name (letters, digits and underscores only, checked again at run time after Forge checked the model),
+         and every value travels as a parameter. Only users holding studio.edit change the models, and a second person
+         approves. Reviewed 2026-10-07. -->
+    <Match>
+        <Or>
+            <Bug pattern="SQL_INJECTION_JDBC"/>
+            <Bug pattern="SQL_PREPARED_STATEMENT_GENERATED_FROM_NONCONSTANT_STRING"/>
+        </Or>
+        <Class name="io.orvanta.pay.kernel.JdbcDataAccess"/>
+    </Match>
+
+    <!-- POTENTIAL_XML_INJECTION. The WSDL is built from the SOAP operation names of Api models, which Forge accepts only as
+         letters, digits and underscores, and from their descriptions, which are escaped. Reviewed 2026-10-07. -->
+    <Match>
+        <Bug pattern="POTENTIAL_XML_INJECTION"/>
+        <Class name="io.orvanta.pay.api.ApiServer"/>
+        <Method name="wsdl"/>
+    </Match>
+
+</FindBugsFilter>

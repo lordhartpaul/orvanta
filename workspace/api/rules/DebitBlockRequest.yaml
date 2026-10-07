@@ -1,0 +1,17 @@
+kind: RuleSet
+name: api.rules.DebitBlockRequest
+description: A block names an account and a creditor identifier; a limit, when given, is a positive amount.
+rules:
+  - id: ACCOUNT_FORMAT
+    assert: matches(request.path.account, '[A-Za-z0-9]{5,34}')
+    code: AC01
+    message: Account must be 5 to 34 letters or digits
+  - id: CREDITOR_FORMAT
+    assert: matches(request.path.creditorId, '[A-Za-z0-9]{8,35}')
+    code: BE05
+    message: The creditor identifier must be 8 to 35 letters or digits
+  - id: LIMIT_POSITIVE
+    when: exists(request.body.maxAmount)
+    assert: num(request.body.maxAmount) > 0
+    code: AM01
+    message: maxAmount must be a number greater than zero

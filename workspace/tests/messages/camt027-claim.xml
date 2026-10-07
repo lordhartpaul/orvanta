@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:camt.027.001.09">
+  <ClmNonRct>
+    <Assgnmt>
+      <Id>CNR-2026-10-06-001</Id>
+      <Assgnr><Agt><FinInstnId><BICFI>BNPAFRPP</BICFI></FinInstnId></Agt></Assgnr>
+      <Assgne><Agt><FinInstnId><BICFI>ORVADEFF</BICFI></FinInstnId></Agt></Assgne>
+      <CreDtTm>2026-10-06T14:30:00Z</CreDtTm>
+    </Assgnmt>
+    <Case><Id>CASE-CNR-1</Id><Cretr><Agt><FinInstnId><BICFI>BNPAFRPP</BICFI></FinInstnId></Agt></Cretr></Case>
+    <Undrlyg>
+      <IntrBk>
+        <OrgnlGrpInf><OrgnlMsgId>CLEARING-IN-2026-10-06-001</OrgnlMsgId><OrgnlMsgNmId>pacs.008.001.08</OrgnlMsgNmId></OrgnlGrpInf>
+        <OrgnlEndToEndId>RENT-OCT</OrgnlEndToEndId>
+        <OrgnlTxId>SNDTX-1</OrgnlTxId>
+      </IntrBk>
+    </Undrlyg>
+    <InstrForAssgnee><Instr>Our customer says the beneficiary has not received the funds</Instr></InstrForAssgnee>
+  </ClmNonRct>
+</Document>

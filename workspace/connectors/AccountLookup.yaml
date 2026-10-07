@@ -1,0 +1,9 @@
+kind: Connector
+name: connectors.AccountLookup
+description: Asks the account system whether an account exists and can be used. Answers status ACTIVE, UNKNOWN, CLOSED or BLOCKED.
+type: http
+method: GET
+url: ${env.ORVANTA_ACCOUNTS_URL:-${env.ORVANTA_SIM_URL:-http://localhost:8480/sim}}/accounts/{account}
+timeoutMs: 3000
+retries: 1
+testReply: {status: ACTIVE, currency: ZAR}

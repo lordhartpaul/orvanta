@@ -1,0 +1,13 @@
+kind: TestCase
+name: tests.LimitApiRejectsABadRequest
+description: A non-positive limit is rejected and nothing is stored.
+target: api.flows.AccountLimitWrite
+given:
+  request:
+    path: {account: "4051122334"}
+    body: {perTransaction: 0}
+    user: checker1
+expect:
+  - result.status == 'REJECTED'
+  - result.code == 'AM01'
+  - not exists(stored.data.AccountLimits)

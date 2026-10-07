@@ -1,0 +1,7 @@
+kind: Api
+name: api.DocumentGet
+description: Fetches the supporting document stored for a payment reference.
+method: GET
+path: /documents/{reference}
+permission: payments.view
+target: api.flows.DocumentFetch

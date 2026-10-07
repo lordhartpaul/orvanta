@@ -1,0 +1,28 @@
+kind: Flow
+name: api.flows.NotificationPreferenceWrite
+description: Stores what a customer wants to be told about one account.
+steps:
+  - id: check
+    type: rules
+    ref: api.rules.NotificationPreferenceRequest
+    onViolation: reject
+
+  - id: store
+    type: save
+    dataset: data.NotificationPreferences
+    values:
+      account: request.path.account
+      notifications: request.body.notifications
+      channel: request.body.channel
+      accountReport: request.body.accountReport
+      note: request.body.note
+      updatedBy: request.user
+      updatedAt: now()
+
+  - id: answer
+    type: find
+    dataset: data.NotificationPreferences
+    where:
+      account: request.path.account
+    first: true
+    into: response

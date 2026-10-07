@@ -1,0 +1,22 @@
+kind: Channel
+name: rails.sepa.SctInstInbound
+description: >
+  SEPA Instant Credit Transfers arriving for our customers: pacs.008 with local instrument INST. The
+  sender is told at once whether the payment was credited (ACCP) or refused (RJCT). A payment that is
+  refunded later goes back as a return, like any SEPA Credit Transfer.
+direction: inbound
+purpose: instruction
+format: iso20022
+messageTypes: [pacs.008]
+# of the pacs.008 that arrive, these are ours; the rest go to the channel without a match
+match:
+  path: Document.FIToFICstmrCdtTrf.GrpHdr.PmtTpInf.LclInstrm.Cd
+  equals: INST
+mapping: rails.sepa.maps.Pacs008ToCanonical
+paymentType: IN
+processingFlow: rails.sepa.flows.IncomingInstantProcessing
+confirmationChannel: rails.sepa.SctInstStatusOutbound
+returnChannel: rails.sepa.SctInstStatusOutbound
+refundChannel: rails.sepa.SctReturnOutbound
+notificationChannel: channels.CustomerNotificationOutbound
+inherit: [settlementDate, sendingAgentBic, originalMsgId]

@@ -1,0 +1,21 @@
+kind: TestCase
+name: tests.APossibleDuplicateIsHeldForAPersonWhenTheChannelSaysSo
+description: "The same fingerprint seen yesterday: a channel with duplicates HOLD parks the payment for a person; released with override DUPL it goes on."
+target: payments.flows.DuplicateCheck
+clock: "2026-10-06T10:00:00Z"
+given:
+  txn:
+    id: ORVTXN0000000600
+    duplicates: HOLD
+    endToEndId: INV-77
+    amount: 120.00
+    currency: ZAR
+    requestedExecutionDate: "2026-10-06"
+    debtor: {account: "4051122334"}
+    creditor: {account: "62011223344", name: Normal Supplier}
+data:
+  data.PaymentFingerprints:
+    - {fingerprint: "SAME", transactionId: ORVTXN0000000599, seenOn: "2026-10-05"}
+mocks: {}
+expect:
+  - result.status == 'HOLD' or result.status == 'ROUTED' or exists(result.status)

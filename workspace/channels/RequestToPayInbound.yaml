@@ -1,0 +1,15 @@
+kind: Channel
+name: channels.RequestToPayInbound
+description: >
+  Requests to pay (pain.013) from creditors' banks: a creditor asks our customer to pay. Each waits for
+  the customer's answer; accepted, a payment is created from it, and either way the creditor's bank is
+  told with a pain.014 on the answer channel. A request past its expiry date is refused by itself.
+direction: inbound
+purpose: requestToPay
+format: iso20022
+messageTypes: [pain.013]
+mapping: payments.inbound.Pain013ToRequests
+answerChannel: channels.RequestToPayAnswerOutbound
+transport:
+  - type: folder
+    path: inbound/requests-to-pay

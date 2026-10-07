@@ -1,0 +1,14 @@
+kind: Flow
+name: api.flows.NotificationPreferenceRemove
+description: Removes a customer's preference; the account is notified as usual again.
+steps:
+  - id: remove
+    type: remove
+    dataset: data.NotificationPreferences
+    key: request.path.account
+
+  - id: answer
+    type: set
+    values:
+      response.account: request.path.account
+      response.removed: "true"

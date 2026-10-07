@@ -1,0 +1,27 @@
+kind: RuleSet
+name: rails.sepa.rules.IncomingCredit
+description: >
+  What a received SEPA Credit Transfer must have before anything else is looked at. A payment that
+  fails is sent back with the code of the first rule that failed, so the codes are ISO 20022 return reasons.
+rules:
+  - id: CREDITOR_ACCOUNT_IS_IBAN
+    assert: isIban(txn.creditor.account)
+    code: AC01
+    message: The creditor account is missing or is not a valid IBAN
+  - id: AMOUNT_POSITIVE
+    assert: exists(txn.amount) and txn.amount > 0
+    code: AM02
+    message: The amount is missing or not greater than zero
+  - id: CURRENCY_EURO
+    assert: txn.currency == 'EUR'
+    code: AM03
+    message: A SEPA Credit Transfer is in euro
+  - id: SENDER_REFERENCES_PRESENT
+    assert: exists(txn.endToEndId) and exists(txn.originalTxId)
+    code: FF01
+    message: The end-to-end id or the transaction id of the sender is missing
+  - id: CREDITOR_NAME_PRESENT
+    assert: exists(txn.creditor.name)
+    code: BE04
+    severity: warning
+    message: The creditor name is missing; the account alone decides

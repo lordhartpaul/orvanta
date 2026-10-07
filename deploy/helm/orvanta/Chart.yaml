@@ -1,0 +1,7 @@
+apiVersion: v2
+name: orvanta
+description: "Orvanta Pay, the low-code payment hub: the Console and API, and the processing engine. MongoDB and RabbitMQ are expected to exist (managed services or their own charts)."
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords: [payments, iso20022, swift, low-code]

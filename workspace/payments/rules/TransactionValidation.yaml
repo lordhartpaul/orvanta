@@ -1,0 +1,96 @@
+kind: RuleSet
+name: payments.rules.TransactionValidation
+description: >
+  Business validation of one transaction. Codes follow the ISO 20022 external status reason
+  codes where one exists, so a rejection can be reported back unchanged.
+rules:
+  - id: END_TO_END_ID_PRESENT
+    assert: exists(txn.endToEndId) and len(txn.endToEndId) <= 35
+    code: FF01
+    message: End-to-end identification is missing or longer than 35 characters
+  - id: AMOUNT_POSITIVE
+    assert: exists(txn.amount) and txn.amount > 0
+    code: AM01
+    message: Amount must be greater than zero
+  - id: AMOUNT_WITHIN_LIMIT
+    when: exists(txn.amount)
+    assert: txn.amount <= 999999999.99
+    code: AM02
+    message: Amount exceeds the maximum allowed for a single transaction
+  - id: CURRENCY_VALID
+    assert: isCurrency(txn.currency)
+    code: AM03
+    message: Currency is missing or not an ISO 4217 code
+  - id: DEBTOR_ACCOUNT_PRESENT
+    assert: exists(txn.debtor.account)
+    code: AC02
+    message: Debtor account is missing
+  - id: CREDITOR_ACCOUNT_PRESENT
+    assert: exists(txn.creditor.account)
+    code: AC03
+    message: Creditor account is missing
+  - id: CREDITOR_IBAN_VALID
+    when: matches(txn.creditor.account, '[A-Z]{2}[0-9]{2}[A-Z0-9]+')
+    assert: isIban(txn.creditor.account)
+    code: AC03
+    message: Creditor IBAN fails the check digit test
+  # the length and layout of the country, from reference.IbanStructures (check digits can agree on a wrong length)
+  - id: CREDITOR_IBAN_STRUCTURE
+    when: matches(txn.creditor.account, '[A-Z]{2}[0-9]{2}[A-Z0-9]+') and isIban(txn.creditor.account)
+    assert: ibanProblem(txn.creditor.account) == null
+    code: AC03
+    message: Creditor IBAN does not fit its country's structure
+  # what the destination country needs to identify the account (reference.CountryRouting), and the form of a bank code given
+  - id: CREDITOR_ACCOUNT_ROUTING
+    when: exists(txn.creditor.country)
+    assert: "accountRoutingProblem(txn.creditor.country, isIban(txn.creditor.account) ? txn.creditor.account : null, txn.creditor.agentCode, txn.creditor.agentBic) == null"
+    code: RC01
+    message: "The creditor account is not identified as its country requires"
+  # an IBAN and a national bank code given together must name the same bank
+  - id: CREDITOR_IBAN_AND_BANK_CODE_AGREE
+    when: isIban(txn.creditor.account) and exists(txn.creditor.agentCode) and exists(decomposeIban(txn.creditor.account)) and lookup('reference.CountryRouting', left(txn.creditor.account, 2)).bankCodeInIban == true
+    assert: "replace(txn.creditor.agentCode, '-', '') == (exists(decomposeIban(txn.creditor.account).branchCode) ? decomposeIban(txn.creditor.account).branchCode : decomposeIban(txn.creditor.account).bankCode)"
+    code: RC01
+    message: "The creditor IBAN and the bank code given do not name the same bank"
+  # national account number checks: the Dutch 11-test, the Hungarian check digits, the UK modulus check (with the loaded weights)
+  - id: CREDITOR_NL_ACCOUNT
+    when: isIban(txn.creditor.account) and left(txn.creditor.account, 2) == 'NL'
+    assert: nlAccountValid(decomposeIban(txn.creditor.account).account)
+    code: AC03
+    message: The Dutch account number in the IBAN fails the 11-test
+  - id: CREDITOR_HU_ACCOUNT
+    when: isIban(txn.creditor.account) and left(txn.creditor.account, 2) == 'HU'
+    assert: "huAccountValid(concat(decomposeIban(txn.creditor.account).bankCode, decomposeIban(txn.creditor.account).branchCode), decomposeIban(txn.creditor.account).account)"
+    code: AC03
+    message: The Hungarian account number in the IBAN fails its check digits
+  - id: CREDITOR_GB_ACCOUNT
+    when: isIban(txn.creditor.account) and left(txn.creditor.account, 2) == 'GB'
+    assert: ukAccountProblem(decomposeIban(txn.creditor.account).branchCode, decomposeIban(txn.creditor.account).account) == null
+    code: AC03
+    message: The UK account number fails the modulus check of its sort code
+  - id: CREDITOR_NAME_PRESENT
+    assert: exists(txn.creditor.name)
+    code: BE22
+    message: Creditor name is missing
+  - id: CREDITOR_AGENT_BIC_VALID
+    when: exists(txn.creditor.agentBic)
+    assert: isBic(txn.creditor.agentBic)
+    code: RC01
+    message: Creditor agent BIC is not a valid BIC
+  - id: CREDITOR_AGENT_KNOWN
+    when: isBic(txn.creditor.agentBic)
+    assert: exists(lookup('reference.BicDirectory', txn.creditor.agentBic))
+    code: RC04
+    message: Creditor agent BIC is not in the BIC directory
+    severity: warning
+  - id: REQUESTED_DATE_VALID
+    when: exists(txn.requestedDate)
+    assert: isDate(txn.requestedDate)
+    code: DT01
+    message: Requested execution date is not a valid date
+  - id: REMITTANCE_LENGTH
+    when: exists(txn.remittance)
+    assert: len(txn.remittance) <= 140
+    code: FF10
+    message: Remittance information is longer than 140 characters
+    severity: warning

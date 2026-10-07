@@ -1,0 +1,9 @@
+kind: Api
+name: api.NotificationPreferencePut
+description: >
+  What a customer wants to be told about bookings on an account. Body {"notifications": "NONE"} switches
+  notifications off; {"notifications": "ALL", "channel": "<outbound channel>"} sends them on another channel.
+method: PUT
+path: /notification-preferences/{account}
+permission: payments.approve
+target: api.flows.NotificationPreferenceWrite

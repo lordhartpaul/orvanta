@@ -1,0 +1,9 @@
+kind: Schedule
+name: schedules.AccountReports
+description: >
+  Writes the account reports customers asked for (notification preferences) every day at 06:30, besides
+  the engine's own check. Off until ORVANTA_SCHEDULES_ENABLED is true.
+cron: "30 6 * * *"
+timezone: Africa/Johannesburg
+job: accountReports
+enabled: ${env.ORVANTA_SCHEDULES_ENABLED:-false}

@@ -1,0 +1,32 @@
+kind: RuleSet
+name: payments.rules.Compliance
+description: >
+  Checks a person would want made before a payment leaves: a suspended bank on either side, a payment
+  that crosses a border without saying who pays and who is paid (the travel rule), and an amount above
+  the bank's high-value threshold. Each puts the payment in front of a person; none decides by itself.
+rules:
+  - id: CREDITOR_BANK_SUSPENDED
+    when: not contains(txn.overrides, 'SUSP')
+    assert: not exists(lookup('reference.SuspendedParticipants', txn.creditor.agentBic))
+    code: SUSP
+    message: The creditor's bank is suspended
+  - id: DEBTOR_BANK_SUSPENDED
+    when: not contains(txn.overrides, 'SUSP')
+    assert: not exists(lookup('reference.SuspendedParticipants', txn.debtor.agentBic))
+    code: SUSP
+    message: The debtor's bank is suspended
+  - id: TRAVEL_RULE
+    when: not contains(txn.overrides, 'TRVL') and exists(txn.creditor.country) and exists(txn.debtor.country) and txn.creditor.country != txn.debtor.country and txn.amount >= 1000
+    assert: exists(txn.debtor.name) and exists(txn.debtor.account) and exists(txn.creditor.name) and exists(txn.creditor.account)
+    code: TRVL
+    message: A cross-border payment names the payer and the payee with their accounts
+  - id: CORRIDOR_REVIEW
+    when: not contains(txn.overrides, 'CORR')
+    assert: corridorRestriction(txn.debtor.country, txn.creditor.country, txn.currency) != 'REVIEW'
+    code: CORR
+    message: Payments on this corridor are looked at by a person before they go
+  - id: HIGH_VALUE
+    when: not contains(txn.overrides, 'HVAL') and exists(lookup('reference.HighValue', txn.currency))
+    assert: txn.amount < lookup('reference.HighValue', txn.currency).amount
+    code: HVAL
+    message: The amount is above the high-value threshold

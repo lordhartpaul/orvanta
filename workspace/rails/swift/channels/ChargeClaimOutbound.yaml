@@ -1,0 +1,15 @@
+kind: Channel
+name: rails.swift.ChargeClaimOutbound
+description: >
+  Requests for payment of charges (MT191) to banks that sent us a payment with all charges borne by
+  the payer: one message per payment, quoting the reference of the payment it is for.
+direction: outbound
+format: swift.mt
+messageType: MT191
+mapping: rails.swift.maps.CanonicalToMt191
+destination:
+  type: folder
+  path: outbound/swift-charge-claims
+  extension: fin
+properties:
+  senderBic: ORVAZAJJ

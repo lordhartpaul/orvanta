@@ -1,0 +1,7 @@
+kind: Connector
+name: connectors.LiquidityCheck
+description: Asks whether the route (a clearing settlement position, a partner or a merchant) can fund the payment. Answers status OK or INSUFFICIENT.
+type: http
+url: ${env.ORVANTA_SIM_URL:-http://localhost:8480/sim}/liquidity/check
+timeoutMs: 3000
+testReply: {status: OK}

@@ -1,0 +1,46 @@
+kind: ReferenceTable
+name: reference.ReasonTexts
+description: >
+  What a reason code means, in the languages the bank's customers read. Looked up with
+  text(code, language): the text in that language, or else in English, or else the code itself. The
+  codes are ISO 20022 external status reason codes and the platform's own; the wording is the bank's
+  to change. Sample texts: add the languages and codes you need.
+key: id
+rows:
+  - {id: AC01-en, code: AC01, language: en, text: The account number is incorrect}
+  - {id: AC01-de, code: AC01, language: de, text: Die Kontonummer ist falsch}
+  - {id: AC01-fr, code: AC01, language: fr, text: Le numéro de compte est incorrect}
+  - {id: AC04-en, code: AC04, language: en, text: The account is closed}
+  - {id: AC04-de, code: AC04, language: de, text: Das Konto ist geschlossen}
+  - {id: AC04-fr, code: AC04, language: fr, text: Le compte est clôturé}
+  - {id: AC06-en, code: AC06, language: en, text: The account is blocked}
+  - {id: AC06-de, code: AC06, language: de, text: Das Konto ist gesperrt}
+  - {id: AC06-fr, code: AC06, language: fr, text: Le compte est bloqué}
+  - {id: AM02-en, code: AM02, language: en, text: The amount is above the allowed maximum}
+  - {id: AM02-de, code: AM02, language: de, text: Der Betrag liegt über dem zulässigen Höchstbetrag}
+  - {id: AM02-fr, code: AM02, language: fr, text: Le montant dépasse le maximum autorisé}
+  - {id: AM04-en, code: AM04, language: en, text: There are not enough funds on the account}
+  - {id: AM04-de, code: AM04, language: de, text: Das Konto hat nicht genügend Deckung}
+  - {id: AM04-fr, code: AM04, language: fr, text: Le compte ne dispose pas de fonds suffisants}
+  - {id: AM05-en, code: AM05, language: en, text: This payment was received before}
+  - {id: AM05-de, code: AM05, language: de, text: Diese Zahlung wurde bereits eingereicht}
+  - {id: AM05-fr, code: AM05, language: fr, text: Ce paiement a déjà été reçu}
+  - {id: AB05-en, code: AB05, language: en, text: The payment could not be completed in time}
+  - {id: AB05-de, code: AB05, language: de, text: Die Zahlung konnte nicht rechtzeitig abgeschlossen werden}
+  - {id: AB05-fr, code: AB05, language: fr, text: Le paiement n'a pas pu être finalisé à temps}
+  - {id: MD01-en, code: MD01, language: en, text: There is no valid mandate}
+  - {id: MD01-de, code: MD01, language: de, text: Es liegt kein gültiges Mandat vor}
+  - {id: MD01-fr, code: MD01, language: fr, text: Il n'existe pas de mandat valide}
+  - {id: MD06-en, code: MD06, language: en, text: The debtor asked for the money back}
+  - {id: MD06-de, code: MD06, language: de, text: Der Zahlungspflichtige hat die Erstattung verlangt}
+  - {id: MD06-fr, code: MD06, language: fr, text: Le débiteur a demandé le remboursement}
+  - {id: RR04-en, code: RR04, language: en, text: Refused for regulatory reasons}
+  - {id: RR04-de, code: RR04, language: de, text: Aus aufsichtsrechtlichen Gründen abgelehnt}
+  - {id: RR04-fr, code: RR04, language: fr, text: Refusé pour des raisons réglementaires}
+  - {id: FRAUD-en, code: FRAUD, language: en, text: Refused after a review by the bank}
+  - {id: FRAUD-de, code: FRAUD, language: de, text: Nach Prüfung durch die Bank abgelehnt}
+  - {id: FRAUD-fr, code: FRAUD, language: fr, text: Refusé après examen par la banque}
+  - {id: CONNECTOR_REFUSED-en, code: CONNECTOR_REFUSED, language: en, text: The payment could not be processed; the bank will contact you}
+  - {id: CONNECTOR_REFUSED-de, code: CONNECTOR_REFUSED, language: de, text: Die Zahlung konnte nicht verarbeitet werden; die Bank meldet sich bei Ihnen}
+  - {id: CONNECTOR_REFUSED-fr, code: CONNECTOR_REFUSED, language: fr, text: Le paiement n'a pas pu être traité ; la banque vous contactera}
+  - {id: NO_RMA-en, code: NO_RMA, language: en, text: No relationship (RMA) with the bank for this message type}

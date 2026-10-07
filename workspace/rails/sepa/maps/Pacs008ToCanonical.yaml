@@ -1,0 +1,66 @@
+kind: Mapping
+name: rails.sepa.maps.Pacs008ToCanonical
+description: >
+  Reads a pacs.008 received from the clearing system into the canonical instruction: one batch with
+  one transaction per CdtTrfTxInf. The ids of the sender are kept, because a return has to quote them.
+rules:
+  - let: msg
+    value: src.Document.FIToFICstmrCdtTrf
+  - set: msgId
+    value: msg.GrpHdr.MsgId
+  - set: createdAt
+    value: msg.GrpHdr.CreDtTm
+  - set: declaredCount
+    value: num(msg.GrpHdr.NbOfTxs)
+  - set: declaredSum
+    value: num(msg.GrpHdr.TtlIntrBkSttlmAmt)
+  - append: batches
+    rules:
+      - set: batchRef
+        value: msg.GrpHdr.MsgId
+      - set: originalMsgId
+        value: msg.GrpHdr.MsgId
+      - set: settlementDate
+        value: msg.GrpHdr.IntrBkSttlmDt
+      - set: sendingAgentBic
+        value: coalesce(msg.GrpHdr.InstgAgt.FinInstnId.BICFI, msg.GrpHdr.InstgAgt.FinInstnId.BIC)
+      - forEach: msg.CdtTrfTxInf
+        as: tx
+        append: txns
+        rules:
+          - set: endToEndId
+            value: tx.PmtId.EndToEndId
+          - set: instructionRef
+            value: tx.PmtId.InstrId
+          - set: originalTxId
+            value: tx.PmtId.TxId
+          - set: uetr
+            value: tx.PmtId.UETR
+          - set: amount
+            value: num(tx.IntrBkSttlmAmt)
+          - set: currency
+            value: tx.IntrBkSttlmAmt.@Ccy
+          - set: settlementDate
+            value: tx.IntrBkSttlmDt
+          - set: chargeBearer
+            value: tx.ChrgBr
+          - set: debtor.name
+            value: tx.Dbtr.Nm
+          - set: debtor.account
+            value: coalesce(tx.DbtrAcct.Id.IBAN, tx.DbtrAcct.Id.Othr.Id)
+          - set: debtor.agentBic
+            value: coalesce(tx.DbtrAgt.FinInstnId.BICFI, tx.DbtrAgt.FinInstnId.BIC)
+          - set: creditor.name
+            value: tx.Cdtr.Nm
+          - set: creditor.account
+            value: coalesce(tx.CdtrAcct.Id.IBAN, tx.CdtrAcct.Id.Othr.Id)
+          - set: creditor.agentBic
+            value: coalesce(tx.CdtrAgt.FinInstnId.BICFI, tx.CdtrAgt.FinInstnId.BIC)
+          - set: localInstrument
+            value: coalesce(tx.PmtTpInf.LclInstrm.Cd, msg.GrpHdr.PmtTpInf.LclInstrm.Cd)
+          - set: acceptedAt
+            value: tx.AccptncDtTm
+          - set: purposeCode
+            value: tx.Purp.Cd
+          - set: remittance
+            value: tx.RmtInf.Ustrd

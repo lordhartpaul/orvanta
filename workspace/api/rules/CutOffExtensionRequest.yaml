@@ -1,0 +1,20 @@
+kind: RuleSet
+name: api.rules.CutOffExtensionRequest
+description: An extension names a scheme that has operating hours, a day, and a time later than the usual cut-off.
+rules:
+  - id: SCHEME_KNOWN
+    assert: exists(lookup('reference.CutOffs', request.path.scheme))
+    code: AG02
+    message: the scheme has no operating hours to extend
+  - id: DAY_FORMAT
+    assert: matches(request.body.date, '[0-9]{4}-[0-9]{2}-[0-9]{2}')
+    code: AG02
+    message: date must be a day like 2026-10-06
+  - id: TIME_FORMAT
+    assert: matches(request.body.until, '([01][0-9]|2[0-3]):[0-5][0-9]')
+    code: AG02
+    message: until must be a time like 17:30
+  - id: LATER_THAN_USUAL
+    assert: request.body.until > lookup('reference.CutOffs', request.path.scheme).cutOff
+    code: AG02
+    message: an extension is later than the usual cut-off

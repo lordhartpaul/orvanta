@@ -1,0 +1,22 @@
+kind: TestCase
+name: tests.Mt101IsDebulked
+description: The sample MT101 becomes one batch with two cross-border transactions.
+target: payments.inbound.Mt101ToCanonical
+givenMessage:
+  var: src
+  file: tests/messages/mt101-suppliers.fin
+expect:
+  - result.msgId == 'SUPPLIERS-1004'
+  - result.initiatingParty == 'KAROZAJJ'
+  - result.batches[0].requestedDate == '2026-10-05'
+  - result.batches[0].debtor.account == '4051122334'
+  - result.batches[0].debtor.name == 'Karoo Mining Supplies (Pty) Ltd'
+  - result.batches[0].debtor.agentBic == 'ORVAZAJJ'
+  - count(result.batches[0].txns) == 2
+  - result.batches[0].txns[0].amount == 12500
+  - result.batches[0].txns[0].currency == 'USD'
+  - result.batches[0].txns[0].creditor.agentBic == 'CHASUS33'
+  - result.batches[0].txns[1].amount == 8300.40
+  - result.batches[0].txns[1].creditor.account == 'DE89370400440532013000'
+  - result.batches[0].txns[1].chargeBearer == 'DEBT'
+  - result.batches[0].txns[0].chargeBearer == 'SHAR'

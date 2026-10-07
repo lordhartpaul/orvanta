@@ -1,0 +1,42 @@
+kind: Mapping
+name: payments.inbound.Mt940ToStatement
+description: >
+  Reads a SWIFT MT940 customer statement into the canonical statement. Each statement line (field 61)
+  starts an entry; the field 86 that follows it is its narrative.
+rules:
+  - append: statements
+    rules:
+      - let: opening
+        value: mtBalance(coalesce(mtField(src, '60F'), mtField(src, '60M')))
+      - let: closing
+        value: mtBalance(coalesce(mtField(src, '62F'), mtField(src, '62M')))
+      - set: statementId
+        value: concat(mtField(src, '20'), '/', mtField(src, '28C'))
+      - set: account
+        value: mtField(src, '25')
+      - set: currency
+        value: opening.currency
+      - set: openingBalance
+        value: opening.amount
+      - set: closingBalance
+        value: closing.amount
+      - forEach: mtGroups(src, '61')
+        as: g
+        append: entries
+        rules:
+          - let: line
+            value: mt61(mtField(g, '61'))
+          - set: reference
+            value: line.reference
+          - set: bankReference
+            value: line.bankReference
+          - set: amount
+            value: line.amount
+          - set: currency
+            value: opening.currency
+          - set: creditDebit
+            value: line.creditDebit
+          - set: valueDate
+            value: line.valueDate
+          - set: narrative
+            value: replace(mtField(g, '86'), '\n', ' ')

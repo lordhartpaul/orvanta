@@ -1,0 +1,10 @@
+kind: Connector
+name: connectors.AccountPosting
+description: >
+  Posts the debit of the customer account against the settlement account of the route (nostro,
+  vostro or loro). The request carries an idempotency key, also sent as the Idempotency-Key header,
+  so the posting system answers a repeated request with the posting it already made.
+type: http
+url: ${env.ORVANTA_ACCOUNTS_URL:-${env.ORVANTA_SIM_URL:-http://localhost:8480/sim}}/postings
+timeoutMs: 5000
+testReply: {status: POSTED, postingId: TEST-POSTING}

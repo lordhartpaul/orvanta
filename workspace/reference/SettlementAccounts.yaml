@@ -1,0 +1,19 @@
+kind: ReferenceTable
+name: reference.SettlementAccounts
+description: >
+  The account credited when a customer account is debited for a payment, per scheme; a scheme that
+  settles in several currencies has a row per currency keyed "<scheme>|<currency>", and
+  settlementAccount(scheme, currency) takes that row before the scheme's own.
+  NOSTRO: our account held at another bank. VOSTRO: another bank's account held with us.
+  LORO: a third party's account with a correspondent. Sample data.
+key: scheme
+rows:
+  - {scheme: ZA-RTC, account: "9100000001", type: NOSTRO, holder: Reserve Bank settlement account}
+  - {scheme: SEPA-SCT, account: "9100000003", type: NOSTRO, holder: TARGET settlement account}
+  - {scheme: SEPA-SDD, account: "9100000005", type: NOSTRO, holder: TARGET settlement account for direct debits}
+  - {scheme: SEPA-INST, account: "9100000004", type: NOSTRO, holder: TIPS instant settlement account}
+  - {scheme: SWIFT, account: "9100000002", type: NOSTRO, holder: Correspondent bank account (dollars)}
+  - {scheme: "SWIFT|EUR", account: "9100000006", type: NOSTRO, holder: Correspondent bank account (euro)}
+  - {scheme: "SWIFT|GBP", account: "9100000007", type: NOSTRO, holder: Correspondent bank account (sterling)}
+  # not a scheme: where the funds of a payment held on a sanctions hit are kept until a person decides
+  - {scheme: FROZEN, account: "9700000001", type: SUSPENSE, holder: Seized funds, sanctions}

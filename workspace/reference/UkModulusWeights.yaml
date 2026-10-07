@@ -1,0 +1,11 @@
+kind: ReferenceTable
+name: reference.UkModulusWeights
+description: >
+  The weights of the UK account number modulus check, one row per sort code range as the published
+  Vocalink table has them (sort code from and to, method DBLAL / MOD10 / MOD11, fourteen weights u v w x y z
+  a b c d e f g h for the six sort code digits and eight account digits, and the exception number). The
+  table is the bank's to load from the published file (Rows tab, CSV); nothing of it is shipped, so until it
+  is loaded ukAccountProblem() answers null (no check) rather than refusing accounts. Ranges with an
+  exception the check does not implement are reported as not checked.
+key: from
+rows: []

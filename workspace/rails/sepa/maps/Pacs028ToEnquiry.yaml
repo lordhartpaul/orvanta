@@ -1,0 +1,27 @@
+kind: Mapping
+name: rails.sepa.maps.Pacs028ToEnquiry
+description: >
+  Reads a status enquiry (pacs.028) from another bank: one request per payment it asks about, with the ids the payment had.
+rules:
+  - let: req
+    value: src.Document.FIToFIPmtStsReq
+  - set: msgId
+    value: req.GrpHdr.MsgId
+  - set: senderBic
+    value: req.GrpHdr.InstgAgt.FinInstnId.BICFI
+  - forEach: req.TxInf
+    as: tx
+    append: requests
+    rules:
+      - set: requestId
+        value: tx.StsReqId
+      - set: originalMsgId
+        value: tx.OrgnlGrpInf.OrgnlMsgId
+      - set: originalInstrId
+        value: tx.OrgnlInstrId
+      - set: originalEndToEndId
+        value: tx.OrgnlEndToEndId
+      - set: originalTxId
+        value: tx.OrgnlTxId
+      - set: uetr
+        value: tx.OrgnlUETR

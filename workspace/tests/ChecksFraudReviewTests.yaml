@@ -1,0 +1,19 @@
+kind: TestCase
+name: tests.FraudAlertIsHeldForReview
+description: A fraud alert stops the payment for a person to review.
+target: payments.flows.TransactionProcessing
+given:
+  txn:
+    id: ORVTXN0000000007
+    endToEndId: CHK-1
+    amount: 250
+    currency: ZAR
+    debtor: {name: "Karoo Mining Supplies", account: "4051122334"}
+    creditor: {name: "Thandiwe Mokoena", account: "62011223344", agentBic: FIRNZAJJ}
+mocks:
+  connectors.FraudCheck: {status: REVIEW, score: 87}
+expect:
+  - result.status == 'HOLD'
+  - result.code == 'FRAUD'
+  - not exists(txn.route)
+  - not exists(txn.posting)

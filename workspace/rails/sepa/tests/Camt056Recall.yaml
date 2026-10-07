@@ -1,0 +1,34 @@
+kind: TestCase
+name: tests.RecallRequestIsReadPerTransaction
+description: "A camt.056 from the sender's bank: the case, who asks, and for each payment its ids and the reason."
+target: rails.sepa.maps.Camt056ToRecall
+given:
+  src:
+    Document:
+      FIToFIPmtCxlReq:
+        Assgnmt: {Id: RECALL-MSG-1, Assgnr: {Agt: {FinInstnId: {BICFI: BNPAFRPP}}}, Assgne: {Agt: {FinInstnId: {BICFI: ORVADEFF}}}, CreDtTm: "2026-10-07T09:00:00"}
+        Case: {Id: CASE-7781}
+        Undrlyg:
+          TxInf:
+            - CxlId: CXL-1
+              OrgnlGrpInf: {OrgnlMsgId: SND-MSG-1, OrgnlMsgNmId: pacs.008.001.08}
+              OrgnlEndToEndId: RENT-OCT
+              OrgnlTxId: SNDTX-1
+              OrgnlIntrBkSttlmAmt: {"@Ccy": EUR, "#text": "950.00"}
+              CxlRsnInf: {Rsn: {Cd: DUPL}, AddtlInf: Sent twice by mistake}
+            - CxlId: CXL-2
+              OrgnlGrpInf: {OrgnlMsgId: SND-MSG-1}
+              OrgnlTxId: SNDTX-2
+              CxlRsnInf: {Rsn: {Prtry: FRAD}}
+expect:
+  - result.msgId == 'RECALL-MSG-1'
+  - result.caseId == 'CASE-7781'
+  - result.assignerBic == 'BNPAFRPP'
+  - result.requests[0].cancellationId == 'CXL-1'
+  - result.requests[0].originalMsgId == 'SND-MSG-1'
+  - result.requests[0].originalTxId == 'SNDTX-1'
+  - result.requests[0].amount == 950
+  - result.requests[0].reasonCode == 'DUPL'
+  - result.requests[0].reasonText == 'Sent twice by mistake'
+  - result.requests[1].reasonCode == 'FRAD'
+  - result.requests[1].originalTxId == 'SNDTX-2'

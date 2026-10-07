@@ -1,0 +1,14 @@
+# only what the image needs is sent to the builder
+**/target
+data
+.git
+.github
+.claude
+.idea
+.env
+*.iml
+*.log
+deploy
+parts
+*.md
+config/seed-users.yaml

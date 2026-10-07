@@ -1,0 +1,8 @@
+kind: Channel
+name: channels.ClearingReturnInbound
+description: Returns of funds (pacs.004) from the clearing system for payments it had accepted.
+direction: inbound
+purpose: return
+format: iso20022
+messageTypes: [pacs.004]
+mapping: payments.inbound.Pacs004ToReturn

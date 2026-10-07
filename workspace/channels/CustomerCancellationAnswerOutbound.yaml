@@ -1,0 +1,16 @@
+kind: Channel
+name: channels.CustomerCancellationAnswerOutbound
+description: >
+  Answers to customers' cancellation requests (camt.029): for each payment whether it was cancelled,
+  refused and why, or is still with the receiving side. A second answer follows when the receiving
+  side has decided on a request that was forwarded.
+direction: outbound
+format: iso20022
+messageType: camt.029.001.09
+mapping: payments.outbound.CanonicalToCamt029
+destination:
+  type: folder
+  path: outbound/customer-cancellation-answers
+  extension: xml
+properties:
+  senderBic: ORVAZAJJ

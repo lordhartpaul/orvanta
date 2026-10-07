@@ -1,0 +1,16 @@
+kind: Channel
+name: channels.CustomerStatementOutbound
+description: >
+  Account statements (camt.053) to customers, from the platform's own ledger: opening balance, the
+  entries of one day, closing balance. Written on request, and at the end of each day for the accounts
+  whose customer asked for a statement in the notification preferences.
+direction: outbound
+format: iso20022
+messageType: camt.053.001.08
+mapping: payments.outbound.CanonicalToCamt053
+destination:
+  type: folder
+  path: outbound/customer-statements
+  extension: xml
+properties:
+  senderBic: ORVADEFF

@@ -1,0 +1,7 @@
+kind: Connector
+name: connectors.PostingReversal
+description: Reverses a posting made earlier. Idempotent in the same way as the posting itself.
+type: http
+url: ${env.ORVANTA_ACCOUNTS_URL:-${env.ORVANTA_SIM_URL:-http://localhost:8480/sim}}/postings/reverse
+timeoutMs: 5000
+testReply: {status: REVERSED, reversalId: TEST-REVERSAL}

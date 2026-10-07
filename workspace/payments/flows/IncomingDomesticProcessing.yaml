@@ -1,0 +1,61 @@
+kind: Flow
+name: payments.flows.IncomingDomesticProcessing
+description: >
+  Processing of one domestic rand payment received for a customer. It ends CREDITED when the account
+  has been credited; a payment that fails a rule, is a duplicate, or is for an account that does not
+  exist, is closed or is blocked is sent back by the engine. A sender on a sanctions list stops the
+  payment for a person to decide.
+completeStatus: CREDITED
+steps:
+  - id: rules
+    type: rules
+    ref: payments.rules.IncomingDomestic
+    onViolation: reject
+
+  - id: duplicates
+    type: flow
+    ref: payments.flows.DuplicateCheck
+
+  - id: accountLookup
+    type: call
+    connector: connectors.AccountLookup
+    once: true
+    request:
+      account: txn.creditor.account
+    into: txn.checks.account
+
+  - id: accountStatus
+    type: rules
+    ref: rails.swift.rules.BeneficiaryAccountStatus
+    onViolation: reject
+
+  - id: screen
+    type: call
+    connector: connectors.SanctionsScreening
+    once: true
+    request:
+      reference: txn.id
+      name: txn.debtor.name
+      account: txn.debtor.account
+    into: txn.screening
+
+  - id: sanctionsReview
+    type: end
+    when: (txn.screening.status == 'HIT' or txn.screening.status == 'POSSIBLE') and not contains(txn.overrides, 'SANC')
+    status: HOLD
+    code: SANC
+    message: The sender matches a sanctions list entry; decide whether the payment may be credited
+
+  - id: credit
+    type: call
+    connector: connectors.AccountPosting
+    once: true
+    request:
+      idempotencyKey: concat(txn.id, '-CREDIT')
+      reference: txn.id
+      debitAccount: lookup('reference.SettlementAccounts', 'ZA-RTC').account
+      debitAccountType: lookup('reference.SettlementAccounts', 'ZA-RTC').type
+      creditAccount: txn.creditor.account
+      amount: txn.amount
+      currency: txn.currency
+    into: txn.posting

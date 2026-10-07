@@ -1,0 +1,71 @@
+kind: Mapping
+name: payments.inbound.Pain001ToCanonical
+description: >
+  Debulks an ISO 20022 customer credit transfer initiation (pain.001, any version) into the
+  canonical instruction: one batch per PmtInf, one transaction per CdtTrfTxInf.
+rules:
+  - let: init
+    value: src.Document.CstmrCdtTrfInitn
+  - set: msgId
+    value: init.GrpHdr.MsgId
+  - set: createdAt
+    value: init.GrpHdr.CreDtTm
+  - set: initiatingParty
+    value: init.GrpHdr.InitgPty.Nm
+  - set: declaredCount
+    value: num(init.GrpHdr.NbOfTxs)
+  - set: declaredSum
+    value: num(init.GrpHdr.CtrlSum)
+  - forEach: init.PmtInf
+    as: pi
+    append: batches
+    rules:
+      - set: batchRef
+        value: pi.PmtInfId
+      # version 03 carries a plain date, version 09 wraps it in Dt
+      - set: requestedDate
+        value: coalesce(pi.ReqdExctnDt.Dt, pi.ReqdExctnDt)
+      - set: serviceLevel
+        value: pi.PmtTpInf.SvcLvl.Cd
+      - set: localInstrument
+        value: pi.PmtTpInf.LclInstrm.Cd
+      - set: debtor.name
+        value: pi.Dbtr.Nm
+      - set: debtor.account
+        value: coalesce(pi.DbtrAcct.Id.IBAN, pi.DbtrAcct.Id.Othr.Id)
+      - set: debtor.agentBic
+        value: coalesce(pi.DbtrAgt.FinInstnId.BICFI, pi.DbtrAgt.FinInstnId.BIC)
+      - forEach: pi.CdtTrfTxInf
+        as: tx
+        append: txns
+        rules:
+          - set: endToEndId
+            value: tx.PmtId.EndToEndId
+          - set: instructionRef
+            value: tx.PmtId.InstrId
+          - set: amount
+            value: num(tx.Amt.InstdAmt)
+          - set: currency
+            value: tx.Amt.InstdAmt.@Ccy
+          - set: creditor.name
+            value: tx.Cdtr.Nm
+          - set: creditor.account
+            value: coalesce(tx.CdtrAcct.Id.IBAN, tx.CdtrAcct.Id.Othr.Id)
+          - set: creditor.agentBic
+            value: coalesce(tx.CdtrAgt.FinInstnId.BICFI, tx.CdtrAgt.FinInstnId.BIC)
+          # a national bank code (sort code, IFSC, ABA, branch code) given instead of or besides the BIC
+          - set: creditor.agentCode
+            value: coalesce(tx.CdtrAgt.FinInstnId.ClrSysMmbId.MmbId, tx.CdtrAgt.FinInstnId.Othr.Id)
+          - set: remittance
+            value: tx.RmtInf.Ustrd
+          - set: chargeBearer
+            value: coalesce(tx.ChrgBr, pi.ChrgBr)
+          - set: serviceLevel
+            value: coalesce(tx.PmtTpInf.SvcLvl.Cd, pi.PmtTpInf.SvcLvl.Cd)
+          - set: localInstrument
+            value: coalesce(tx.PmtTpInf.LclInstrm.Cd, pi.PmtTpInf.LclInstrm.Cd)
+          - set: purposeCode
+            value: tx.Purp.Cd
+          # HIGH: the customer wants it out now; it does not wait for a bulk to fill
+          - set: priority
+            value: coalesce(tx.PmtTpInf.InstrPrty, pi.PmtTpInf.InstrPrty)

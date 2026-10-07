@@ -1,0 +1,45 @@
+kind: Mapping
+name: payments.outbound.CanonicalToMt199
+description: >
+  Tells a customer who works with MT what became of an MT101: one MT199 per transaction, with the
+  transaction's own reference in field 21 and the status as a code word in the narrative (ACCP accepted,
+  RJCT rejected or returned with the reason, CANC cancelled, PDNG still in progress). A file that was
+  rejected as a whole gets one MT199 that quotes the reference of the file.
+rules:
+  - append: messages
+    when: exists(report.groupStatus)
+    rules:
+      - set: type
+        value: "'199'"
+      - set: sender
+        value: report.senderBic
+      - set: receiver
+        value: coalesce(report.to, report.receiverBic)
+      - field: 20
+        value: right(report.id, 16)
+      - field: 21
+        value: left(report.originalMsgId, 16)
+      - field: 79
+        value: concat('/', report.groupStatus, '/', coalesce(report.reasonCode, ''), '\n', 'YOUR ', report.originalMessageType, ' ', left(report.originalMsgId, 16), ' WAS NOT TAKEN', '\n', left(toSepaText(coalesce(report.reasonText, 'NO REASON GIVEN')), 50))
+  - forEach: batches
+    as: b
+    rules:
+      - forEach: b.txns
+        as: t
+        rules:
+          - let: st
+            value: "t.status == 'ACCEPTED' ? 'ACCP' : t.status == 'CANCELLED' ? 'CANC' : t.status in ['REJECTED_BY_APPLICATION', 'REJECTED_BY_EXTERNAL', 'RETURNED'] ? 'RJCT' : 'PDNG'"
+          - append: messages
+            rules:
+              - set: type
+                value: "'199'"
+              - set: sender
+                value: report.senderBic
+              - set: receiver
+                value: coalesce(report.to, report.receiverBic)
+              - field: 20
+                value: right(t.id, 16)
+              - field: 21
+                value: left(t.endToEndId, 16)
+              - field: 79
+                value: "concat('/', st, '/', st in ['RJCT', 'CANC'] ? coalesce(t.reasonCode, '') : '', '\n', 'YOUR ', report.originalMessageType, ' ', left(report.originalMsgId, 16), '\n', t.currency, mtAmount(t.amount), ' TO ', left(toSepaText(t.creditor.name), 30), st in ['RJCT', 'CANC'] and exists(t.reasonText) ? concat('\n', left(toSepaText(t.reasonText), 50)) : '')"

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:camt.056.001.08">
+  <FIToFIPmtCxlReq>
+    <Assgnmt>
+      <Id>RECALL-2026-10-07-001</Id>
+      <Assgnr><Agt><FinInstnId><BICFI>BNPAFRPP</BICFI></FinInstnId></Agt></Assgnr>
+      <Assgne><Agt><FinInstnId><BICFI>ORVADEFF</BICFI></FinInstnId></Agt></Assgne>
+      <CreDtTm>2026-10-07T09:00:00</CreDtTm>
+    </Assgnmt>
+    <Case><Id>CASE-7781</Id></Case>
+    <Undrlyg>
+      <TxInf>
+        <CxlId>CXL-1</CxlId>
+        <OrgnlGrpInf><OrgnlMsgId>CLEARING-IN-2026-10-06-001</OrgnlMsgId><OrgnlMsgNmId>pacs.008.001.08</OrgnlMsgNmId></OrgnlGrpInf>
+        <OrgnlEndToEndId>RENT-OCT</OrgnlEndToEndId>
+        <OrgnlTxId>SNDTX-1</OrgnlTxId>
+        <OrgnlIntrBkSttlmAmt Ccy="EUR">950.00</OrgnlIntrBkSttlmAmt>
+        <CxlRsnInf><Rsn><Cd>DUPL</Cd></Rsn><AddtlInf>Sent twice by mistake</AddtlInf></CxlRsnInf>
+      </TxInf>
+      <TxInf>
+        <CxlId>CXL-2</CxlId>
+        <OrgnlGrpInf><OrgnlMsgId>CLEARING-IN-2026-10-06-001</OrgnlMsgId><OrgnlMsgNmId>pacs.008.001.08</OrgnlMsgNmId></OrgnlGrpInf>
+        <OrgnlEndToEndId>INV-2291</OrgnlEndToEndId>
+        <OrgnlTxId>SNDTX-2</OrgnlTxId>
+        <OrgnlIntrBkSttlmAmt Ccy="EUR">1830.00</OrgnlIntrBkSttlmAmt>
+        <CxlRsnInf><Rsn><Cd>DUPL</Cd></Rsn><AddtlInf>Sent twice by mistake</AddtlInf></CxlRsnInf>
+      </TxInf>
+      <TxInf>
+        <CxlId>CXL-3</CxlId>
+        <OrgnlGrpInf><OrgnlMsgId>CLEARING-IN-2026-10-06-001</OrgnlMsgId><OrgnlMsgNmId>pacs.008.001.08</OrgnlMsgNmId></OrgnlGrpInf>
+        <OrgnlEndToEndId>DONATION-7</OrgnlEndToEndId>
+        <OrgnlTxId>SNDTX-4</OrgnlTxId>
+        <OrgnlIntrBkSttlmAmt Ccy="EUR">500.00</OrgnlIntrBkSttlmAmt>
+        <CxlRsnInf><Rsn><Cd>FRAD</Cd></Rsn><AddtlInf>Reported as fraud by the payer</AddtlInf></CxlRsnInf>
+      </TxInf>
+      <TxInf>
+        <CxlId>CXL-4</CxlId>
+        <OrgnlGrpInf><OrgnlMsgId>CLEARING-IN-2026-10-06-001</OrgnlMsgId><OrgnlMsgNmId>pacs.008.001.08</OrgnlMsgNmId></OrgnlGrpInf>
+        <OrgnlEndToEndId>NEVER-SENT</OrgnlEndToEndId>
+        <OrgnlTxId>SNDTX-99</OrgnlTxId>
+        <OrgnlIntrBkSttlmAmt Ccy="EUR">10.00</OrgnlIntrBkSttlmAmt>
+        <CxlRsnInf><Rsn><Cd>TECH</Cd></Rsn><AddtlInf>Technical problem</AddtlInf></CxlRsnInf>
+      </TxInf>
+    </Undrlyg>
+  </FIToFIPmtCxlReq>
+</Document>

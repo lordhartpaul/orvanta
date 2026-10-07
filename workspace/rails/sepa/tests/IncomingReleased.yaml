@@ -1,0 +1,23 @@
+kind: TestCase
+name: tests.IncomingPaymentReleasedAfterReviewIsCredited
+description: "The hold was released by a person (override SANC): the payment is credited."
+target: rails.sepa.flows.IncomingCreditProcessing
+given:
+  txn:
+    id: ORVTXN0000000900
+    paymentType: IN
+    channelIn: rails.sepa.SctInbound
+    endToEndId: RENT-OCT
+    originalTxId: SNDTX-1
+    originalMsgId: SND-MSG-1
+    amount: 950.00
+    currency: EUR
+    debtor: {name: "Camille Laurent", account: "FR1420041010050500013M02606", agentBic: BNPAFRPP}
+    creditor: {name: "Rheinland Pumpen GmbH", account: "DE08500105175400000042"}
+    overrides: [SANC]
+mocks:
+  connectors.AccountLookup: {status: ACTIVE, currency: EUR}
+  connectors.SanctionsScreening: {status: HIT, list: TEST}
+  connectors.AccountPosting: {status: POSTED, postingId: P-1}
+expect:
+  - result.status == 'CREDITED'

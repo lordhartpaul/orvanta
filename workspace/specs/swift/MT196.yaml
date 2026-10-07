@@ -1,0 +1,15 @@
+kind: MessageSpec
+name: specs.swift.MT196
+description: >
+  Field rules of the MT196 answers to a category 1 query or request.
+  Formats are in SWIFT format notation. Written from the published field formats, not copied from a
+  standards release: compare with the release your bank is on before relying on it.
+format: swift.mt
+messageType: MT196
+fields:
+  - {tag: "20", name: transaction reference, required: true, format: "16x"}
+  - {tag: "21", name: related reference, required: true, format: "16x"}
+  - {tag: "76", name: answers, required: true, format: "6*35x"}
+  - {tag: "77A", name: narrative, format: "20*35x"}
+  - {tag: "11", name: type and date of the original message, options: {R: ["3!n", "6!n", "[4!n6!n]"], S: ["3!n", "6!n", "[4!n6!n]"]}}
+  - {tag: "79", name: narrative description of the original message, format: "35*50x"}

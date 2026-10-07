@@ -1,0 +1,20 @@
+kind: Mapping
+name: rails.swift.maps.CanonicalToMt191
+description: >
+  Builds the MT191 that asks the sending bank to pay our charge for a payment it sent with charges OUR.
+  Field 21 quotes its reference, field 32B is what we ask for, field 71B says what it is for.
+rules:
+  - set: type
+    value: "'191'"
+  - set: sender
+    value: claim.senderBic
+  - set: receiver
+    value: claim.from
+  - field: 20
+    value: claim.id
+  - field: 21
+    value: left(txn.originalTxId, 16)
+  - field: 32B
+    value: concat(claim.currency, mtAmount(claim.amount))
+  - field: 71B
+    value: concat('/COMM/', claim.currency, mtAmount(claim.amount), '\n', 'CHARGES FOR YOUR PAYMENT', '\n', left(concat('REF ', txn.originalTxId), 35))

@@ -1,0 +1,24 @@
+kind: TestCase
+name: tests.IncomingPaymentFromASanctionedSenderWaitsForAPerson
+description: "The sender matches a sanctions list: held, not credited and not sent back; after release it is credited."
+target: rails.sepa.flows.IncomingCreditProcessing
+given:
+  txn:
+    id: ORVTXN0000000900
+    paymentType: IN
+    channelIn: rails.sepa.SctInbound
+    endToEndId: RENT-OCT
+    originalTxId: SNDTX-1
+    originalMsgId: SND-MSG-1
+    amount: 950.00
+    currency: EUR
+    debtor: {name: "Camille Laurent", account: "FR1420041010050500013M02606", agentBic: BNPAFRPP}
+    creditor: {name: "Rheinland Pumpen GmbH", account: "DE08500105175400000042"}
+mocks:
+  connectors.AccountLookup: {status: ACTIVE, currency: EUR}
+  connectors.SanctionsScreening: {status: HIT, list: TEST}
+  connectors.AccountPosting: {status: POSTED, postingId: P-1}
+expect:
+  - result.status == 'HOLD'
+  - result.code == 'SANC'
+  - not exists(txn.posting)

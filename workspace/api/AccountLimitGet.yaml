@@ -1,0 +1,9 @@
+kind: Api
+name: api.AccountLimitGet
+description: The per-transaction limit set for a debtor account.
+method: GET
+path: /limits/{account}
+permission: payments.view
+target: api.flows.AccountLimitRead
+# the same API as a SOAP operation: <GetAccountLimit><account>…</account></GetAccountLimit> to POST /api/soap
+soap: {operation: GetAccountLimit}

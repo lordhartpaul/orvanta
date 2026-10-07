@@ -1,0 +1,16 @@
+kind: Channel
+name: channels.SwiftMtOutbound
+description: Cross-border payments sent as SWIFT MT103, one message per transaction.
+direction: outbound
+format: swift.mt
+messageType: MT103
+mapping: payments.outbound.CanonicalToMt103
+bulking:
+  maxTransactions: 20
+  maxWaitSeconds: 3
+destination:
+  type: folder
+  path: outbound/swift
+  extension: fin
+properties:
+  senderBic: ORVAZAJJ

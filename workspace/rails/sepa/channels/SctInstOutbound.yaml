@@ -1,0 +1,24 @@
+kind: Channel
+name: rails.sepa.SctInstOutbound
+description: >
+  SEPA Instant Credit Transfer. One payment per message, sent the moment it is routed
+  (maxWaitSeconds 0), around the clock.
+direction: outbound
+format: iso20022
+messageType: pacs.008.001.08
+mapping: rails.sepa.maps.CanonicalToSepaPacs008
+bulking:
+  maxTransactions: 1
+  maxWaitSeconds: 0
+destination:
+  type: folder
+  path: outbound/sepa-inst
+  extension: xml
+# an instant payment is answered within seconds; one that is not is pointed out to people
+answerWithinSeconds: 20
+# and asked about with a pacs.028 on this channel when none comes
+enquiryChannel: rails.sepa.StatusEnquiryOutbound
+properties:
+  senderBic: ORVADEFF
+  localInstrument: INST
+simulator: clearing

@@ -1,0 +1,68 @@
+kind: Mapping
+name: rails.sepa.maps.CanonicalToSepaPacs003
+description: Builds the pacs.003.001.08 that carries SEPA Core Direct Debit collections to the clearing system.
+rules:
+  - set: Document.@xmlns
+    value: "'urn:iso:std:iso:20022:tech:xsd:pacs.003.001.08'"
+  - set: Document.FIToFICstmrDrctDbt.GrpHdr.MsgId
+    value: bulk.msgId
+  - set: Document.FIToFICstmrDrctDbt.GrpHdr.CreDtTm
+    value: bulk.createdAt
+  - set: Document.FIToFICstmrDrctDbt.GrpHdr.NbOfTxs
+    value: str(bulk.count)
+  - set: Document.FIToFICstmrDrctDbt.GrpHdr.TtlIntrBkSttlmAmt.@Ccy
+    value: "'EUR'"
+  - set: Document.FIToFICstmrDrctDbt.GrpHdr.TtlIntrBkSttlmAmt.#text
+    value: str(bulk.total)
+  - set: Document.FIToFICstmrDrctDbt.GrpHdr.SttlmInf.SttlmMtd
+    value: "'CLRG'"
+  - set: Document.FIToFICstmrDrctDbt.GrpHdr.PmtTpInf.SvcLvl.Cd
+    value: "'SEPA'"
+  - set: Document.FIToFICstmrDrctDbt.GrpHdr.PmtTpInf.LclInstrm.Cd
+    value: "'CORE'"
+  - set: Document.FIToFICstmrDrctDbt.GrpHdr.InstgAgt.FinInstnId.BICFI
+    value: bulk.senderBic
+  - forEach: txns
+    as: t
+    append: Document.FIToFICstmrDrctDbt.DrctDbtTxInf
+    rules:
+      - set: PmtId.InstrId
+        value: t.id
+      - set: PmtId.EndToEndId
+        value: t.endToEndId
+      - set: PmtId.TxId
+        value: t.id
+      - set: PmtTpInf.SeqTp
+        value: t.sequenceType
+      - set: IntrBkSttlmAmt.@Ccy
+        value: "'EUR'"
+      - set: IntrBkSttlmAmt.#text
+        value: str(t.amount)
+      - set: IntrBkSttlmDt
+        value: t.collectionDate
+      - set: ChrgBr
+        value: "'SLEV'"
+      - set: ReqdColltnDt
+        value: t.collectionDate
+      - set: DrctDbtTx.MndtRltdInf.MndtId
+        value: t.mandate.id
+      - set: DrctDbtTx.MndtRltdInf.DtOfSgntr
+        value: t.mandate.signedOn
+      - set: DrctDbtTx.CdtrSchmeId.Id.PrvtId.Othr.Id
+        value: t.creditor.schemeId
+      - set: DrctDbtTx.CdtrSchmeId.Id.PrvtId.Othr.SchmeNm.Prtry
+        value: "'SEPA'"
+      - set: Cdtr.Nm
+        value: t.creditor.name
+      - set: CdtrAcct.Id.IBAN
+        value: t.creditor.account
+      - set: CdtrAgt.FinInstnId.BICFI
+        value: coalesce(t.creditor.agentBic, bulk.senderBic)
+      - set: Dbtr.Nm
+        value: t.debtor.name
+      - set: DbtrAcct.Id.IBAN
+        value: t.debtor.account
+      - set: DbtrAgt.FinInstnId.BICFI
+        value: t.debtor.agentBic
+      - set: RmtInf.Ustrd
+        value: t.remittance

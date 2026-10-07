@@ -1,0 +1,28 @@
+kind: TestCase
+name: tests.APaymentThatWouldTakeTheAccountOverItsDailyLimitIsRejected
+description: "Two payments of today add up to 900; with a daily limit of 1000, a third of 200 would make 1100."
+target: payments.flows.TransactionProcessing
+clock: "2026-10-07T10:00:00Z"
+given:
+  txn:
+    id: ORVTXN0000000701
+    endToEndId: DAY-3
+    amount: 200
+    currency: ZAR
+    createdAt: "2026-10-07T09:59:00Z"
+    debtor: {name: "Karoo Mining Supplies", account: "4051122334"}
+    creditor: {name: "Thandiwe Mokoena", account: "62011223344", agentBic: FIRNZAJJ}
+data:
+  data.AccountLimits:
+    - {account: "4051122334", perTransaction: 1000, perDay: 1000}
+  data.Transactions:
+    - {id: ORVTXN0000000699, status: ROUTED, amount: 500, createdAt: "2026-10-07T08:00:00Z", debtor: {account: "4051122334"}}
+    - {id: ORVTXN0000000700, status: SENT, amount: 400, createdAt: "2026-10-07T09:00:00Z", debtor: {account: "4051122334"}}
+    - {id: ORVTXN0000000698, status: REJECTED_BY_APPLICATION, amount: 5000, createdAt: "2026-10-07T07:00:00Z", debtor: {account: "4051122334"}}
+    - {id: ORVTXN0000000690, status: SENT, amount: 5000, createdAt: "2026-10-06T09:00:00Z", debtor: {account: "4051122334"}}
+mocks:
+  connectors.SanctionsScreening: {status: CLEAR}
+expect:
+  - result.status == 'REJECTED'
+  - result.code == 'AM02'
+  - contains(result.message, 'daily')

@@ -1,0 +1,24 @@
+kind: TestCase
+name: tests.SepaDuplicateWithinFiveDaysIsRejected
+description: "The same debtor account, end-to-end id, amount and currency two days ago: rejected."
+target: payments.flows.TransactionProcessing
+clock: "2026-10-05T08:00:00Z"
+given:
+  txn:
+    id: ORVTXN0000000008
+    endToEndId: SEPA-T1
+    amount: 1250
+    currency: EUR
+    requestedDate: "2026-10-05"
+    chargeBearer: SLEV
+    debtor: {name: "Rheinland Pumpen GmbH", account: "DE89370400440532013000", agentBic: DEUTDEFF}
+    creditor: {name: "Atelier Lumiere SARL", account: "FR1420041010050500013M02606", agentBic: BNPAFRPP}
+data:
+  data.PaymentFingerprints:
+    - {fingerprint: "DE89370400440532013000|SEPA-T1|1250|EUR", transactionId: ORVTXN0000000001, seenOn: "2026-10-03"}
+mocks:
+  connectors.AccountLookup: {status: ACTIVE, currency: EUR}
+expect:
+  - result.status == 'REJECTED'
+  - result.code == 'AM05'
+  - stored.data.PaymentFingerprints[0].transactionId == 'ORVTXN0000000001'

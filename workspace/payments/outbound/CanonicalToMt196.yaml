@@ -1,0 +1,23 @@
+kind: Mapping
+name: payments.outbound.CanonicalToMt196
+description: >
+  Builds the MT196 that answers an MT192. Field 21 quotes the reference of the request, field 76 gives
+  the status of the request as a code word and, per line, what became of each transaction.
+rules:
+  - let: first
+    value: entries[0]
+  - set: type
+    value: "'196'"
+  - set: sender
+    value: answer.senderBic
+  - set: receiver
+    value: answer.to
+  - field: 20
+    value: answer.id
+  - field: 21
+    value: left(answer.caseId, 16)
+  - field: 76
+    value: concat('/', answer.status, '/', '\n', left(concat(str(answer.count), ' TRANSACTION(S) OF ', first.originalMsgId), 35))
+  - field: 77A
+    when: answer.status == 'RJCR' or answer.status == 'PACR'
+    value: left(concat('REASON ', coalesce(first.reasonCode, 'SEE EACH TRANSACTION')), 35)

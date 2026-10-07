@@ -1,0 +1,28 @@
+kind: Mapping
+name: api.maps.PaymentStatusView
+description: What a caller of the payment status API is told about a transaction.
+rules:
+  - set: id
+    value: txn.id
+  - set: endToEndId
+    value: txn.endToEndId
+  - set: status
+    value: txn.status
+  - set: amount
+    value: txn.amount
+  - set: currency
+    value: txn.currency
+  - set: creditorName
+    value: txn.creditor.name
+  - set: creditorAgent
+    value: txn.creditor.agentName
+  - set: valueDate
+    value: txn.valueDate
+  - set: scheme
+    value: txn.route.scheme
+  - set: reasonCode
+    value: txn.reasonCode
+  - set: reasonText
+    value: txn.reasonText
+  - set: updatedAt
+    value: txn.updatedAt

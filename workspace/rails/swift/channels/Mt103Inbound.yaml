@@ -1,0 +1,18 @@
+kind: Channel
+name: rails.swift.Mt103Inbound
+description: >
+  Cross-border payments arriving for our customers as SWIFT MT103, one transaction per message.
+  Each is credited to the customer's account, converted when the account is in another currency,
+  or sent back to the sending bank with the reason.
+direction: inbound
+purpose: instruction
+format: swift.mt
+messageTypes: [MT103]
+mapping: rails.swift.maps.Mt103ToCanonical
+paymentType: IN
+processingFlow: rails.swift.flows.IncomingSwiftProcessing
+returnChannel: rails.swift.Mt103ReturnOutbound
+notificationChannel: channels.CustomerNotificationOutbound
+# where our charge is claimed when the payer bears all charges (71A OUR)
+chargeClaimChannel: rails.swift.ChargeClaimOutbound
+inherit: [settlementDate, sendingAgentBic, originalMsgId, originalMessageType]

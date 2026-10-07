@@ -1,0 +1,23 @@
+kind: TestCase
+name: tests.UnknownBicIsAWarningAndKnownBicIsEnriched
+description: A well-formed BIC missing from the directory is only a warning; a known BIC adds the bank name.
+target: payments.flows.TransactionProcessing
+given:
+  txn:
+    id: ORVTXN0000000005
+    endToEndId: REF-1
+    amount: 250
+    currency: ZAR
+    debtor: {name: "Karoo Mining Supplies", account: "4051122334"}
+    creditor: {name: "New Supplier", account: "1234567890", agentBic: ZZZZZAJJ}
+  known:
+    creditor: {agentBic: FIRNZAJJ}
+mocks:
+  connectors.SanctionsScreening: {status: CLEAR}
+expect:
+  - result.status == 'ROUTED'
+  - "'RC04' in result.codes"
+  - result.count == 1
+  - not exists(txn.creditor.agentName)
+  - lookup('reference.BicDirectory', known.creditor.agentBic).name == 'FirstRand Bank'
+  - lookup('reference.BicDirectory', 'DEUTDEFF').country == 'DE'

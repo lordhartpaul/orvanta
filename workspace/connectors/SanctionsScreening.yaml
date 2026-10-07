@@ -1,0 +1,10 @@
+kind: Connector
+name: connectors.SanctionsScreening
+description: >
+  Sanctions screening of the creditor. Answers status CLEAR, POSSIBLE or HIT.
+  ORVANTA_SIM_URL points every connector at the built-in simulator; replace the url to call a real system.
+type: http
+url: ${env.ORVANTA_SIM_URL:-http://localhost:8480/sim}/sanctions/screen
+timeoutMs: 3000
+# used by model tests that do not mock this connector
+testReply: {status: CLEAR}

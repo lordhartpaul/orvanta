@@ -1,0 +1,12 @@
+kind: TestCase
+name: tests.AStatusEnquiryNamesThePaymentAndTheFileItWentOutIn
+description: "The pacs.028 asks about one payment with the ids the rail knows it by."
+target: rails.sepa.maps.CanonicalToPacs028
+given:
+  enquiry: {id: ORVOUT0000000500, createdAt: "2026-10-06T12:00:00Z", senderBic: ORVADEFF, originalMsgId: ORVOUT0000000400, originalMessageType: pacs.008.001.08}
+  txn: {id: ORVTXN0000000401, endToEndId: INV-1, uetr: 8e5b6d5a-0d3f-4a2b-9c1e-2f3a4b5c6d7e, creditor: {agentBic: BNPAFRPP}}
+expect:
+  - result.Document.FIToFIPmtStsReq.TxInf.OrgnlGrpInf.OrgnlMsgId == 'ORVOUT0000000400'
+  - result.Document.FIToFIPmtStsReq.TxInf.OrgnlTxId == 'ORVTXN0000000401'
+  - result.Document.FIToFIPmtStsReq.TxInf.OrgnlUETR == '8e5b6d5a-0d3f-4a2b-9c1e-2f3a4b5c6d7e'
+  - result.Document.FIToFIPmtStsReq.TxInf.InstdAgt.FinInstnId.BICFI == 'BNPAFRPP'

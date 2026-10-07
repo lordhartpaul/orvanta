@@ -1,0 +1,108 @@
+kind: Flow
+name: rails.sepa.flows.DirectDebitProcessing
+description: >
+  Processing of one SEPA Core Direct Debit collection, for the bank of the creditor. Named by the
+  direct debit channel as its processing flow, so it replaces the credit transfer flow for these
+  transactions. A collection must reach the clearing one business day before its collection date:
+  earlier than that it is warehoused, later it is rejected.
+completeStatus: ROUTED
+steps:
+  - id: schemeRules
+    type: rules
+    ref: rails.sepa.rules.DirectDebit
+    onViolation: reject
+
+  - id: accountLookup
+    type: call
+    connector: connectors.AccountLookup
+    once: true
+    request:
+      account: txn.creditor.account
+    into: txn.checks.account
+
+  - id: accountStatus
+    type: rules
+    ref: rails.sepa.rules.CreditorAccountStatus
+    onViolation: reject
+
+  - id: mandate
+    type: find
+    dataset: data.Mandates
+    where:
+      mandateId: txn.mandate.id
+    first: true
+    into: mandate
+
+  - id: mandateRules
+    type: rules
+    ref: rails.sepa.rules.Mandate
+    onViolation: reject
+
+  - id: duplicates
+    type: flow
+    ref: payments.flows.DuplicateCheck
+
+  - id: clock
+    type: set
+    values:
+      txn.warehouse: "null"
+      hours: lookup('reference.CutOffs', 'SEPA-SDD')
+      txn.rail.today: todayIn('Europe/Berlin')
+      txn.rail.time: timeIn('Europe/Berlin')
+
+  # a collection date on a closed day moves to the next business day; the file is due the business day before
+  - id: dates
+    type: set
+    values:
+      txn.collectionDate: businessDayOnOrAfter(hours.calendar, txn.requestedDate)
+      txn.submissionDate: previousBusinessDay(hours.calendar, businessDayOnOrAfter(hours.calendar, txn.requestedDate))
+
+  - id: tooLate
+    type: end
+    when: txn.submissionDate < txn.rail.today or (txn.submissionDate == txn.rail.today and txn.rail.time >= hours.cutOff)
+    status: REJECTED
+    code: DT01
+    message: Too late for the requested collection date; a collection must be submitted one business day before, by the cut-off
+
+  - id: early
+    type: set
+    when: txn.submissionDate > txn.rail.today
+    values:
+      txn.warehouse.until: instantOf(txn.submissionDate, hours.opens, hours.zone)
+      txn.warehouse.reason: concat('Collection on ', txn.collectionDate, '; submitted the business day before')
+
+  - id: waitForSubmission
+    type: end
+    when: exists(txn.warehouse.until)
+    status: WAREHOUSE
+    code: DATE
+    message: Kept until the business day before the collection date
+
+  - id: route
+    type: set
+    values:
+      txn.route.channel: "'rails.sepa.SddOutbound'"
+      txn.route.scheme: "'SEPA-SDD'"
+      txn.route.methodOfPayment: "'SDD'"
+      txn.valueDate: txn.collectionDate
+
+  # the mandate counts this collection once; a final or one-off collection uses the mandate up
+  - id: countCollection
+    type: save
+    when: mandate.lastTransactionId != txn.id
+    dataset: data.Mandates
+    values:
+      mandateId: mandate.mandateId
+      creditorId: mandate.creditorId
+      creditorName: mandate.creditorName
+      debtorName: mandate.debtorName
+      debtorAccount: mandate.debtorAccount
+      debtorAgentBic: mandate.debtorAgentBic
+      signedOn: mandate.signedOn
+      type: mandate.type
+      status: "txn.sequenceType in ['FNAL', 'OOFF'] ? 'COMPLETED' : 'ACTIVE'"
+      collections: mandate.collections + 1
+      lastCollectionOn: txn.collectionDate
+      lastTransactionId: txn.id
+      registeredBy: mandate.registeredBy
+      registeredAt: mandate.registeredAt

@@ -1,0 +1,11 @@
+kind: Channel
+name: channels.ClearingStatusInbound
+description: Payment status reports (pacs.002) returned by the clearing system for bulks we sent.
+direction: inbound
+purpose: acknowledgement
+format: iso20022
+messageTypes: [pacs.002]
+mapping: payments.inbound.Pacs002ToAcknowledgement
+# status codes of the report mapped to the transaction outcome
+accepted: [ACCP, ACSP, ACSC, ACCC]
+rejected: [RJCT]

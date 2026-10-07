@@ -1,0 +1,15 @@
+kind: TestCase
+name: tests.LimitApiStoresAValidRequest
+description: The write flow stores the limit with who set it and answers with the stored record.
+target: api.flows.AccountLimitWrite
+given:
+  request:
+    path: {account: "4051122334"}
+    body: {perTransaction: "25000.50"}
+    user: checker1
+expect:
+  - result.status == 'COMPLETED'
+  - response.perTransaction == 25000.50
+  - response.updatedBy == 'checker1'
+  - count(stored.data.AccountLimits) == 1
+  - stored.data.AccountLimits[0].account == '4051122334'

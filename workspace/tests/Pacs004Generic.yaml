@@ -1,0 +1,23 @@
+kind: TestCase
+name: tests.DomesticReturnUsesAccountNumbersAndTheCurrencyOfThePayment
+description: "The pacs.004 of the domestic rail: rand, account numbers that are not IBANs, the reason and the original ids."
+target: payments.outbound.CanonicalToPacs004
+given:
+  bulk: {msgId: ORVOUT0000000120, createdAt: "2026-10-06T09:05:00Z", count: 1, total: 1250.00, currency: ZAR, senderBic: ORVAZAJJ}
+  txns:
+    - id: ORVTXN0000000998
+      endToEndId: DEPOSIT-BACK
+      originalTxId: RTCTX-2
+      originalMsgId: RTC-IN-1
+      amount: 1250.00
+      currency: ZAR
+      debtor: {name: David Naidoo, account: "62033445566", agentBic: FIRNZAJJ}
+      creditor: {name: Closed Account Trading, account: "99911223344"}
+      return: {reasonCode: AC04, reasonText: The beneficiary account is closed, requestedBy: application}
+expect:
+  - result.Document.PmtRtr.GrpHdr.NbOfTxs == '1'
+  - result.Document.PmtRtr.TxInf[0].OrgnlTxId == 'RTCTX-2'
+  - result.Document.PmtRtr.TxInf[0].RtrRsnInf.Rsn.Cd == 'AC04'
+  - result.Document.PmtRtr.TxInf[0].OrgnlTxRef.DbtrAcct.Id.Othr.Id == '62033445566'
+  - result.Document.PmtRtr.TxInf[0].OrgnlTxRef.CdtrAcct.Id.Othr.Id == '99911223344'
+  - not exists(result.Document.PmtRtr.TxInf[0].OrgnlTxRef.DbtrAcct.Id.IBAN)

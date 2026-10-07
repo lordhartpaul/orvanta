@@ -1,0 +1,7 @@
+kind: Api
+name: api.PaymentStatus
+description: Status of one transaction by its id, for channels and back-office systems.
+method: GET
+path: /payments/{id}
+permission: payments.view
+target: api.flows.PaymentStatusInquiry

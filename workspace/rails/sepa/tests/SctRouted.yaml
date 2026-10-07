@@ -1,0 +1,26 @@
+kind: TestCase
+name: tests.SepaCreditTransferIsRouted
+description: "A euro payment between two SEPA accounts in opening hours goes to SEPA Credit Transfer, with no conversion."
+target: payments.flows.TransactionProcessing
+clock: "2026-10-05T08:00:00Z"
+given:
+  txn:
+    id: ORVTXN0000000008
+    endToEndId: SEPA-T1
+    amount: 1250
+    currency: EUR
+    requestedDate: "2026-10-05"
+    chargeBearer: SLEV
+    debtor: {name: "Rheinland Pumpen GmbH", account: "DE89370400440532013000", agentBic: DEUTDEFF}
+    creditor: {name: "Atelier Lumiere SARL", account: "FR1420041010050500013M02606", agentBic: BNPAFRPP}
+mocks:
+  connectors.AccountLookup: {status: ACTIVE, currency: EUR}
+expect:
+  - result.status == 'ROUTED'
+  - txn.route.scheme == 'SEPA-SCT'
+  - txn.route.methodOfPayment == 'SCT'
+  - txn.valueDate == '2026-10-05'
+  - not exists(txn.fx)
+  - txn.posting.status == 'POSTED'
+  - count(stored.data.PaymentFingerprints) == 1
+  - stored.data.PaymentFingerprints[0].transactionId == 'ORVTXN0000000008'

@@ -1,0 +1,39 @@
+kind: MessageSpec
+name: specs.swift.MT101
+description: >
+  Field rules of the MT101 request for transfer, used to check messages received on an MT channel.
+  Formats are in SWIFT format notation. Written from the published field formats, not copied from a
+  standards release: compare with the release your bank is on before relying on it.
+format: swift.mt
+messageType: MT101
+sequences:
+  - id: A
+    fields:
+      - {tag: "20", name: sender's reference, required: true, format: "16x"}
+      - {tag: "21R", name: customer specified reference, format: "16x"}
+      - {tag: "28D", name: message index and total, required: true, format: "5n/5n"}
+      - {tag: "50", name: instructing party, options: {C: "4!a2!a2!c[3!c]", L: "35x"}}
+      - {tag: "50", name: ordering customer, options: {F: ["35x", "4*35x"], G: ["/34x", "4!a2!a2!c[3!c]"], H: ["/34x", "4*35x"]}}
+      - {tag: "52", name: account servicing institution, options: {A: ["[/1!a][/34x]", "4!a2!a2!c[3!c]"], C: "/34x"}}
+      - {tag: "51A", name: sending institution, format: ["[/1!a][/34x]", "4!a2!a2!c[3!c]"]}
+      - {tag: "30", name: requested execution date, required: true, format: "6!n", is: date}
+      - {tag: "25", name: authorisation, format: "35x"}
+  - id: B
+    repeat: true
+    fields:
+      - {tag: "21", name: transaction reference, required: true, format: "16x"}
+      - {tag: "21F", name: F/X deal reference, format: "16x"}
+      - {tag: "23E", name: instruction code, repeat: true, format: "4!c[/30x]"}
+      - {tag: "32B", name: currency and amount, required: true, format: "3!a15d", is: currencyAmount}
+      - {tag: "50", name: instructing party, options: {C: "4!a2!a2!c[3!c]", L: "35x"}}
+      - {tag: "50", name: ordering customer, options: {F: ["35x", "4*35x"], G: ["/34x", "4!a2!a2!c[3!c]"], H: ["/34x", "4*35x"]}}
+      - {tag: "52", name: account servicing institution, options: {A: ["[/1!a][/34x]", "4!a2!a2!c[3!c]"], C: "/34x"}}
+      - {tag: "56", name: intermediary, options: {A: ["[/1!a][/34x]", "4!a2!a2!c[3!c]"], C: "/34x", D: ["[/1!a][/34x]", "4*35x"]}}
+      - {tag: "57", name: account with institution, options: {A: ["[/1!a][/34x]", "4!a2!a2!c[3!c]"], C: "/34x", D: ["[/1!a][/34x]", "4*35x"]}}
+      - {tag: "59", name: beneficiary, required: true, options: {"": ["[/34x]", "4*35x"], A: ["[/34x]", "4!a2!a2!c[3!c]"], F: ["[/34x]", "4*35x"]}}
+      - {tag: "70", name: remittance information, format: "4*35x"}
+      - {tag: "77B", name: regulatory reporting, format: "3*35x"}
+      - {tag: "33B", name: currency and original ordered amount, format: "3!a15d", is: currencyAmount}
+      - {tag: "71A", name: details of charges, required: true, format: "3!a"}
+      - {tag: "25A", name: charges account, format: "/34x"}
+      - {tag: "36", name: exchange rate, format: "12d"}

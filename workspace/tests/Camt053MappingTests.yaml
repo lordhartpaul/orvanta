@@ -1,0 +1,26 @@
+kind: TestCase
+name: tests.Camt053IsRead
+description: A camt.053 with a debit balance and two entries; the balance sign and the references are read.
+target: payments.inbound.Camt053ToStatement
+given:
+  src:
+    Document:
+      BkToCstmrStmt:
+        Stmt:
+          Id: ST-1
+          Acct: {Id: {IBAN: DE89370400440532013000}, Ccy: EUR}
+          Bal:
+            - {Tp: {CdOrPrtry: {Cd: OPBD}}, Amt: {"@Ccy": EUR, "#text": "100.00"}, CdtDbtInd: CRDT}
+            - {Tp: {CdOrPrtry: {Cd: CLBD}}, Amt: {"@Ccy": EUR, "#text": "150.00"}, CdtDbtInd: DBIT}
+          Ntry:
+            - {Amt: {"@Ccy": EUR, "#text": "200.00"}, CdtDbtInd: DBIT, ValDt: {Dt: "2026-10-05"}, NtryDtls: {TxDtls: {Refs: {InstrId: ORVTXN0000000009}}}}
+            - {Amt: {"@Ccy": EUR, "#text": "50.00"}, CdtDbtInd: DBIT, BookgDt: {Dt: "2026-10-05"}, AcctSvcrRef: FEE-1, AddtlNtryInf: Fee}
+expect:
+  - result.statements[0].account == 'DE89370400440532013000'
+  - result.statements[0].openingBalance == 100
+  - result.statements[0].closingBalance == -150
+  - count(result.statements[0].entries) == 2
+  - result.statements[0].entries[0].reference == 'ORVTXN0000000009'
+  - result.statements[0].entries[0].amount == 200
+  - result.statements[0].entries[1].reference == 'FEE-1'
+  - result.statements[0].entries[1].valueDate == '2026-10-05'

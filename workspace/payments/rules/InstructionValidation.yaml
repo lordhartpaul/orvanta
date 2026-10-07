@@ -1,0 +1,22 @@
+kind: RuleSet
+name: payments.rules.InstructionValidation
+description: Checks on the whole instruction before any transaction is created. A failure rejects the file.
+rules:
+  - id: MESSAGE_ID_PRESENT
+    assert: exists(instr.msgId)
+    code: IN01
+    message: The instruction has no message identification
+  - id: HAS_TRANSACTIONS
+    assert: count(collect(instr.batches, 'txns')) > 0
+    code: IN02
+    message: The instruction contains no transactions
+  - id: DECLARED_COUNT_MATCHES
+    when: exists(instr.declaredCount)
+    assert: instr.declaredCount == count(collect(instr.batches, 'txns'))
+    code: IN03
+    message: The declared number of transactions differs from the transactions found
+  - id: DECLARED_SUM_MATCHES
+    when: exists(instr.declaredSum)
+    assert: instr.declaredSum == sumOf(collect(instr.batches, 'txns'), 'amount')
+    code: IN04
+    message: The declared control sum differs from the sum of the transaction amounts

@@ -1,0 +1,18 @@
+kind: TestCase
+name: tests.SanctionsHitIsRejected
+description: A creditor matched by screening is rejected by the application and never routed.
+target: payments.flows.TransactionProcessing
+given:
+  txn:
+    id: ORVTXN0000000002
+    endToEndId: SAL-0004
+    amount: 7500.25
+    currency: ZAR
+    debtor: {name: "Karoo Mining Supplies", account: "4051122334"}
+    creditor: {name: "BLOCKED Trading Company", account: "1199887766", agentBic: NEDSZAJJ}
+mocks:
+  connectors.SanctionsScreening: {status: HIT, list: "OFAC-SDN"}
+expect:
+  - result.status == 'REJECTED'
+  - result.code == 'SANC'
+  - not exists(txn.route)

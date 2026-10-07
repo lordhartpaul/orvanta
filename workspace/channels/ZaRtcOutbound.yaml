@@ -1,0 +1,25 @@
+kind: Channel
+name: channels.ZaRtcOutbound
+description: Domestic rand payments sent to the clearing system as bulked pacs.008 files.
+direction: outbound
+format: iso20022
+messageType: pacs.008.001.08
+mapping: payments.outbound.CanonicalToPacs008
+# the category purposes the clearing takes; a payment with another code is parked for repair (a payment without a code goes)
+allowedPurposeCodes: [SALA, SUPP, INTC, TRAD, GDDS, SCVE, OTHR, PENS, TAXS, LOAN, DIVI, RENT]
+# the clearing's limit per payment: a larger payment is parked for repair (another route, or split)
+maxAmount: 5000000
+# where a cancellation request goes for a payment already sent on this channel
+cancellationChannel: channels.ZaRtcCancellationOutbound
+bulking:
+  maxTransactions: 50
+  maxWaitSeconds: 3
+destination:
+  type: folder
+  path: outbound/za-rtc
+  extension: xml
+# values available to the mapping as bulk.<name>
+properties:
+  senderBic: ORVAZAJJ
+# development only: the built-in clearing simulator answers every file with a pacs.002
+simulator: clearing

@@ -1,0 +1,72 @@
+kind: Mapping
+name: rails.sepa.maps.MandateMessageToMandate
+description: >
+  Reads a mandate message from the creditor's side, whichever of the three it is: a new mandate
+  (pain.009), an amendment (pain.010) or a cancellation (pain.011). One mandate per entry, with the
+  reference, the creditor and the debtor, the type and the day it was signed.
+rules:
+  - let: body
+    value: coalesce(src.Document.MndtInitnReq, src.Document.MndtAmdmntReq, src.Document.MndtCxlReq)
+  - set: kind
+    value: "exists(src.Document.MndtInitnReq) ? 'INITIATE' : exists(src.Document.MndtAmdmntReq) ? 'AMEND' : 'CANCEL'"
+  - set: messageType
+    value: "exists(src.Document.MndtInitnReq) ? 'pain.009.001.07' : exists(src.Document.MndtAmdmntReq) ? 'pain.010.001.07' : 'pain.011.001.07'"
+  - set: msgId
+    value: body.GrpHdr.MsgId
+  - set: senderBic
+    value: coalesce(body.GrpHdr.InitgPty.Id.OrgId.AnyBIC, body.GrpHdr.InstgAgt.FinInstnId.BICFI)
+  # a new mandate carries the mandate itself; an amendment carries the new values and names the original; a cancellation names the original
+  - forEach: body.Mndt
+    as: m
+    append: mandates
+    rules:
+      - set: mandateId
+        value: m.MndtId
+      - set: type
+        value: m.Ocrncs.SeqTp
+      - set: frequency
+        value: m.Ocrncs.Frqcy.Tp
+      - set: signedOn
+        value: m.DtOfSgntr
+      - set: creditorName
+        value: m.Cdtr.Nm
+      - set: creditorAccount
+        value: coalesce(m.CdtrAcct.Id.IBAN, m.CdtrAcct.Id.Othr.Id)
+      - set: creditorAgentBic
+        value: m.CdtrAgt.FinInstnId.BICFI
+      - set: creditorId
+        value: m.CdtrSchmeId.Id.PrvtId.Othr.Id
+      - set: debtorName
+        value: m.Dbtr.Nm
+      - set: debtorAccount
+        value: coalesce(m.DbtrAcct.Id.IBAN, m.DbtrAcct.Id.Othr.Id)
+      - set: debtorAgentBic
+        value: m.DbtrAgt.FinInstnId.BICFI
+  - forEach: body.UndrlygAmdmntDtls
+    as: a
+    append: mandates
+    rules:
+      - set: mandateId
+        value: coalesce(a.OrgnlMndt.OrgnlMndtId, a.OrgnlMndt.OrgnlMndt.MndtId, a.Mndt.MndtId)
+      - set: reason
+        value: coalesce(a.AmdmntRsn.Rsn.Cd, a.AmdmntRsn.Rsn.Prtry)
+      - set: type
+        value: a.Mndt.Ocrncs.SeqTp
+      - set: creditorName
+        value: a.Mndt.Cdtr.Nm
+      - set: creditorId
+        value: a.Mndt.CdtrSchmeId.Id.PrvtId.Othr.Id
+      - set: debtorName
+        value: a.Mndt.Dbtr.Nm
+      - set: debtorAccount
+        value: coalesce(a.Mndt.DbtrAcct.Id.IBAN, a.Mndt.DbtrAcct.Id.Othr.Id)
+      - set: debtorAgentBic
+        value: a.Mndt.DbtrAgt.FinInstnId.BICFI
+  - forEach: body.UndrlygCxlDtls
+    as: c
+    append: mandates
+    rules:
+      - set: mandateId
+        value: coalesce(c.OrgnlMndt.OrgnlMndtId, c.OrgnlMndt.OrgnlMndt.MndtId)
+      - set: reason
+        value: coalesce(c.CxlRsn.Rsn.Cd, c.CxlRsn.Rsn.Prtry)

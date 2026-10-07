@@ -1,0 +1,30 @@
+# One refusal per line: what the engine must say about each file in this folder, checked by NegativeSamplesTest.
+# channel: the channel the file is handed in for (empty: recognised from the text, as a file posted to /api/inbound).
+# code: the reason code stored on the rejected message; text: a fragment of the reason.
+- file: mt101-no-reference.fin
+  channel: channels.CorporateMtInbound
+  code: FORMAT_INVALID
+  text: ":20:"
+- file: mt101-bad-amount.fin
+  channel: channels.CorporateMtInbound
+  code: FORMAT_INVALID
+  text: "32B"
+- file: pain001-truncated.xml
+  code: PARSE_ERROR
+- file: xml-not-iso20022.xml
+  code: PARSE_ERROR
+  text: "ISO 20022"
+- file: iso-unknown-type.xml
+  code: NO_CHANNEL
+  text: "acmt.023"
+- file: json-not-an-object.json
+  code: NO_CHANNEL
+- file: json-unknown-type.json
+  code: NO_CHANNEL
+  text: "nobody.knows"
+- file: text-garbage.txt
+  code: PARSE_ERROR
+- file: flat-unknown-record.txt
+  channel: channels.FlatFileInbound
+  code: PARSE_ERROR
+  text: "line 2"

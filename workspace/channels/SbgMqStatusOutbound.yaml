@@ -1,0 +1,26 @@
+kind: Channel
+name: channels.SbgMqStatusOutbound
+description: >
+  Payment status reports (pain.002) for the instructions that arrived over the SBG IBM MQ queue, put on
+  the reply queue of the same queue manager. The reply queue is a placeholder until SBG names it: a status
+  report must not go back on the queue the instructions arrive on. Off until ORVANTA_SBG_MQ_ENABLED=true.
+direction: outbound
+format: iso20022
+messageType: pain.002.001.10
+mapping: payments.outbound.CanonicalToPain002
+reporting:
+  maxWaitSeconds: 20
+destination:
+  type: ibmmq
+  host: ${env.SBG_MQ_HOST:-10.50.1.104}
+  port: ${env.SBG_MQ_PORT:-1600}
+  channel: ${env.SBG_MQ_CHANNEL:-SBG609SN.CH}
+  queueManager: ${env.SBG_MQ_QUEUE_MANAGER:-CMQPSB6093XDQM}
+  queue: ${env.SBG_MQ_OUT_QUEUE:-SBGQ1DEVH2H.REPLY}
+  username: ${env.SBG_MQ_USER:-sbgdev}
+  password: ${env.SBG_MQ_PASSWORD}
+  ccsid: 1208
+  enabled: ${env.ORVANTA_SBG_MQ_ENABLED:-false}
+properties:
+  senderBic: ORVAZAJJ
+  language: en

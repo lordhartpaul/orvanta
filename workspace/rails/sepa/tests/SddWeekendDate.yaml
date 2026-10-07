@@ -1,0 +1,26 @@
+kind: TestCase
+name: tests.CollectionDateOnASaturdayMovesToMonday
+description: "A Saturday collection date becomes Monday; the file is then due on Friday."
+target: rails.sepa.flows.DirectDebitProcessing
+clock: "2026-10-09T08:00:00Z"
+given:
+  txn:
+    id: ORVTXN0000000010
+    paymentType: DD
+    endToEndId: DD-T1
+    amount: 49.90
+    currency: EUR
+    requestedDate: "2026-10-10"
+    sequenceType: RCUR
+    creditor: {name: "Nordlicht Energie GmbH", account: "DE89370400440532013000", agentBic: ORVADEFF, schemeId: DE98ZZZ09999999999}
+    debtor: {name: "Camille Laurent", account: "FR1420041010050500013M02606", agentBic: BNPAFRPP}
+    mandate: {id: MND-1001, signedOn: "2026-01-15"}
+data:
+  data.Mandates:
+    - {mandateId: MND-1001, creditorId: DE98ZZZ09999999999, debtorAccount: "FR1420041010050500013M02606", debtorName: Camille Laurent, type: RCUR, status: ACTIVE, collections: 3}
+mocks:
+  connectors.AccountLookup: {status: ACTIVE, currency: EUR}
+expect:
+  - result.status == 'ROUTED'
+  - txn.collectionDate == '2026-10-12'
+  - txn.submissionDate == '2026-10-09'

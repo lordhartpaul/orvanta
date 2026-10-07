@@ -1,0 +1,42 @@
+kind: Flow
+name: api.flows.MandateRegister
+steps:
+  - id: check
+    type: rules
+    ref: api.rules.MandateRequest
+    onViolation: reject
+
+  - id: existing
+    type: find
+    dataset: data.Mandates
+    where:
+      mandateId: request.path.mandateId
+    first: true
+    into: existing
+
+  - id: store
+    type: save
+    dataset: data.Mandates
+    values:
+      mandateId: request.path.mandateId
+      creditorId: request.body.creditorId
+      creditorName: request.body.creditorName
+      debtorName: request.body.debtorName
+      debtorAccount: request.body.debtorAccount
+      debtorAgentBic: request.body.debtorAgentBic
+      signedOn: request.body.signedOn
+      type: request.body.type
+      status: "'ACTIVE'"
+      collections: coalesce(existing.collections, 0)
+      lastCollectionOn: existing.lastCollectionOn
+      lastTransactionId: existing.lastTransactionId
+      registeredBy: request.user
+      registeredAt: now()
+
+  - id: answer
+    type: find
+    dataset: data.Mandates
+    where:
+      mandateId: request.path.mandateId
+    first: true
+    into: response

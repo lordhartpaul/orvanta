@@ -1,0 +1,21 @@
+kind: Channel
+name: rails.sepa.SctInstStatusOutbound
+description: >
+  The answer to an instant payment we received (pacs.002): ACCP when it was credited, RJCT with the
+  reason when it was refused. One message per payment, sent the moment the outcome is known. A refused
+  payment has reached its end when its answer is sent.
+direction: outbound
+format: iso20022
+messageType: pacs.002.001.10
+mapping: rails.sepa.maps.CanonicalToInstStatus
+sentStatus: RETURNED
+bulking:
+  maxTransactions: 1
+  maxWaitSeconds: 0
+destination:
+  type: folder
+  path: outbound/sepa-inst-status
+  extension: xml
+properties:
+  senderBic: ORVADEFF
+  scheme: SEPA-INST

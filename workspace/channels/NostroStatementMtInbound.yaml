@@ -1,0 +1,9 @@
+kind: Channel
+name: channels.NostroStatementMtInbound
+description: Statements of our accounts at correspondents, as SWIFT MT940. Same reconciliation as the camt.053 channel.
+direction: inbound
+purpose: statement
+format: swift.mt
+messageTypes: [MT940]
+mapping: payments.inbound.Mt940ToStatement
+settles: true

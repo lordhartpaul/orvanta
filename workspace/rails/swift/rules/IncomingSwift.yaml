@@ -1,0 +1,22 @@
+kind: RuleSet
+name: rails.swift.rules.IncomingSwift
+description: >
+  What a received MT103 must tell us before the account is looked at. A payment that fails is sent
+  back with the code of the first rule that failed.
+rules:
+  - id: BENEFICIARY_ACCOUNT_PRESENT
+    assert: exists(txn.creditor.account)
+    code: AC01
+    message: The beneficiary account is missing
+  - id: AMOUNT_POSITIVE
+    assert: exists(txn.amount) and txn.amount > 0
+    code: AM02
+    message: The amount is missing or not greater than zero
+  - id: CURRENCY_KNOWN
+    assert: isCurrency(txn.currency)
+    code: AM03
+    message: The currency is not an ISO 4217 code
+  - id: SENDER_KNOWN
+    assert: isBic(txn.sendingAgentBic)
+    code: RC01
+    message: The sending bank is not identified by a BIC, so the payment could not be sent back

@@ -1,0 +1,9 @@
+kind: ReferenceTable
+name: reference.SuspendedParticipants
+description: >
+  Banks that are not to be paid for the time being: a scheme suspended the participant, a correspondent
+  relationship is on hold, a regulator said so. A payment to or from a listed BIC is held for a person
+  (code SUSP). Maintained in Studio; the sample row is a bank that does not exist.
+key: bic
+rows:
+  - {bic: SUSPZAJJ, reason: Suspended by the scheme operator, since: "2026-10-01"}

@@ -1,0 +1,20 @@
+kind: TestCase
+name: tests.SwiftSerialWhenWeDoNotKnowTheCreditorBank
+description: "Dollars to a bank we have no relationship with: serial method through the correspondent."
+target: payments.flows.TransactionProcessing
+given:
+  txn:
+    id: ORVTXN0000000009
+    endToEndId: XB-1
+    amount: 5000
+    currency: USD
+    valueDate: "2026-10-05"
+    uetr: 3f0c0a2e-0b7e-4b53-9d55-5f4f0f6f2b11
+    debtor: {name: "Karoo Mining Supplies", account: "4051122334"}
+    creditor: {name: "Overseas Supplier Inc", account: "000987654321", agentBic: SMALUS44}
+mocks:
+  connectors.FxRates: {rate: 18.50}
+expect:
+  - result.status == 'ROUTED'
+  - txn.route.settlementMethod == 'SERIAL'
+  - "'RC04' in result.codes"

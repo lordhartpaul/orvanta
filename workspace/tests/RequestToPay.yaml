@@ -1,0 +1,26 @@
+kind: TestCase
+name: tests.ARequestToPayIsReadWithWhoAsksWhomForWhat
+description: "A pain.013 with two requests: the creditor, the customer asked, amounts and the expiry date."
+target: payments.inbound.Pain013ToRequests
+given:
+  src:
+    Document:
+      CdtrPmtActvtnReq:
+        GrpHdr: {MsgId: RTP-1}
+        PmtInf:
+          - PmtInfId: RTP-1-1
+            ReqdExctnDt: {Dt: "2026-10-10"}
+            XpryDt: {Dt: "2026-10-20"}
+            Dbtr: {Nm: Karoo Mining Supplies}
+            DbtrAcct: {Id: {Othr: {Id: "4051122334"}}}
+            CdtTrfTx:
+              - {PmtId: {EndToEndId: ELECTRICITY-OCT}, Amt: {InstdAmt: {"#text": "1840.00", "@Ccy": ZAR}}, Cdtr: {Nm: Nordlicht Energie GmbH}, CdtrAcct: {Id: {Othr: {Id: "62011223344"}}}, RmtInf: {Ustrd: Electricity October}}
+              - {PmtId: {EndToEndId: LATE-FEE}, Amt: {InstdAmt: {"#text": "150.00", "@Ccy": ZAR}}, Cdtr: {Nm: Nordlicht Energie GmbH}, CdtrAcct: {Id: {Othr: {Id: "62011223344"}}}}
+expect:
+  - result.msgId == 'RTP-1'
+  - len(result.requests) == 2
+  - result.requests[0].debtor.account == '4051122334'
+  - result.requests[0].creditor.name == 'Nordlicht Energie GmbH'
+  - result.requests[0].amount == 1840.00
+  - result.requests[0].expiryDate == '2026-10-20'
+  - result.requests[1].endToEndId == 'LATE-FEE'

@@ -1,0 +1,21 @@
+kind: TestCase
+name: tests.SepaFutureDatedIsKeptUntilItsDate
+description: "A payment requested for Thursday is kept until Thursday begins in Berlin."
+target: payments.flows.TransactionProcessing
+clock: "2026-10-05T08:00:00Z"
+given:
+  txn:
+    id: ORVTXN0000000008
+    endToEndId: SEPA-T1
+    amount: 1250
+    currency: EUR
+    requestedDate: "2026-10-08"
+    chargeBearer: SLEV
+    debtor: {name: "Rheinland Pumpen GmbH", account: "DE89370400440532013000", agentBic: DEUTDEFF}
+    creditor: {name: "Atelier Lumiere SARL", account: "FR1420041010050500013M02606", agentBic: BNPAFRPP}
+mocks:
+  connectors.AccountLookup: {status: ACTIVE, currency: EUR}
+expect:
+  - result.status == 'WAREHOUSE'
+  - result.code == 'DATE'
+  - txn.warehouse.until == '2026-10-07T22:05:00Z'

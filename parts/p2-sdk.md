@@ -1,0 +1,55 @@
+
+---
+
+## 2. VolPaySDK (`F:\Projects\VolPaySDK`) – what SBG actually consumes
+
+VolPay 3.5.2.1 (build 67258, commit `b916bdcb…`, branch `release`) / VolBase 4.3.1 (build 65796) / Designer 7.2.0 / BuildUtils 3.1.2 / TestUtils 2.1.3 / JDK 17. Not a git repo (extracted zip, 2026-08-17).
+
+### 2.1 Layout
+| Path | Contents |
+|---|---|
+| `bin/` | **The artifact payload: 1,325 module folders, 4,713 jars** (3,529 `cartridge-<name>-1.0.jar`) + poms. Installed into `.m2`. |
+| `volbase-bin/` | VolBase 4.3.1 binaries: `volbase-parent/pom.xml` (the real BOM, 1,206 lines), `pom.xml` (`volbase`), `framework/` (69 modules jar+pom), `installVolbaseJars.xml`. |
+| `BuildUtilsSDK/` | `bin/` jars v3.1.2 (`sdk-utilites`, `vol-sdkinstaller-maven-plugin`, `volbase-code-generation`, `volbase-utility-addin`), `install.cmd/.sh`, release-tools. |
+| `core/`, `chips/`, `egach/`, `fednow/`, `fedwire/`, `lynx/`, `rtp/`, `sepact/`, `sepadd/`, `sepaip/`, `sic/`, `swift/`, `usach/` | `<rail>-data-structure/` Designer sources (`.vpj`/`.car`; core alone 160 vpj / 882 car) + `studio-config/`. Cartridges cross-reference by relative path, so these must ship as source. |
+| `oms/`, `tips/` | **`studio-config/` only – no `.car`/`.vpj`.** OMS is binary-only (12 `bin/oms*` modules) + config/scripts under `implementation/`. |
+| `core/data-structure/VolBase/` | VolBase `data-structure` sources = `${volbase.datastructures}` macro target. |
+| `implementation/` | Reference implementation: `<rail>-impl` shims, `webapps/` (legacy) and `webapps-1/` (current; rest, script, transaction, sync-processor, simulator, dashboardsync, stmt), `volpay-configs/` (`db-configs/{mm,cm,rdbms}-configs`, `core-configs/*`, `<rail>-configs/`), `volpay-scripts/` (`core`, `bank`, `endpoint`, `configs`, `task-changelog`), `studio/` (`switch.json`, `queues/`, `transport-templates/` per version 3.3.0→3.5.2.1, `interface-scripts/`, `interface-liquibase-contexts/`, `process-flow-scripts/<rail>/{business-function-definition,process-flow-definition,task-association}.xml` incl. a `std-implementation/` baseline with only BF definition + task association), `samples/` (150 payloads; none for OMS), `generated-wars/mongo-mongo-1/` (proof build: `volpay-{rest,transaction,sync,dbscripts,stmt,dashboardsync,simulator}-OMS.war`). |
+| `core-tools/` | `Data_Dictionary`, `EntityListGenerator`, `VolPaySDK_Lite`, `html-doc-generator`, `sdk-utilities` (`set-volbase-macro`, `generate-bin-folder`, `volbase-sdk-installer`, version/field updaters), `tenantId-updater-tool`, `test-utilities`. |
+| `volpayui/`, `volpay-edge/` | Exploded Angular UIs (the source of SBG's `volpayui`/`volpayzaui`/`volpay-edge` folders). |
+| `docs/` | 9 module user-guide PDFs only – no install/deployment guide, no release notes (the old SDK had 30+ docs). |
+| root | `install.cmd/.sh`, `installJars.*`, `generateInstallscript.sh`, `installVolpayJars.xml` (2.9 MB generated), `pom.xml`, `build.properties`, `license/VolPay3x_Libraries.xlsm`. |
+
+### 2.2 `install.cmd` / `install.sh` – exact behaviour (first-time consumption)
+Preconditions: `VOLANTE_HOME` set (Designer 7.2.0), Designer **closed** (checks `tasklist` for the stale string `Designer 6.exe` / `ps -ef | grep designer`), `BuildUtilsSDK` present, `mvn` + JDK 17 on PATH.
+1. `BuildUtilsSDK/install.*`: installs `volbase-build-utils:3.1.2` and `build-utils:3.1.2` poms; for each jar extracts the embedded pom with `com.tplus.transform.util.POMUtil` (from `%VOLANTE_HOME%\lib\generalutils.jar`) and `install-file`s it (`volbase-code-generation`, `volbase-utility-addin`, `sdk-utilites`, `vol-sdkinstaller-maven-plugin`); **copies `volbase-utility-addin-3.1.2.jar` into `%VOLANTE_HOME%\plugin`** (why Designer must be closed).
+2. Installs `volbase-bin/volbase-parent/pom.xml` → `com.volantetech.services.engine:volbase-parent:4.3.1`; `volbase-bin/pom.xml` → `volbase:4.3.1`; `framework/pom.xml` → `volbase-framework:4.3.1`.
+3. `mvn -f installVolbaseJars.xml install` → 413 `maven-install-plugin:3.1.1:install-file` executions bound to `compile` (all 69 VolBase framework jars + poms).
+4. Installs `bin/pom.xml` → `volpay-core:1.0` and `bin/business-functions/pom.xml` → `business-functions:1.0` (parents of every cartridge pom).
+5. `mvn -f installVolpayJars.xml install` → **5,985 install-file executions** (4,712 jars + 1,273 poms) – every VolPay cartridge/module lands in `.m2` at version **1.0** under `com.volantetech.services.engine` and `com.volantetech.volante.cartridge`.
+6. `dependency:copy-dependencies` (excluding designer/javaCG/composer), `mvn install` on root pom, second `copy-dependencies` excluding `volante-*`/`camel-volante` with `-Dmdep.copyPom -Dmdep.addParentPoms` → `target/dependency/`.
+7. `java -cp .;%VOLANTE_HOME%/lib/*;…;bin/sdk-utilities/* com.volantetech.volpay.utils.SetVolPayDataStructures` (twice, second with arg `volpay.sdk`) → rewrites Designer `designer.cfg` `[Variables]` so `.car` references via `${volpay.sdk}` / `${volbase.datastructures}` / `${volbase.sdk}` resolve. (`install.sh` omits `$VOLANTE_HOME/runtime/*` from this classpath – a Linux/Windows divergence.)
+
+`installJars.*` = targeted re-install of `bin/` (walks `*.pom`, installs jar+pom or pom-only). `generateInstallscript.sh` regenerates the two install manifests after `bin/` changes. `BuildUtilsSDK/release-tools/deploy.*` push to internal Nexus `200.200.200.172` (Volante-internal only).
+
+### 2.3 POM model
+- Root/`bin/pom.xml`: `com.volantetech.services.engine:volpay-core:1.0` (pom). Properties `volante.build.version 7.2.0`, `volante.version [7.2.0]` (**hard range pin** – cartridges will not resolve against another Designer runtime), `volbase.version 4.3.1`, `buildutils 3.1.2`, `testutils 2.1.3`, `volpay.version 1.0`, Camel 4.4.2, Spring 6.2.17, ActiveMQ 6.1.6, Log4j 2.25.4, Netty 4.2.13, ZooKeeper 3.9.5, `skipTest=true`, `copyartifacts.dir=${basedir}/bin`. Plugins: `volante-tasks` 7.2.0 (`rebuild=true`, `projectFile=${basedir}\${project.artifactId}.vpj`, `targetVersion 17`, `home=${env.VOLANTE_HOME}`, `useMavenJarName`, `generatePomDependenciesFile`), `volbase-code-generation:3.1.2` (install phase), `maven-install-plugin:3.1.4` with default-install disabled, compiler 3.15.0 (17), **`maven-clean-plugin` fileset includes `bin/` – never run `mvn clean` at SDK root**, resources plugin copying `target/*.jar`+pom into `bin/` at install. Profiles: numbered core shards + one per rail + `MANDATE`.
+- `volbase-bin/volbase-parent/pom.xml` 4.3.1 = the real BOM (`dependencyManagement` for all `com.volantetech.volante:volante-*` at 7.2.0, `sdk-utilites`, test utils; `pluginManagement`; extra repo `shibboleth` for OpenSAML → build needs network or a mirror).
+- Cartridge pom pattern: parent `business-functions:1.0` (or `core`/`oms`/`volpay-core`), artifact `<name>:1.0`. Bundle poms `core-artifacts-default` → `core-{script,transaction,rest,sync-processor}-artifacts`; `oms-artifacts-default` → `oms-{rest,script,stmt,sync-processor,transaction}-artifacts` (pom-only aggregations of ~160 cartridge dependencies each).
+- Three groupIds: `com.volantetech.services.engine` (modules/bundles, 1.0 / VolBase 4.3.1 / BuildUtils 3.1.2), `com.volantetech.volante.cartridge` (every compiled cartridge, 1.0), `com.volantetech.volante` (Designer runtime + `volante-tasks`, 7.2.0). Verified in SBG `.m2`: 3,649 cartridge artifacts, 1,429 engine artifacts.
+- `com.volante:VolPay-license:1.0.0` and `com.volante:script-app:1.0.0` are **not** referenced by the SDK; they come from SBG's own `libs/` (installed by `BuildSource`).
+
+### 2.4 Consumption contract (`implementation/pom.xml`)
+Two-axis profiles: rail (`CORE, RTP, RTP5, TIPS, FEDNOW, SWIFT, FEDWIRE, CHIPS, LYNX, SEPACT, SEPADD, SIC, SEPAIP, SEPAIP-2025, EGACH, USACH, MANDATE, OMS, VERAFIN` – each sets `railconfig-folder` and `append.war.version.rail`, activates `<rail>-impl`) × war-type (`mongo-mongo`, **`mongo-mongo-1`** → `webapps-1`, `cassandra-mongo`). Build: `mvn install -P OMS,mongo-mongo-1` → `implementation/generated-wars/mongo-mongo-1/volpay-*-OMS.war`. Properties a customer fork overrides: `TenantId` (MASTER), `war.version`, `webapps.folder`, `*.webapp` names, `liquibase 4.19.0`, `jasperreports 7.0.6`, `rabbitmq 1.15.2` – **SBG's root pom is this property block verbatim** with `TenantId=SBG_ZA`.
+
+`oms-impl/oms-rest/pom.xml` shows the whole pattern: depend on `oms-rest-artifacts:1.0`, `copy-dependencies` with `includeGroupIds=com.volantetech.services.engine,com.volantetech.volante.cartridge` into `webapps-1/rest-webapp-1/temp/volpay-rest-OMS/WEB-INF/lib`, `copy-resources` from `volpay-configs/oms-configs/common-configs` into `WEB-INF/classes`. `oms-scripts` copies `volpay-scripts/endpoint/oms` + `task-changelog/oms` into `WEB-INF/classes/endpoint/oms` and `oms-configs/liquibase` (`oms_bankliquibase_context.xml`, `oms_endpointliquibase_context.xml`) into `META-INF`. SBG replaced the shim layer with direct dependencies on `oms-script-artifacts`/`core-script-artifacts` + individual cartridges, and its own `config/` + `scripts/` + `LiquibaseContext.xml`.
+
+Liquibase in the SDK: contexts named `<x>liquibase_context.xml` (rail `_bank`/`_endpoint` variants, interface contexts for accountlookup/accountposting/charges/document*/fraud/funds/fx/liquidity/sanction, `DfltPrcFlowCfg`); changelogs under `volpay-scripts/{endpoint/<rail>, bank/<rail> (PFD-*.xml process flows), core, configs}` plus the `bank/sample-*` onboarding set (sample-bank-setup, sample-customer, sample-users, sample-routing, sample-oms…). Transport templates versioned 3.3.0…3.5.2.1; latest OMS template is 3.5.0.1.
+
+### 2.5 Old SDK (`F:\Projects\SBG Old SDK\VolPaySDK`, VolPay 3.1.12-14204 / VolBase 1.1.22-8 / Designer 6.6.0 / JDK 11 / BuildUtils 1.9.2, branch `v3.1.12-EMEA-OMS`)
+- Old root pom was a real BOM `volpay:3.1.12-14204` listing every module at `${project.version}`; new SDK is `volpay-core:1.0` with everything at 1.0 – the release version is only in `build.properties`, so two SDK drops overwrite each other in `.m2` (hence the user's renamed `*_SBG` backup folders).
+- Old `sample-impl/` was a customer-extension cookbook (adapter-impl, bank-routing-extension, bulking-impl, glueback-impl, id-generation, keycloak-impl, encrypt_decrypt, eg-ach…); new `implementation/` has none of these (they live only in the VolPay3x repo `core/sample-impl`). Old `docs/` had 30+ guides (Installation, Deployment, Transport, Reference Data, Interface Manager, Warehousing, Incidence/Action frameworks…); new has 9.
+- Old install used inline `for /R` loops with `POMUtil` + `maven-install-plugin:2.5.2`; new pre-generates the XML manifests. Old root `release-tools/` migration utilities are gone.
+
+### 2.6 Risks for SBG
+No onboarding docs in the SDK; no GAV pins the VolPay release; `mvn clean` at SDK root wipes `bin/`; OMS is binary-only so customisation is by layered cartridges (SBG's `patch-product-impl` `.car` sources come from the *old* 3.1.x SDK and are version-stamped 3.1.10/3.1.11); `VOLANTE_HOME` is load-bearing in four places; `tools/volbase-release-updater` ships only its README.

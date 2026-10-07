@@ -1,0 +1,9 @@
+kind: Api
+name: api.DebitBlockPut
+description: >
+  A customer's instruction about direct debits by one creditor. Body {} blocks the creditor;
+  body {"maxAmount": 100} lets the creditor collect up to that amount at a time.
+method: PUT
+path: /debit-blocks/{account}/{creditorId}
+permission: payments.approve
+target: api.flows.DebitBlockWrite

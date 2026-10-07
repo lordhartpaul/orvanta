@@ -1,0 +1,16 @@
+kind: TestCase
+name: tests.TheSettlementAccountOfASchemeIsChosenByCurrency
+description: SWIFT settles in several currencies; the euro row is taken for a euro payment and the scheme's own row for a dollar payment.
+target: payments.rules.TransactionValidation
+given:
+  txn:
+    endToEndId: SETTLE-1
+    amount: 10
+    currency: EUR
+    debtor: {account: "4051122334"}
+    creditor: {name: Someone, account: "DE89370400440532013000"}
+expect:
+  - settlementAccount('SWIFT', 'EUR').account == '9100000006'
+  - settlementAccount('SWIFT', 'USD').account == '9100000002'
+  - settlementAccount('ZA-RTC', 'ZAR').account == '9100000001'
+  - not exists(settlementAccount('NO-SUCH', 'ZAR'))

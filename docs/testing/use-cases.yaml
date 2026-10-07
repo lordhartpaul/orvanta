@@ -1,0 +1,601 @@
+# The use-case catalogue: what the platform must do, and the automated tests that prove each point.
+# bin/test-report.py reads this file together with the test results and fails when a use case has
+# a failing test, a test that did not run, or names a test that does not exist.
+#
+# A test is named by its kind and its name:
+#   java:<method>      a JUnit test method (the names are unique across the classes)
+#   model:<name>       a TestCase model of the workspace
+#   browser:<text>     a browser test whose title contains the text
+
+- id: UC-01
+  area: Receiving
+  title: A credit transfer file is received, debulked and every payment followed to its outcome
+  tests: [java:isoInstructionRunsThroughEveryStageToItsFinalStatus, java:anOperatorSubmitsAFileAndFollowsEveryPaymentToItsOutcome,
+          model:tests.Pain001IsDebulked, browser:an operator submits a file]
+- id: UC-02
+  area: Receiving
+  title: A SWIFT MT101 is received and leaves as MT103
+  tests: [java:mt101IsDebulkedAndLeavesAsMt103, model:tests.Mt101IsDebulked, model:tests.Mt103IsBuilt]
+- id: UC-03
+  area: Receiving
+  title: A file is rejected as a whole when it is a duplicate or its totals are wrong
+  tests: [java:theSameFileAgainIsRejectedAsADuplicate, model:tests.InstructionControlSumMismatchIsRejected]
+- id: UC-04
+  area: Receiving
+  title: Nothing received is dropped; unreadable and unroutable messages are kept as rejected
+  tests: [java:unreadableAndUnroutablePayloadsAreStoredAsRejectedNotDropped]
+- id: UC-05
+  area: Receiving
+  title: Any ISO 20022, SWIFT MT or JSON message is recognised and read without type-specific code
+  tests: [java:anyIsoMessageIsReadWithoutAMessageSpecificClass, java:isoTreeSurvivesAWriteAndReadCycleIncludingAttributes,
+          java:anyMtMessageIsReadAtBlockAndTagLevel, java:outputHeaderAndSeveralMessagesInOneFile,
+          java:jsonMessagesAreRecognisedAndTypedByTheirMessageTypeField]
+
+- id: UC-10
+  area: Processing
+  title: A payment is validated and each defect reported with its reason code
+  tests: [model:tests.ValidationReportsEveryDefect, model:tests.UnknownBicIsAWarningAndKnownBicIsEnriched, java:financialIdentifierChecks]
+- id: UC-11
+  area: Processing
+  title: A payment is enriched and routed to the right channel
+  tests: [model:tests.DomesticPaymentIsRouted, model:tests.CrossBorderPaymentGoesToSwift, model:tests.EuroToANonSepaAccountGoesBySwift]
+- id: UC-12
+  area: Processing
+  title: The debtor account is checked with the account system
+  tests: [model:tests.ClosedDebtorAccountIsRejected]
+- id: UC-13
+  area: Processing
+  title: A sanctions hit is rejected and a possible match held for review
+  tests: [model:tests.SanctionsHitIsRejected, model:tests.PossibleSanctionsMatchIsHeld]
+- id: UC-14
+  area: Processing
+  title: A fraud alert holds the payment until a reviewer releases or rejects it
+  tests: [model:tests.FraudAlertIsHeldForReview, model:tests.ReleasedFraudAlertGoesOn, java:aFraudAlertIsHeldUntilAReviewerReleasesOrRejectsIt,
+          java:aHeldPaymentIsReleasedOnlyThroughRequestAndApproval, browser:a held payment is released]
+- id: UC-15
+  area: Processing
+  title: A late answer or a shortage of liquidity delays the payment without failing it
+  tests: [model:tests.PendingFraudResultWaits, model:tests.FraudResultBecomesAnAnswer, model:tests.ShortLiquidityWaitsAndRetries,
+          java:aLateAnswerAndAShortageOfLiquidityOnlyDelayThePayment]
+- id: UC-16
+  area: Processing
+  title: A required supporting document holds the payment until it is uploaded
+  tests: [model:tests.RequiredDocumentMissingIsHeld, model:tests.RequiredDocumentPresentPasses, model:tests.DocumentUploadStoresAndValidates]
+- id: UC-17
+  area: Processing
+  title: A foreign currency payment is debited at the quoted rate
+  tests: [model:tests.ForeignCurrencyIsDebitedInRand]
+- id: UC-18
+  area: Processing
+  title: A payment is posted exactly once and the posting is reversed when the payment fails later
+  tests: [model:tests.AnEarlierAnswerIsNotAskedAgain, model:tests.PostingIsReversedWithItsOwnKey,
+          java:aLateAnswerAndAShortageOfLiquidityOnlyDelayThePayment, java:isoInstructionRunsThroughEveryStageToItsFinalStatus]
+- id: UC-19
+  area: Processing
+  title: An outage of an external system parks the payment for repair and it is retried
+  tests: [model:tests.ScreeningOutageGoesToRepair, java:interruptedWorkIsPickedUpAgainAndFailedCallsAreRetried,
+          java:aRejectedFileIsReplayedAndAFailedPaymentResubmittedThroughApproval]
+- id: UC-20
+  area: Processing
+  title: A debtor account's own limit is enforced
+  tests: [model:tests.AccountLimitRejectsLargerPayments, java:apisDefinedByModelsStoreValidateAndAreEnforced]
+
+- id: UC-30
+  area: Sending
+  title: Routed payments are bulked, sent and acknowledged; a rejection by the receiving side is recorded
+  tests: [java:isoInstructionRunsThroughEveryStageToItsFinalStatus, model:tests.Pacs008IsBuilt]
+- id: UC-31
+  area: Sending
+  title: The customer is told the outcome, and told again when it changes
+  tests: [model:tests.Pain002ReportsEachOutcome, java:aReturnOfFundsAfterAcceptanceIsRecordedAndReportedAgain, java:theSameFileAgainIsRejectedAsADuplicate]
+
+- id: UC-40
+  area: Lifecycle
+  title: A payment not yet sent is cancelled at once
+  tests: [java:aPaymentNotYetSentIsCancelledOnTheSpotAndNeverLeaves]
+- id: UC-41
+  area: Lifecycle
+  title: A payment already sent is cancelled through the receiving side
+  tests: [model:tests.Camt055IsRead, java:aCustomerCancellationOfASentPaymentIsForwardedAndConfirmed,
+          java:anAcceptedPaymentIsCancelledThroughApprovalAndTheReceivingSide]
+- id: UC-42
+  area: Lifecycle
+  title: A return of funds is recorded
+  tests: [java:aReturnOfFundsAfterAcceptanceIsRecordedAndReportedAgain]
+- id: UC-43
+  area: Lifecycle
+  title: Interrupted work is picked up again and a failing event is kept, not lost
+  tests: [java:interruptedWorkIsPickedUpAgainAndFailedCallsAreRetried, java:anEventWhoseHandlerKeepsFailingIsKeptAsADeadLetter]
+- id: UC-44
+  area: Lifecycle
+  title: A rejected message is replayed with approval
+  tests: [java:aRejectedFileIsReplayedAndAFailedPaymentResubmittedThroughApproval]
+
+- id: UC-50
+  area: SEPA rails
+  title: SEPA Credit Transfer and SEPA Instant are chosen, checked and sent by their rules
+  tests: [model:tests.SepaInstructionIsDebulked, model:tests.SepaCreditTransferIsRouted, model:tests.SepaInstantRunsAroundTheClock,
+          model:tests.SepaInstantAboveTheLimitIsRejected, model:tests.SepaNameOutsideTheCharacterSetIsRejected,
+          model:tests.SepaInstantMessageIsBuilt, java:aSepaFileUsesTheBulkAndTheInstantRailAndWaitsOutsideOpeningHours, java:sepaCharacterSetAndZoneTimes]
+- id: UC-51
+  area: SEPA rails
+  title: Payments wait for the cut-off, the weekend, a holiday and a future date
+  tests: [model:tests.SepaAfterCutOffWaitsForTheNextOpening, model:tests.SepaAtTheWeekendWaitsForMonday,
+          model:tests.SepaOnAHolidayWaitsForTheNextBusinessDay, model:tests.SepaFutureDatedIsKeptUntilItsDate,
+          java:aSepaFileUsesTheBulkAndTheInstantRailAndWaitsOutsideOpeningHours]
+- id: UC-52
+  area: SEPA rails
+  title: A duplicate payment is rejected within its window
+  tests: [model:tests.SepaDuplicateWithinFiveDaysIsRejected, model:tests.SepaOldFingerprintHasExpired]
+- id: UC-53
+  area: SEPA rails
+  title: Direct debits are collected under mandates, with sequence and timing rules
+  tests: [model:tests.DirectDebitInstructionIsDebulked, model:tests.DirectDebitIsRoutedAndCountedOnTheMandate, model:tests.DirectDebitMessageIsBuilt,
+          model:tests.DirectDebitWithoutMandateIsRejected, model:tests.DirectDebitUnderACancelledMandateIsRejected,
+          model:tests.DirectDebitFromAnotherAccountThanTheMandateIsRejected, model:tests.RecurrentCollectionBeforeTheFirstIsRejected,
+          model:tests.OneOffCollectionUsesTheMandateUp, model:tests.ARetryIsNotCountedTwice, model:tests.DirectDebitSubmittedEarlyIsWarehoused,
+          model:tests.DirectDebitSubmittedTooLateIsRejected, model:tests.DirectDebitAfterTheCutOffOnTheLastDayIsRejected,
+          model:tests.CollectionDateOnASaturdayMovesToMonday, model:tests.MandateRegistrationKeepsTheCollectionCount,
+          java:directDebitsAreCollectedUnderTheirMandatesAndCanBeRefused, java:directDebitsAreCollectedUnderMandatesRegisteredThroughTheApi]
+
+- id: UC-60
+  area: SWIFT
+  title: Cross-border payments settle direct, by cover or serially
+  tests: [model:tests.SwiftDirectWhenTheCreditorBankIsOurCorrespondent, model:tests.SwiftCoverWhenWeKnowTheCreditorBank,
+          model:tests.SwiftSerialWhenWeDoNotKnowTheCreditorBank, model:tests.SwiftCurrencyWithoutCorrespondentIsRejected,
+          model:tests.SwiftCoverBuildsTwoMessages, model:tests.SwiftSerialBuildsOneMessageToTheCorrespondent,
+          java:swiftPaymentsSettleByCoverOrSerialAndTheStatementConfirmsThem]
+- id: UC-61
+  area: SWIFT
+  title: Statements are read and reconciled against the payments sent
+  tests: [model:tests.Mt940IsRead, model:tests.Camt053IsRead, java:swiftPaymentsSettleByCoverOrSerialAndTheStatementConfirmsThem,
+          browser:a nostro statement is submitted and read]
+
+- id: UC-70
+  area: Channels
+  title: Messages arrive by folder, queue and API key, each only on its own channel
+  tests: [java:aChannelFolderAcceptsOnlyWhatItsChannelAccepts, java:anInstructionArrivesOnAQueueAndItsStatusReportLeavesOnAQueue,
+          java:aSystemPushesAFileWithTheChannelKeyAndNothingElse]
+- id: UC-71
+  area: Channels
+  title: Models expose and protect their own APIs and data
+  tests: [model:tests.LimitApiStoresAValidRequest, model:tests.LimitApiRejectsABadRequest, java:apisDefinedByModelsStoreValidateAndAreEnforced,
+          java:dataSetAndApiModelsAreChecked]
+
+- id: UC-45
+  area: Incoming payments
+  title: A payment received for a customer is credited, or sent back to the sender with the reason; a credited one is refunded only with a second person
+  tests: [model:tests.IncomingPaymentIsCreditedToTheCustomer, model:tests.IncomingPaymentForAClosedAccountGoesBack, model:tests.IncomingPaymentWithABadAccountNumberGoesBack,
+          model:tests.IncomingPaymentFromASanctionedSenderWaitsForAPerson, model:tests.IncomingPaymentReleasedAfterReviewIsCredited,
+          model:tests.ReturnMessageQuotesThePaymentAsItWasReceived, model:tests.ReceivedPacs008IsReadIntoTransactions,
+          java:anIncomingPaymentIsCreditedOrSentBackAndACreditedOneCanBeRefunded, "browser:an incoming payment is credited, then refunded"]
+
+- id: UC-46
+  area: Incoming payments
+  title: A recall of the sender's bank sends back a payment not yet credited, waits for a decision on a credited one, and is answered when it cannot be met
+  tests: [model:tests.RecallRequestIsReadPerTransaction, model:tests.RefusedRecallIsAnsweredWithTheReason,
+          java:aRecallOfTheSendersBankIsAcceptedRefusedOrAnsweredByItself, "browser:a recall of the sender's bank is decided from the review queue"]
+
+- id: UC-47
+  area: Incoming payments
+  title: A direct debit collection against a customer's account is debited, or sent back with the reason (account, customer's block or limit, funds); a debited one is refunded with a second person
+  tests: [model:tests.IncomingCollectionIsDebitedFromTheCustomer, model:tests.IncomingCollectionByABlockedCreditorGoesBack,
+          model:tests.IncomingCollectionAboveTheCustomersLimitGoesBack, model:tests.IncomingCollectionWithinTheCustomersLimitIsDebited,
+          model:tests.IncomingCollectionWithoutFundsGoesBack, model:tests.IncomingCollectionForAClosedAccountGoesBack,
+          java:aCollectionAgainstACustomersAccountIsDebitedOrSentBackAndCanBeRefunded]
+
+- id: UC-48
+  area: Incoming payments
+  title: What customers told the bank (limits, mandates, direct debit blocks) is seen and searched in the Console, and changed only by a request that a second person approves
+  tests: [java:customerInstructionsAreSeenInTheConsoleAndChangedOnlyWithASecondPerson,
+          browser:a customer instruction is entered in the Console and takes effect when a second person approves]
+
+- id: UC-49
+  area: Incoming payments
+  title: The customer is told of a credit, a debit and the reversal of either, once each, in a notification per account
+  tests: [model:tests.NotificationHasOneEntryPerBookingAndMarksReversals, java:theCustomerIsToldOfACreditADebitAndTheirReversalOnceEach]
+
+- id: UC-50
+  area: Incoming payments
+  title: A payment received over SWIFT (MT103) is credited, converted into the currency of the account, or sent back to the sending bank as a return
+  tests: [model:tests.ReceivedMt103IsReadIntoATransaction, model:tests.IncomingSwiftPaymentInTheAccountsCurrencyIsCreditedAsReceived,
+          model:tests.IncomingSwiftPaymentInAnotherCurrencyIsCreditedAtTheQuotedRate, model:tests.IncomingSwiftPaymentForAClosedAccountGoesBack,
+          model:tests.Mt103ReturnSwapsThePartiesAndSaysWhy, java:aPaymentReceivedOverSwiftIsCreditedConvertedOrSentBack,
+          model:tests.SharedChargesComeOffTheAmountCredited, model:tests.WithOurTheCustomerGetsEverythingAndTheChargeIsAClaim,
+          model:tests.TheChargeIsInTheCurrencyOfTheAccountAfterConversion, model:tests.AChargeThatWouldEatThePaymentWaitsForAPerson,
+          model:tests.AReleasedSmallPaymentIsCreditedWithoutACharge, model:tests.ChargeClaimNamesThePaymentAndTheAmount]
+
+- id: UC-51
+  area: Incoming payments
+  title: Instant and domestic payments find the channel that names them as its own; an instant payment is answered at once, accepted or refused
+  tests: [model:tests.IncomingInstantPaymentIsCredited, model:tests.IncomingInstantPaymentFromASanctionedSenderIsRefusedNotHeld,
+          model:tests.InstantAnswerIsAcceptedOrRejectedWithTheReason, model:tests.IncomingDomesticPaymentIsCredited,
+          model:tests.IncomingDomesticPaymentInAnotherCurrencyGoesBack, model:tests.IncomingDomesticPaymentForABlockedAccountGoesBack,
+          model:tests.DomesticReturnUsesAccountNumbersAndTheCurrencyOfThePayment, java:instantAndDomesticPaymentsFindTheirOwnChannelAndAreAnsweredTheirOwnWay]
+
+- id: UC-52
+  area: Payment lifecycle
+  title: A customer who asks for a cancellation is told what became of it, at once and again when the receiving side has decided, in ISO 20022 or MT
+  tests: [model:tests.CancellationAnswerSaysWhatBecameOfEachPayment, model:tests.Mt192NamesTheMessageToCancel, model:tests.Mt196AnswersWithOneStatusAndACount,
+          java:theCustomerIsToldWhatBecameOfACancellationRequest]
+
+- id: UC-53
+  area: Incoming payments
+  title: A refund of a collection has the scheme's time limits, the creditor's bank can reverse a collection, and a recall carries the day an answer is due
+  tests: [model:tests.ReversalNamesTheCollectionsItTakesBack, java:refundsHaveTimeLimitsCollectionsCanBeReversedAndRecallsHaveADueDate]
+
+- id: UC-54
+  area: Incoming payments
+  title: "An instant payment that took too long is refused, one we sent without an answer in time is pointed out, and a customer chooses whether to be notified"
+  tests: [model:tests.AnInstantPaymentThatTookTooLongIsRefusedNotCreditedLate, java:instantPaymentsHaveTheirTimeAndACustomerChoosesWhatToBeTold]
+
+- id: UC-55
+  area: Incoming payments
+  title: "A customer gets a report of what was booked on an account (camt.052), on request and once a day"
+  tests: [model:tests.AccountReportListsBookingsWithTheirSums, java:aCustomerGetsAReportOfWhatWasBookedOnAnAccount]
+
+- id: UC-56
+  area: Ledger
+  title: "The platform's own ledger keeps accounts and balances: payments debit it, a refused debit rejects the payment, a return brings the money back"
+  tests: [model:tests.APaymentTheAccountSystemWillNotDebitIsRejected, java:accountsAreOpenedAndFundedOnlyWithASecondPerson,
+          java:aPaymentMovesTheBalanceAndComesBackWhenItIsReturned, java:aPostingIsMadeOnceAndRefusedWhenItCannotBeMade,
+          java:aConvertedPaymentGoesThroughThePositionAccountsAndEveryCurrencyBalances,
+          "browser:an account is opened and funded in the Console"]
+
+- id: UC-57
+  area: Ledger
+  title: "A day is closed and the customer gets a statement with opening and closing balance (camt.053 or MT940)"
+  tests: [model:tests.StatementHasBalancesAndTheEntriesOfTheDay, model:tests.Mt940StatementHasBalancesLinesAndReversalMarks, java:aDayIsClosedAndBalancesGoOnFromThere]
+
+- id: UC-58
+  area: Payment lifecycle
+  title: "A customer who sends MT101 is told what became of each transaction by MT199"
+  tests: [model:tests.Mt199SaysWhatBecameOfEachTransaction, java:aCustomerWhoSendsMt101IsToldTheOutcomeByMt199]
+
+- id: UC-59
+  area: Transports
+  title: "An inbound channel fetches its messages from a remote endpoint and acknowledges each after it is stored"
+  tests: [java:messagesAreFetchedFromAnEndpointStoredAndThenAcknowledged]
+
+- id: UC-79
+  area: Security
+  title: "The Console's session is an HttpOnly cookie: no script holds the token, and a request from another site changes nothing"
+  tests: [java:theConsolesSessionIsACookieThatScriptsCannotReadAndOtherSitesCannotUse]
+
+- id: UC-78
+  area: Security
+  title: "A user turns on a second step and then signs in with password and a one-time code; an administrator can reset it with a second person"
+  tests: [java:aUserTurnsOnASecondStepAndThenSignsInWithPasswordAndCode, java:whereTheSecondStepIsRequiredAUserWithoutItCanOnlySetItUp,
+          "browser:a user turns on the second step"]
+
+- id: UC-77
+  area: Transports
+  title: "A flow calls an operation of a SOAP web service; a fault that blames the request is a refusal, a fault of the server is tried again"
+  tests: [java:anOperationIsCalledAndFaultsAreToldApart]
+
+- id: UC-76
+  area: Transports
+  title: "Files are fetched from a directory on an SFTP server and outbound files are delivered to one, only to a server that shows the expected key"
+  tests: [java:filesAreFetchedFromAnSftpServerAndReportsAreDeliveredToIt]
+
+- id: UC-75
+  area: Transports
+  title: "An instruction arrives on a Kafka topic and its status report leaves on a Kafka topic"
+  tests: [java:anInstructionArrivesOnATopicAndItsStatusReportLeavesOnATopic]
+
+- id: UC-74
+  area: Operations
+  title: "A monitoring system scrapes the state of the platform as numbers (Prometheus format), never payment data"
+  tests: [java:aMonitoringSystemScrapesNumbersNotPaymentData]
+
+- id: UC-73
+  area: Operations
+  title: "A condition that needs a person opens an incident, told once to a webhook, and closes it when the cause is gone"
+  tests: [java:anIncidentIsOpenedOnceToldOnceAndClosedWhenTheCauseIsGone]
+
+- id: UC-72
+  area: Console
+  title: "Any list is exported as a spreadsheet file with the same filters and order; the export is written to the security log"
+  tests: [java:aListIsExportedAsASpreadsheetFileWithTheSameFiltersAndTheExportIsLogged]
+
+- id: UC-71
+  area: Security
+  title: "A user whose role lacks the right to read data in full sees account numbers, names and free text masked, in lists, pages and exports alike"
+  tests: [java:aUserWithoutTheRightToReadDataInFullSeesAccountsAndNamesMasked]
+
+- id: UC-69
+  area: Transports
+  title: "Files for a partner go out encrypted to the partner's key and signed with ours; files from the partner are decrypted and their signature checked, and what does not fit is refused"
+  tests: [java:filesAreEncryptedAndSignedOnTheWayOutAndCheckedOnTheWayIn]
+
+- id: UC-68
+  area: Operations
+  title: "Stopping a process tells the health check first, stops taking work, waits for the work in hand, and loses nothing"
+  tests: [java:stoppingWaitsForWorkInHandAndSaysSoOnTheHealthCheck]
+
+- id: UC-67
+  area: Customer messages
+  title: "A reason code is explained to the customer in the customer's language, from a table the bank maintains"
+  tests: [model:tests.AReasonIsExplainedInTheCustomersLanguage]
+
+- id: UC-66
+  area: Operations
+  title: "Operators pause and resume a channel, send a file again, cancel a whole file, and decide on possible duplicates, each with a second person"
+  tests: [model:tests.APossibleDuplicateIsHeldForAPersonWhenTheChannelSaysSo, java:operatorsPauseAChannelResendAFileCancelAWholeInstructionAndDecideOnPossibleDuplicates]
+
+- id: UC-65
+  area: Payment lifecycle
+  title: "A payment marked HIGH goes at once; an operator extends a scheme's cut-off for one day; suspended banks, the travel rule, high values and unreachable banks are checked"
+  tests: [model:tests.ASuspendedBankATravelRuleGapAndAHighValueAreHeldForAPerson, model:tests.AComplianceHoldReleasedByAPersonIsNotRaisedAgain,
+          model:tests.ABankTheSchemeCannotReachIsNotSentTo, java:aPriorityPaymentGoesAtOnceAndAnOperatorExtendsTodaysCutOff]
+
+- id: UC-64
+  area: Payment lifecycle
+  title: "A sent payment with no answer in time is asked about with a status enquiry (pacs.028), once; an enquiry from another bank is answered with where its payment stands"
+  tests: [model:tests.AStatusEnquiryNamesThePaymentAndTheFileItWentOutIn, java:anUnansweredPaymentIsAskedAboutAndAnEnquiryFromAnotherBankIsAnswered]
+
+- id: UC-63
+  area: Payment lifecycle
+  title: "The SWIFT network's ACK is recorded as delivered; its NAK puts the payment in repair with the network's code"
+  tests: [java:theSwiftNetworksAckMarksAMessageDeliveredAndItsNakPutsThePaymentInRepair]
+
+- id: UC-62
+  area: Incoming payments
+  title: "The funds of an incoming payment that hits a sanctions list are frozen on a seized-funds account while a person decides; released they reach the customer, rejected they go back"
+  tests: [model:tests.AnIncomingSanctionsHitFreezesTheFundsUntilAPersonDecides, java:theFundsOfASanctionsHitAreFrozenAndFollowThePersonsDecision]
+
+- id: UC-61
+  area: Payment lifecycle
+  title: "An investigation from another bank (request for information, claim of non-receipt, request to modify) is a case on the payment, answered by a person with camt.028 or camt.029"
+  tests: [model:tests.AnInvestigationIsReadWhicheverOfTheThreeItIs, model:tests.AResolutionCarriesTheCaseAndTheConfirmation,
+          java:investigationsFromOtherBanksAreCasesOnThePaymentAnsweredByAPerson]
+
+- id: UC-60
+  area: Operations
+  title: "A person matches a statement entry the engine could not, with a second person; the day's figures are reported per channel to compare with the clearing's"
+  tests: [java:aPersonMatchesAStatementEntryTheEngineCouldNotAndTheDayIsReportedPerChannel]
+
+- id: UC-59
+  area: Payment lifecycle
+  title: "A payment held for a person longer than its channel allows is turned down as expired, with its hold code; nothing is released by time alone"
+  tests: [java:aPaymentHeldLongerThanTheChannelAllowsIsTurnedDownAsExpiredNeverReleased]
+
+- id: UC-58
+  area: Payment lifecycle
+  title: "A request to pay (pain.013) waits for the customer; refused or expired it is answered RJCT, accepted it becomes a payment and is answered ACCP (pain.014)"
+  tests: [model:tests.ARequestToPayIsReadWithWhoAsksWhomForWhat, java:aRequestToPayWaitsForTheCustomerAndBecomesAPaymentWhenAccepted]
+
+- id: UC-57A
+  area: Direct debits
+  title: "Mandate messages from the creditor's side (new, amended, cancelled: pain.009/010/011) maintain the mandate register and are answered with acceptance reports (pain.012)"
+  tests: [model:tests.AMandateMessageIsReadWhicheverOfTheThreeItIs, java:mandateMessagesMaintainTheMandateRegisterAndAreAnsweredWithAcceptanceReports]
+
+- id: UC-56A
+  area: Transports
+  title: "Instructions arrive on an IBM MQ queue and files leave on one; the settings are tried from the API and switched on and off without a restart"
+  tests: [java:theQueueManagerAnswersAProbeAndAMessageGoesRoundTripOnAQueueOfItsOwn]
+
+- id: UC-55A
+  area: Operations
+  title: "A parked payment is repaired with corrected fields and resubmitted, notes are kept with a payment, and a warehoused payment is released before its time, each with a second person where it changes the payment"
+  tests: [java:aPaymentIsRepairedWithChangesNotedAndAWarehousedOneReleasedBeforeItsTime]
+
+- id: UC-54A
+  area: Security
+  title: "A role may approve payment actions only up to an amount per currency; above it another approver decides, and the refusal is logged"
+  tests: [java:anApproverMayApproveOnlyUpToTheRolesLimit]
+
+- id: UC-58A
+  area: Studio
+  title: "A reference table's rows are edited in a table in the Studio, or downloaded as a CSV file and uploaded again, merged or replacing the table, as a change request a second person approves"
+  tests: [java:aReferenceTableIsDownloadedAndUploadedAsASpreadsheetFileWithApproval, browser:a reference table is uploaded as a spreadsheet file]
+
+- id: UC-59A
+  area: Operations
+  title: "A payment is initiated from a Console form, from a template, approved by a second person within their limit, and then processed like any instruction; the Console channel takes nothing from outside"
+  tests: [java:aPaymentIsInitiatedFromAFormWithATemplateAndEntersProcessingOnceApproved, browser:a payment is initiated from the form with a template]
+
+- id: UC-60A
+  area: Security
+  title: "A person signs in through an OpenID Connect provider (single sign-on); the ID token is checked against the provider's keys, the state against this process, and only an active Orvanta user by that name gets a session"
+  tests: [java:aPersonSignsInThroughTheProviderAndOnlyAKnownActiveUserGetsASession, java:aTokenThatDoesNotHoldUpIsRefused]
+
+- id: UC-61A
+  area: Integration
+  title: "A connector or destination authenticates with OAuth2 client credentials: the token is fetched from the token URL, kept until shortly before it expires, shared, and renewed once when the system refuses it"
+  tests: [java:aTokenIsFetchedKeptAndRenewedWhenTheApiRefusesIt]
+
+- id: UC-62A
+  area: Security
+  title: "A system calls the API with a key that people issue, rotate and disable with a second person; the key has roles, may never approve or administer, and its secret is shown once"
+  tests: [java:aSystemCallsTheApiWithAKeyThatPeopleIssueAndMayNeverApprove]
+
+- id: UC-63A
+  area: Integration
+  title: "The model-defined APIs of the active deployment are described in OpenAPI 3.0 for tools and partners, with paths, parameters, permissions, examples and the ways to authenticate"
+  tests: [java:theModelDefinedApisAreDescribedForToolsInOpenApi]
+
+- id: UC-64A
+  area: Low-code
+  title: "A flow's parallel step runs its branches at once, each on a copy of the scope; their changes meet in the scope, the first branch to end the flow decides, and the trace shows the branches nested"
+  tests: [java:branchesRunAtOnceAndTheirResultsMeetInTheScope, java:aBranchThatEndsTheFlowEndsIt, java:aParallelStepNeedsTwoBranches]
+
+- id: UC-65A
+  area: Low-code
+  title: "A flow's find step reads a data set by ranges, sets and 'not' besides equality, sorted and in pages; a condition without a value finds nothing; the stores answer the same conditions"
+  tests: [java:conditionsAreRangesSetsAndPagesInAFindStep, java:anUnknownConditionIsAProblemOfTheModel,
+          java:theMemoryStoreAnswersTheQuestionsOfTheLists, java:mongoDbAnswersTheQuestionsOfTheListsTheSameWay]
+
+- id: UC-66A
+  area: Transports
+  title: "Files for partners without OpenPGP carry a SHA-256 checksum companion file: written after every outgoing file, awaited and checked for every incoming one, a disagreeing file refused without being read"
+  tests: [java:aFolderWithChecksumCompanionsTakesAFileOnlyWhenItsChecksumAgrees]
+
+- id: UC-67A
+  area: Integration
+  title: "A connector with a circuit breaker stops calling a system that keeps failing for a while, tries it once when the time is up, and closes the circuit when it answers; refusals do not count"
+  tests: [java:aFailingSystemIsLeftAloneForAWhileAndTriedOnceWhenTheTimeIsUp]
+
+- id: UC-68A
+  area: Security
+  title: "A model-defined API that changes data may ask for a second person: the call is recorded as a request (202) and runs as the caller once approved; reads need no approval"
+  tests: [java:aModelDefinedApiThatAsksForApprovalRunsOnlyWhenASecondPersonApproves]
+
+- id: UC-69A
+  area: Transports
+  title: "A partner pushes files with a key of its own, limited to its channels, which people rotate and disable in the Console without a redeployment"
+  tests: [java:aPartnerPushesFilesWithItsOwnKeyWhichIsRotatedWithoutARedeployment]
+
+- id: UC-70A
+  area: Transports
+  title: "A sender on a queue (RabbitMQ, Kafka, IBM MQ) gets a receipt per message stored: the id here, the outcome of reading it and the reason when refused"
+  tests: [java:anInstructionArrivesOnAQueueAndItsStatusReportLeavesOnAQueue]
+
+- id: UC-71A
+  area: Transports
+  title: "A partner submits messages as SOAP requests (the message in the Body, the channel's key or its own) and gets a SOAP envelope with a receipt per message, or a fault"
+  tests: [java:aPartnerSubmitsAnInstructionAsASoapRequestAndGetsAReceiptEnvelope]
+
+- id: UC-72A
+  area: Integration
+  title: "A connector presents our client certificate to a system that requires one (mutual TLS) and trusts that system only by the certificates named; without ours, or without trust, the call fails"
+  tests: [java:aServiceThatRequiresAClientCertificateIsCalledWithOurs]
+
+- id: UC-73A
+  area: Formats
+  title: "A payment file of fixed-width or delimited records is read by a Format model into an instruction and its payments, and written back the same way; a line the model does not know is refused"
+  tests: [java:aFixedWidthFileIsReadByItsModelAndWrittenBackTheSame, java:aDelimitedFileIsReadAndWrittenWithQuotes, java:aFormatWithAMistakeIsAProblemOfTheModelAndAChannelNamesItsFormat,
+          java:aFixedWidthPaymentFileBecomesAnInstructionAndItsPayments]
+
+- id: UC-74A
+  area: Low-code
+  title: "A flow's wait step stops the payment until a callback fills the answer or a time has passed, with a retry time and its own time limit; run again with the answer there, the flow goes on"
+  tests: [java:theFlowStopsUntilTheAnswerIsThereAndGoesOnWhenItIs, java:aWaitStepNeedsACodeAndSensibleTimes, model:tests.PendingFraudResultWaits,
+          model:tests.ShortLiquidityWaitsAndRetries]
+
+- id: UC-75A
+  area: Low-code
+  title: "A flow's task step hands a payment to people in a named operator queue with instructions; the review queue lists it under that queue, and once released the flow goes on past the task"
+  tests: [java:aPaymentIsHeldForAQueueWithInstructionsAndGoesOnOnceReleased, java:aTaskStepNeedsACodeAndAQueue]
+
+- id: UC-76A
+  area: Formats
+  title: "Every way a message was found to be wrong has a sample file that the engine refuses with the expected reason code: truncated or non-ISO XML, a type no channel takes, an MT message missing a mandatory field or with a malformed amount, non-message JSON, plain text, a flat file with an unknown record"
+  tests: [java:everyNegativeSampleIsRefusedWithTheExpectedReason]
+
+- id: UC-77A
+  area: Validation
+  title: "An IBAN is checked against its country's structure (length) besides its check digits, and a creditor given by IBAN alone gets its bank's BIC from the bank code inside the IBAN"
+  tests: [model:tests.AnIbanOfTheWrongLengthForItsCountryIsRefused, model:tests.AWellFormedIbanPassesTheStructureCheck,
+          model:tests.TheCreditorBankIsDerivedFromTheIbanWhenNoneIsGiven, model:tests.AGivenCreditorBicIsKeptOverTheIbanOne, model:tests.AnUnknownBankCodeLeavesTheBicEmpty]
+
+- id: UC-78A
+  area: Operations
+  title: "Jobs run at the times Schedule models name (cron in a time zone): closing the day, statements, account reports or a flow; once across processes; listed with next and last run and run by hand"
+  tests: [java:minutesHoursDaysMonthsAndWeekdaysAreMatched, java:aMalformedExpressionNamesItsField, java:aScheduledJobRunsOnceWhenItsMinuteComesAndCanBeRunByHand]
+
+- id: UC-79A
+  area: SWIFT
+  title: "A SWIFT payment goes only to banks we have a relationship with for that message type today (RMA): cover when the creditor's bank allows an MT103, serial otherwise, rejected when the correspondent would not take it; text is cut to MT field lengths with a truncation mark; outbound files carry message ids in the receiver's form"
+  tests: [model:tests.ABankThatAllowsOnlyBankTransfersGetsTheCustomerTransferSerially, model:tests.ARelationshipThatEndedCountsAsNone, model:tests.TextIsCutToAnMtFieldWithATruncationMark,
+          java:placeholdersAreFilledAndTheResultIsASwiftCharacterSetId]
+
+- id: UC-81E
+  area: Ledger
+  title: "A fee from the schedule is booked with the debit to a fee account and returned with a reversal, the funds check covers it, a posting carries a value date and the balance by value date is reported, and a day's journal is exported as a file"
+  tests: [java:aFeeIsBookedAndReturnedWithThePostingAndTheDayIsExported, model:tests.AFeeIsComputedFromASchedule, model:tests.TheSettlementAccountOfASchemeIsChosenByCurrency]
+
+- id: UC-81D
+  area: APIs
+  title: "A model-defined API is also a SOAP operation: the Body's element names it, its children are the path values and the body, the answer or a Fault comes back in an envelope, and a WSDL describes every operation; the REST permission applies"
+  tests: [java:theModelDefinedApisAreAlsoSoapOperations]
+
+- id: UC-81C
+  area: Data
+  title: "A data set may live in a relational database: a DataSet names a table and a configured data source; rows are written, found by conditions, sorted, limited, changed and removed through SQL with parameters, and names that are not plain SQL names are refused"
+  tests: [java:rowsAreWrittenFoundByConditionsChangedAndRemovedOnATable, java:namesThatAreNotPlainSqlNamesAndUnknownDataSourcesAreRefused, java:aTableDataSetNeedsItsDataSourceAndNothingElse]
+
+- id: UC-81B
+  area: Processing
+  title: "A route takes amounts in a range (a clearing's limit): a payment outside it is parked for repair; a debtor account may have a daily cumulative limit besides the per-payment one, set through the same API and form; corridors are blocked or put under review by a table"
+  tests: [model:tests.APaymentThatWouldTakeTheAccountOverItsDailyLimitIsRejected, model:tests.APaymentWithinTheDailyLimitGoesOn, model:tests.APaymentToABlockedDestinationIsRejected,
+          model:tests.APaymentOnACorridorUnderReviewIsHeldForAPerson, java:apisDefinedByModelsStoreValidateAndAreEnforced, java:aPurposeCodeTheClearingDoesNotTakeIsRepairedAndAllSendingCanBeStoppedAtOnce]
+
+- id: UC-81A
+  area: Validation
+  title: "A creditor account is identified as its country requires (IBAN, national bank code of the right form, or BIC); a bank code and a BIC are found from each other and from the IBAN; an IBAN and a bank code given together must agree; Dutch, Hungarian and UK account numbers are checked by their national rules; an IBAN is composed from its parts and taken apart"
+  tests: [model:tests.ACountryThatNeedsAnIbanRefusesAPlainAccountNumber, model:tests.ABankCodeOfTheWrongFormForItsCountryIsRefused, model:tests.AnAccountWithTheCountrysBankCodePasses,
+          model:tests.AnIbanAndASortCodeThatNameDifferentBanksAreRefused, model:tests.ADutchAccountFailingTheElevenTestIsRefused, model:tests.ADutchAccountPassingTheElevenTestIsAccepted,
+          model:tests.TheCreditorBankIsFoundFromItsNationalCodeAndTheCodeFromItsBic, model:tests.TheNationalCodeIsFilledFromTheBic, model:tests.AnIbanIsComposedFromItsPartsAndTakenApartAgain]
+
+- id: UC-80A
+  area: Operations
+  title: "A payment whose purpose code the receiving channel does not take is parked for repair; all sending is stopped and resumed at once with a second person; the day's figures show the time to route per channel; unmatched statement entries get suggested payments; bulking groups files by chosen fields"
+  tests: [java:aPurposeCodeTheClearingDoesNotTakeIsRepairedAndAllSendingCanBeStoppedAtOnce, java:aPersonMatchesAStatementEntryTheEngineCouldNotAndTheDayIsReportedPerChannel]
+
+- id: UC-80
+  area: Low-code tool
+  title: Models compile to code, and a mistake is reported with the model and the place
+  tests: [java:workspaceBuildsAndEveryModelTestPasses, java:expressionPrecedenceAndFunctions, java:problemsNameTheModelAndThePlace,
+          java:aFailingRuleExpressionBecomesAViolationNotACrash, java:forEachRunsNestedStepsPerItemAndStopsWhenTheFlowEnds, java:modelNamesAreValidated]
+- id: UC-81
+  area: Low-code tool
+  title: A model change takes effect only after a second person approves, and then without a restart
+  tests: [java:aModelChangeNeedsASecondPersonAndThenChangesBehaviour, java:aDesignerChangesARuleAndItTakesEffectOnlyAfterApproval,
+          browser:a designer changes a rule in Studio]
+- id: UC-82
+  area: Low-code tool
+  title: Flows, rule sets, decision tables and mappings are built by dragging and filling forms, without typing model text
+  tests: [java:aModelWrittenFromItsDefinitionMeansTheSame, browser:a flow is built in the designer, browser:a channel is edited in a form, browser:a message specification is edited in a form,
+          browser:rules are edited in a form and a decision table in a grid,
+          browser:a mapping is built in the designer with a loop]
+- id: UC-83
+  area: Low-code tool
+  title: A model is removed and an earlier deployment is restored only with a second person, and each deployment shows what it changed
+  tests: [java:aModelIsRemovedAndADeploymentIsRolledBackOnlyWithApproval, browser:a deployment is rolled back]
+- id: UC-84
+  area: Low-code tool
+  title: A message that breaks its schema or its field rules is rejected when received, and held back when the engine built it, with the failing field named
+  tests: [java:anMtMessageIsCheckedFieldByFieldAgainstItsSpecification, java:aMessageSpecificationWithAMistakeIsReportedWhenTheModelsAreBuilt,
+          java:aMessageThatBreaksItsSchemaOrFieldRulesIsRejectedWithTheFieldNamed, browser:a schema is imported and a message is checked,
+          java:aMessageTheEngineBuildsIsCheckedBeforeItIsSentAndHeldBackWhenInvalid]
+
+- id: UC-85
+  area: Console
+  title: Payments and the other records are found by search, filters, order and pages that the store works out, the same on MongoDB as in memory, and the dashboard shows where payments are
+  tests: [java:aListIsSearchedFilteredSortedAndPagedByTheStore, "browser:the dashboard shows where payments are, and the list is searched, sorted and paged",
+          java:theMemoryStoreAnswersTheQuestionsOfTheLists, java:mongoDbAnswersTheQuestionsOfTheListsTheSameWay,
+          "browser:instructions, outbound files, approvals and the security log are searched and filtered like payments"]
+
+- id: UC-86
+  area: Console
+  title: An open page is told when payments or approvals change and fetches again; the notice says what kind of thing changed and carries no data
+  tests: [java:anOpenPageIsToldWhenSomethingChangesAndNothingElse, browser:the dashboard and the lists follow what happens without being reloaded]
+
+- id: UC-87
+  area: Console
+  title: Every screen passes an automated accessibility check (WCAG 2.1 A and AA) and fits the window, at desktop and phone width, in the light and the dark theme
+  tests: [browser:every screen passes the accessibility check and fits the window]
+
+- id: UC-90
+  area: Security
+  title: Each role reaches only what its permissions allow
+  tests: [java:eachRoleReachesOnlyWhatItsPermissionsAllow, browser:shows each role only its own pages]
+- id: UC-94
+  area: Security
+  title: Roles of one's own are approved by a second person, and a user limited to channels, accounts, currencies or an amount reaches only those payments
+  tests: [java:aRoleOfOnesOwnAndALimitToChannelsOrAccountsDecideWhatAUserReaches, browser:a role is created and a user is limited to one channel]
+- id: UC-91
+  area: Security
+  title: Sign-in is protected, sessions end at sign-out, and security events are recorded
+  tests: [java:headersSessionsThrottlingAndTheSecurityLog, java:passwordAndUrlPolicies, browser:the security log shows sign-ins]
+- id: UC-92
+  area: Security
+  title: Users are created, changed and disabled through approval
+  tests: [java:aUserIsCreatedChangedAndDisabledThroughApproval, java:theBootstrapPasswordCreatesTheAdministratorOnce,
+          java:aShortOrMissingBootstrapPasswordCreatesNoUser]
+- id: UC-93
+  area: Security
+  title: The server speaks HTTPS, refuses hostile input and detects tampering
+  tests: [java:theServerSpeaksHttpsFromAKeystoreAndOnlyHttps, java:externalEntitiesAreRefused, java:modelTextCannotBreakOutOfTheGeneratedCode,
+          java:aDeploymentChangedInTheDatabaseIsNotRun]

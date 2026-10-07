@@ -1,0 +1,15 @@
+kind: Channel
+name: rails.sepa.RecallInbound
+description: >
+  Recall requests from the bank that sent us a SEPA Credit Transfer (camt.056): it asks for a payment
+  back. A payment not yet credited is sent back at once; a credited one waits for a decision, and a
+  refusal is answered on the answer channel.
+direction: inbound
+purpose: recall
+format: iso20022
+messageTypes: [camt.056]
+mapping: rails.sepa.maps.Camt056ToRecall
+answerChannel: rails.sepa.RecallAnswerOutbound
+# the scheme expects the answer within this many business days
+answerWithinBusinessDays: 15
+calendar: TARGET2

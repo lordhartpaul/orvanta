@@ -1,0 +1,10 @@
+kind: Channel
+name: channels.FraudResultInbound
+description: Late results of the fraud check (JSON with messageType fraud.result). The waiting transaction resumes.
+direction: inbound
+purpose: callback
+format: json
+messageTypes: [fraud.result]
+mapping: payments.inbound.FraudResultToAnswer
+# a callback on this channel may fill only these fields of a transaction
+allowedFields: [checks.fraud]

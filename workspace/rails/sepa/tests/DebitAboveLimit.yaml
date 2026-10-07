@@ -1,0 +1,29 @@
+kind: TestCase
+name: tests.IncomingCollectionAboveTheCustomersLimitGoesBack
+description: "The customer allows this creditor 50 at a time; 84.20 is sent back with SL01."
+target: rails.sepa.flows.IncomingDebitProcessing
+given:
+  txn:
+    id: ORVTXN0000000950
+    paymentType: DD_IN
+    channelIn: rails.sepa.SddDebtorInbound
+    endToEndId: POWER-OCT
+    originalTxId: SNDDD-1
+    originalMsgId: SND-DD-MSG-1
+    originalMessageType: pacs.003.001.08
+    amount: 84.20
+    currency: EUR
+    sequenceType: RCUR
+    mandate: {id: MND-7001, signedOn: "2025-03-01"}
+    creditor: {name: "Nordlicht Energie GmbH", account: "DE89370400440532013000", agentBic: COBADEFF, schemeId: DE98ZZZ09999999999}
+    debtor: {name: "Lukas Schmidt", account: "DE08500105175400000042"}
+data:
+  data.DebitBlocks:
+    - {id: "DE08500105175400000042:DE98ZZZ09999999999", maxAmount: 50}
+mocks:
+  connectors.AccountLookup: {status: ACTIVE, currency: EUR}
+  connectors.AccountPosting: {status: POSTED, postingId: P-9}
+expect:
+  - result.status == 'REJECTED'
+  - result.code == 'SL01'
+  - not exists(txn.posting)

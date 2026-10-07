@@ -1,0 +1,23 @@
+kind: TestCase
+name: tests.SwiftSerialBuildsOneMessageToTheCorrespondent
+description: "Serial method: one MT103 to the correspondent, with the creditor bank in field 57A."
+target: payments.outbound.CanonicalToMt103
+given:
+  bulk: {msgId: ORVOUT0000000012, senderBic: ORVAZAJJ}
+  txns:
+    - id: ORVTXN0000000009
+      endToEndId: XB-1
+      amount: 5000
+      currency: USD
+      valueDate: "2026-10-05"
+      uetr: 3f0c0a2e-0b7e-4b53-9d55-5f4f0f6f2b11
+      chargeBearer: SHAR
+      debtor: {name: "Karoo Mining Supplies", account: "4051122334"}
+      creditor: {name: "Overseas Supplier Inc", account: "000987654321", agentBic: SMALUS44}
+      remittance: Invoice 4471
+      route: {settlementMethod: SERIAL, correspondentBic: CHASUS33}
+expect:
+  - count(result.messages) == 1
+  - result.messages[0].receiver == 'CHASUS33'
+  - mtField(result.messages[0], '57A') == 'SMALUS44'
+  - not exists(mtField(result.messages[0], '53A'))

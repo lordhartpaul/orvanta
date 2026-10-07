@@ -1,0 +1,29 @@
+kind: TestCase
+name: tests.SharedChargesComeOffTheAmountCredited
+description: "SHA: of 25,000 rand received the customer is credited 24,875, and 125 is booked as our charge."
+target: rails.swift.flows.IncomingSwiftProcessing
+given:
+  txn:
+    id: ORVTXN0000000980
+    paymentType: IN
+    channelIn: rails.swift.Mt103Inbound
+    endToEndId: CHASE-REF-0100
+    originalTxId: CHASE-REF-0100
+    sendingAgentBic: CHASUS33
+    amount: 25000.00
+    currency: ZAR
+    chargeBearer: SHAR
+    debtor: {name: "Atlas Drilling Equipment Inc", account: "000123456789", agentBic: CHASUS33}
+    creditor: {name: "Thandiwe Mokoena", account: "62011223344"}
+mocks:
+  connectors.AccountLookup: {status: ACTIVE, currency: ZAR}
+  connectors.SanctionsScreening: {status: CLEAR}
+  connectors.AccountPosting: {status: POSTED, postingId: P-7}
+  connectors.FxRates: {rate: 18.50}
+expect:
+  - result.status == 'CREDITED'
+  - txn.charges.deducted == 125
+  - txn.charges.netAmount == 24875
+  - txn.charges.feeAccount == '9200000001'
+  - txn.charges.posting.postingId == 'P-7'
+  - not exists(txn.charges.claim)

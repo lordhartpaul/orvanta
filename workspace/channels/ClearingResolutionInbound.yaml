@@ -1,0 +1,11 @@
+kind: Channel
+name: channels.ClearingResolutionInbound
+description: Answers of the clearing system (camt.029) to cancellation requests we forwarded.
+direction: inbound
+purpose: resolution
+format: iso20022
+messageTypes: [camt.029]
+mapping: payments.inbound.Camt029ToResolution
+# cancellation status codes of the answer mapped to the outcome
+cancelled: [ACCR, CNCL]
+refused: [RJCR]

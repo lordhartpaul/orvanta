@@ -1,0 +1,19 @@
+kind: TestCase
+name: tests.ARelationshipThatEndedCountsAsNone
+description: A relationship with a validTo in the past does not make the cover method available.
+target: payments.flows.TransactionProcessing
+given:
+  txn:
+    id: ORVTXN0000000095
+    endToEndId: XB-RMA-2
+    amount: 5000
+    currency: USD
+    valueDate: "2026-10-05"
+    uetr: 3f0c0a2e-0b7e-4b53-9d55-5f4f0f6f2b95
+    debtor: {name: "Karoo Mining Supplies", account: "4051122334"}
+    creditor: {name: "Overseas Supplier Inc", account: "000987654321", agentBic: WFBIUS6S}
+mocks:
+  connectors.FxRates: {rate: 18.50}
+expect:
+  - result.status == 'ROUTED'
+  - txn.route.settlementMethod == 'SERIAL'

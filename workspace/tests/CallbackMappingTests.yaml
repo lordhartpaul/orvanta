@@ -1,0 +1,12 @@
+kind: TestCase
+name: tests.FraudResultBecomesAnAnswer
+description: A late fraud result names the transaction and fills only the fraud check.
+target: payments.inbound.FraudResultToAnswer
+given:
+  src: {messageType: fraud.result, transactionId: ORVTXN0000000007, status: CLEAR, score: 12}
+expect:
+  - count(result.entries) == 1
+  - result.entries[0].transactionId == 'ORVTXN0000000007'
+  - result.entries[0].field == 'checks.fraud'
+  - result.entries[0].value.status == 'CLEAR'
+  - result.entries[0].value.score == 12

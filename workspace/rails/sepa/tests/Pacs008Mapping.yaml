@@ -1,0 +1,24 @@
+kind: TestCase
+name: tests.SepaInstantMessageIsBuilt
+description: "The instant message carries the SEPA service level, the INST local instrument, shared charges and the acceptance time."
+target: rails.sepa.maps.CanonicalToSepaPacs008
+clock: "2026-10-05T08:00:00Z"
+given:
+  bulk: {msgId: ORVOUT0000000011, createdAt: "2026-10-05T08:00:00Z", count: 1, total: 150, senderBic: ORVADEFF, localInstrument: INST}
+  txns:
+    - id: ORVTXN0000000008
+      endToEndId: SEPA-0004
+      amount: 150
+      currency: EUR
+      uetr: 3f0c0a2e-0b7e-4b53-9d55-5f4f0f6f2b11
+      debtor: {name: "Rheinland Pumpen GmbH", account: "DE89370400440532013000", agentBic: DEUTDEFF}
+      creditor: {name: "Trattoria Bella Srl", account: "IT60X0542811101000000123456", agentBic: BPPIITRR}
+      remittance: Invoice SEPA-0004
+expect:
+  - result.Document.FIToFICstmrCdtTrf.GrpHdr.PmtTpInf.SvcLvl.Cd == 'SEPA'
+  - result.Document.FIToFICstmrCdtTrf.GrpHdr.PmtTpInf.LclInstrm.Cd == 'INST'
+  - result.Document.FIToFICstmrCdtTrf.GrpHdr.IntrBkSttlmDt == '2026-10-05'
+  - result.Document.FIToFICstmrCdtTrf.CdtTrfTxInf[0].ChrgBr == 'SLEV'
+  - result.Document.FIToFICstmrCdtTrf.CdtTrfTxInf[0].AccptncDtTm == '2026-10-05T08:00:00Z'
+  - result.Document.FIToFICstmrCdtTrf.CdtTrfTxInf[0].CdtrAcct.Id.IBAN == 'IT60X0542811101000000123456'
+  - result.Document.FIToFICstmrCdtTrf.CdtTrfTxInf[0].IntrBkSttlmAmt.@Ccy == 'EUR'

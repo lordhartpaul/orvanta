@@ -1,0 +1,20 @@
+kind: Channel
+name: rails.sepa.SddReturnOutbound
+description: >
+  Returns of direct debit collections we received (pacs.004): collections that could not be debited,
+  and refunds a customer asked for. A collection sent on this channel has reached its end: it is RETURNED.
+direction: outbound
+format: iso20022
+messageType: pacs.004.001.09
+mapping: rails.sepa.maps.CanonicalToSepaPacs004
+sentStatus: RETURNED
+bulking:
+  maxTransactions: 100
+  maxWaitSeconds: 3
+destination:
+  type: folder
+  path: outbound/sepa-dd-returns
+  extension: xml
+properties:
+  senderBic: ORVADEFF
+  scheme: SEPA-SDD

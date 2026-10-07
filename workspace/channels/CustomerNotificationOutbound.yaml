@@ -1,0 +1,16 @@
+kind: Channel
+name: channels.CustomerNotificationOutbound
+description: >
+  Debit and credit notifications (camt.054) to customers: what was booked on an account because of a
+  payment received or a direct debit collection, and the reversal when that payment is sent back.
+  One notification holds the entries of one account that were waiting when it was written.
+direction: outbound
+format: iso20022
+messageType: camt.054.001.08
+mapping: payments.outbound.CanonicalToCamt054
+destination:
+  type: folder
+  path: outbound/customer-notifications
+  extension: xml
+properties:
+  senderBic: ORVADEFF

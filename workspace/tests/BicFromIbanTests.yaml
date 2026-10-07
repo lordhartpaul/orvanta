@@ -1,0 +1,13 @@
+kind: TestCase
+name: tests.TheCreditorBankIsDerivedFromTheIbanWhenNoneIsGiven
+description: A SEPA creditor given by IBAN alone gets its bank's BIC from the bank code inside the IBAN; a BIC given is kept.
+target: payments.enrich.TransactionEnrichment
+given:
+  txn:
+    id: ORVTXN0000000091
+    amount: 10
+    currency: EUR
+    creditor: {name: "Rheinland Pumpen GmbH", account: "DE89370400440532013000"}
+expect:
+  - txn.creditor.agentBic == 'COBADEFFXXX'
+  - txn.creditor.country == 'DE'

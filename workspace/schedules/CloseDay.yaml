@@ -1,0 +1,11 @@
+kind: Schedule
+name: schedules.CloseDay
+description: >
+  Closes the ledger's day at 18:00 on weekdays (South African time): balances are carried forward and the
+  day's statements can be made. Off until ORVANTA_SCHEDULES_ENABLED is true, so a development machine
+  does not close days by itself.
+cron: "0 18 * * 1-5"
+timezone: Africa/Johannesburg
+job: closeDay
+day: today
+enabled: ${env.ORVANTA_SCHEDULES_ENABLED:-false}

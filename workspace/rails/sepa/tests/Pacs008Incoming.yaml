@@ -1,0 +1,30 @@
+kind: TestCase
+name: tests.ReceivedPacs008IsReadIntoTransactions
+description: "A pacs.008 from the clearing becomes one batch; the ids of the sender are kept for a later return."
+target: rails.sepa.maps.Pacs008ToCanonical
+given:
+  src:
+    Document:
+      FIToFICstmrCdtTrf:
+        GrpHdr: {MsgId: SND-MSG-1, CreDtTm: "2026-10-06T07:30:00", NbOfTxs: "1", IntrBkSttlmDt: "2026-10-06", InstgAgt: {FinInstnId: {BICFI: BNPAFRPP}}}
+        CdtTrfTxInf:
+          - PmtId: {InstrId: SND-INSTR-1, EndToEndId: RENT-OCT, TxId: SNDTX-1, UETR: 8a562c67-ca16-48ba-b074-65581be6f001}
+            IntrBkSttlmAmt: {"@Ccy": EUR, "#text": "950.00"}
+            ChrgBr: SLEV
+            Dbtr: {Nm: Camille Laurent}
+            DbtrAcct: {Id: {IBAN: FR1420041010050500013M02606}}
+            DbtrAgt: {FinInstnId: {BICFI: BNPAFRPP}}
+            CdtrAgt: {FinInstnId: {BICFI: ORVADEFF}}
+            Cdtr: {Nm: Rheinland Pumpen GmbH}
+            CdtrAcct: {Id: {IBAN: DE08500105175400000042}}
+            RmtInf: {Ustrd: Rent October}
+expect:
+  - result.msgId == 'SND-MSG-1'
+  - result.batches[0].sendingAgentBic == 'BNPAFRPP'
+  - result.batches[0].settlementDate == '2026-10-06'
+  - result.batches[0].originalMsgId == 'SND-MSG-1'
+  - result.batches[0].txns[0].originalTxId == 'SNDTX-1'
+  - result.batches[0].txns[0].amount == 950
+  - result.batches[0].txns[0].currency == 'EUR'
+  - result.batches[0].txns[0].creditor.account == 'DE08500105175400000042'
+  - result.batches[0].txns[0].debtor.agentBic == 'BNPAFRPP'

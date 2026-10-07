@@ -1,0 +1,23 @@
+kind: TestCase
+name: tests.IncomingDomesticPaymentIsCredited
+description: "A rand payment for an open account: credited against the settlement account of the domestic clearing."
+target: payments.flows.IncomingDomesticProcessing
+given:
+  txn:
+    id: ORVTXN0000000997
+    paymentType: IN
+    channelIn: channels.ZaRtcInbound
+    endToEndId: SCHOOL-FEES-T4
+    originalTxId: RTCTX-1
+    originalMsgId: RTC-IN-1
+    amount: 6100.00
+    currency: ZAR
+    debtor: {name: "Nomsa Zulu", account: "62077889900", agentBic: FIRNZAJJ}
+    creditor: {name: "Karoo Mining Supplies (Pty) Ltd", account: "4051122334"}
+mocks:
+  connectors.AccountLookup: {status: ACTIVE, currency: ZAR}
+  connectors.SanctionsScreening: {status: CLEAR}
+  connectors.AccountPosting: {status: POSTED, postingId: P-Z}
+expect:
+  - result.status == 'CREDITED'
+  - txn.posting.postingId == 'P-Z'

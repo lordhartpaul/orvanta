@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "orvanta.fullname" . }}-console
+  labels:
+    {{- include "orvanta.labels" . | nindent 4 }}
+    app.kubernetes.io/component: console
+spec:
+  replicas: {{ .Values.console.replicas }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "orvanta.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: console
+  template:
+    metadata:
+      labels:
+        {{- include "orvanta.labels" . | nindent 8 }}
+        app.kubernetes.io/component: console
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+    spec:
+      # the process finishes the work in hand before it stops (shutdown.graceSeconds, 30 by default)
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: orvanta
+          image: {{ include "orvanta.image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - {name: ORVANTA_UNITS, value: {{ .Values.console.units | quote }}}
+          {{- include "orvanta.envFrom" . | nindent 10 }}
+          ports:
+            - {name: http, containerPort: 8480}
+          readinessProbe:
+            httpGet: {path: /api/health, port: http}
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          livenessProbe:
+            httpGet: {path: /api/health, port: http}
+            initialDelaySeconds: 30
+            periodSeconds: 15
+          resources:
+            {{- toYaml .Values.console.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities: {drop: [ALL]}
+            readOnlyRootFilesystem: false
+          volumeMounts:
+            {{- include "orvanta.volumeMounts" . | nindent 12 }}
+      volumes:
+        {{- include "orvanta.volumes" . | nindent 8 }}

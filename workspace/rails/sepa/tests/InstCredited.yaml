@@ -1,0 +1,26 @@
+kind: TestCase
+name: tests.IncomingInstantPaymentIsCredited
+description: "An instant payment for an open account: credited against the instant settlement account."
+target: rails.sepa.flows.IncomingInstantProcessing
+clock: "2026-10-06T21:14:04Z"
+given:
+  txn:
+    id: ORVTXN0000000995
+    paymentType: IN
+    createdAt: "2026-10-06T21:14:03Z"
+    channelIn: rails.sepa.SctInstInbound
+    localInstrument: INST
+    endToEndId: DINNER-SPLIT
+    originalTxId: INSTTX-1
+    originalMsgId: INST-IN-1
+    amount: 64.90
+    currency: EUR
+    debtor: {name: "Camille Laurent", account: "FR1420041010050500013M02606", agentBic: BNPAFRPP}
+    creditor: {name: "Lukas Schmidt", account: "DE08500105175400000042"}
+mocks:
+  connectors.AccountLookup: {status: ACTIVE, currency: EUR}
+  connectors.SanctionsScreening: {status: CLEAR}
+  connectors.AccountPosting: {status: POSTED, postingId: P-I}
+expect:
+  - result.status == 'CREDITED'
+  - txn.posting.postingId == 'P-I'

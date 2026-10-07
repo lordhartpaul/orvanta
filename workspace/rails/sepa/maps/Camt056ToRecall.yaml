@@ -1,0 +1,39 @@
+kind: Mapping
+name: rails.sepa.maps.Camt056ToRecall
+description: >
+  Reads a recall request (camt.056) from the sender's bank: one request per transaction it wants back,
+  with the ids the payment had when it was sent to us.
+rules:
+  - let: req
+    value: src.Document.FIToFIPmtCxlReq
+  - set: msgId
+    value: req.Assgnmt.Id
+  - set: caseId
+    value: coalesce(req.Case.Id, req.Assgnmt.Id)
+  - set: assignerBic
+    value: coalesce(req.Assgnmt.Assgnr.Agt.FinInstnId.BICFI, req.Assgnmt.Assgnr.Agt.FinInstnId.BIC)
+  - forEach: req.Undrlyg
+    as: u
+    rules:
+      - forEach: u.TxInf
+        as: tx
+        append: requests
+        rules:
+          - set: cancellationId
+            value: tx.CxlId
+          - set: originalMsgId
+            value: coalesce(tx.OrgnlGrpInf.OrgnlMsgId, u.OrgnlGrpInfAndCxl.OrgnlMsgId)
+          - set: originalInstrId
+            value: tx.OrgnlInstrId
+          - set: originalEndToEndId
+            value: tx.OrgnlEndToEndId
+          - set: originalTxId
+            value: tx.OrgnlTxId
+          - set: amount
+            value: num(tx.OrgnlIntrBkSttlmAmt)
+          - set: currency
+            value: tx.OrgnlIntrBkSttlmAmt.@Ccy
+          - set: reasonCode
+            value: coalesce(tx.CxlRsnInf.Rsn.Cd, tx.CxlRsnInf.Rsn.Prtry)
+          - set: reasonText
+            value: tx.CxlRsnInf.AddtlInf

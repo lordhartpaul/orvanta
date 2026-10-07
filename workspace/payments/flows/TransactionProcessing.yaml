@@ -1,0 +1,263 @@
+kind: Flow
+name: payments.flows.TransactionProcessing
+description: >
+  Processing of one outbound transaction. The flow is run again from the start whenever a hold is
+  released, a late answer arrives or a failed call is retried; steps marked "once" then reuse the
+  answer already stored on the transaction. The flow ends in one of:
+  ROUTED (waits for bulking), REJECTED, HOLD (a person must review), WAIT (a late answer or a retry time),
+  WAREHOUSE (kept until the date or time in txn.warehouse.until).
+completeStatus: ROUTED
+steps:
+  - id: validate
+    type: rules
+    ref: payments.rules.TransactionValidation
+    onViolation: reject
+
+  # a debtor account may have a limit of its own, maintained through the limits API
+  - id: accountLimit
+    type: find
+    dataset: data.AccountLimits
+    where:
+      account: txn.debtor.account
+    first: true
+    into: limit
+
+  - id: overLimit
+    type: end
+    when: exists(limit) and exists(limit.perTransaction) and txn.amount > limit.perTransaction
+    status: REJECTED
+    code: AM02
+    message: Amount exceeds the limit set for the debtor account
+
+  # the account's payments of today (engine view, by createdAt), for the daily cumulative limit; rejected and cancelled ones do not count
+  - id: todaysPayments
+    type: find
+    dataset: data.Transactions
+    where:
+      "debtor.account": txn.debtor.account
+      createdAt: {gte: today()}
+      id: {ne: txn.id}
+    into: todays
+
+  - id: overDailyLimit
+    type: end
+    when: "exists(limit) and exists(limit.perDay) and sumOf(without(todays, 'status', ['REJECTED_BY_APPLICATION', 'REJECTED_BY_EXTERNAL', 'CANCELLED']), 'amount') + txn.amount > limit.perDay"
+    status: REJECTED
+    code: AM02
+    message: Today's payments from the debtor account would exceed its daily limit
+
+  # a corridor the bank does not pay (reference.CorridorRestrictions): rejected before anything is looked up
+  - id: corridorBlocked
+    type: end
+    when: corridorRestriction(txn.debtor.country, txn.creditor.country, txn.currency) == 'BLOCKED'
+    status: REJECTED
+    code: RR04
+    message: Payments on this corridor are not made
+
+  - id: enrich
+    type: map
+    ref: payments.enrich.TransactionEnrichment
+
+  # ---- the debtor account must exist and be usable ----
+  # ---- what a person looks at before it goes: suspended banks, travel rule, high value (held, not rejected) ----
+  - id: compliance
+    type: rules
+    ref: payments.rules.Compliance
+    onViolation: reject
+    status: HOLD
+
+  - id: accountLookup
+    type: call
+    connector: connectors.AccountLookup
+    once: true
+    request:
+      account: txn.debtor.account
+    into: txn.checks.account
+
+  - id: accountStatus
+    type: rules
+    ref: payments.rules.DebtorAccountStatus
+    onViolation: reject
+
+  # ---- sanctions: a hit is rejected, a possible match goes to a person ----
+  - id: screen
+    type: call
+    connector: connectors.SanctionsScreening
+    once: true
+    request:
+      reference: txn.id
+      name: txn.creditor.name
+      account: txn.creditor.account
+      country: txn.creditor.country
+    into: txn.screening
+
+  - id: sanctionsHit
+    type: end
+    when: txn.screening.status == 'HIT'
+    status: REJECTED
+    code: SANC
+    message: Creditor matched a sanctions list entry
+
+  - id: sanctionsReview
+    type: end
+    when: txn.screening.status == 'POSSIBLE' and not contains(txn.overrides, 'SANC')
+    status: HOLD
+    code: SANC
+    message: Possible sanctions match; review the creditor before releasing
+
+  # ---- fraud: the answer may come later on the fraud result channel ----
+  - id: fraud
+    type: call
+    connector: connectors.FraudCheck
+    once: true
+    request:
+      reference: txn.id
+      debtorAccount: txn.debtor.account
+      creditorName: txn.creditor.name
+      creditorAccount: txn.creditor.account
+      amount: txn.amount
+      currency: txn.currency
+    into: txn.checks.fraud
+
+  # the result may come later on the fraud result channel; the flow then runs again from the start
+  - id: fraudPending
+    type: wait
+    when: txn.checks.fraud.status == 'PENDING'
+    code: FRAUD
+    message: Waiting for the result of the fraud check
+    timeoutSeconds: 86400
+
+  - id: fraudReview
+    type: end
+    when: txn.checks.fraud.status == 'REVIEW' and not contains(txn.overrides, 'FRAUD')
+    status: HOLD
+    code: FRAUD
+    message: Fraud alert; review before releasing
+
+  # ---- compliance, and the supporting document it may ask for ----
+  - id: compliance
+    type: call
+    connector: connectors.ComplianceCheck
+    once: true
+    request:
+      reference: txn.id
+      amount: txn.amount
+      currency: txn.currency
+      creditorCountry: txn.creditor.country
+      remittance: txn.remittance
+    into: txn.checks.compliance
+
+  - id: complianceReview
+    type: end
+    when: txn.checks.compliance.status == 'REVIEW' and not contains(txn.overrides, 'COMP')
+    status: HOLD
+    code: COMP
+    message: Compliance review required before releasing
+
+  - id: document
+    type: find
+    when: txn.checks.compliance.documentRequired
+    dataset: data.Documents
+    where:
+      reference: txn.endToEndId
+    first: true
+    into: document
+
+  - id: documentNoted
+    type: set
+    when: exists(document)
+    values:
+      txn.checks.document.name: document.name
+      txn.checks.document.uploadedBy: document.uploadedBy
+
+  - id: documentMissing
+    type: end
+    when: txn.checks.compliance.documentRequired and not exists(document) and not contains(txn.overrides, 'DOCS')
+    status: HOLD
+    code: DOCS
+    message: A supporting document is required; upload it under the end-to-end id, then release
+
+  # ---- a payment in a currency other than the debtor account's is debited at the quoted rate ----
+  - id: fxRate
+    type: call
+    when: txn.currency != txn.checks.account.currency
+    connector: connectors.FxRates
+    once: true
+    request:
+      from: txn.checks.account.currency
+      to: txn.currency
+    into: txn.fx
+
+  - id: fxAmount
+    type: set
+    when: exists(txn.fx.rate)
+    values:
+      txn.fx.debitCurrency: txn.checks.account.currency
+      txn.fx.debitAmount: round(txn.amount * txn.fx.rate, 2)
+
+  - id: route
+    type: decide
+    ref: payments.routing.OutboundRouting
+    onNoMatch: reject
+    code: RR04
+    message: No outbound route exists for this transaction
+
+  # ---- the rail the routing chose brings its own checks: scheme rules, duplicates, calendar, cut-off ----
+  - id: rail
+    type: flow
+    when: exists(txn.route.railFlow)
+    refExpr: txn.route.railFlow
+
+  # ---- liquidity on the route is asked every time; without it the payment waits and tries again ----
+  - id: liquidity
+    type: call
+    connector: connectors.LiquidityCheck
+    request:
+      reference: txn.id
+      channel: txn.route.channel
+      scheme: txn.route.scheme
+      creditorName: txn.creditor.name
+      amount: txn.amount
+      currency: txn.currency
+    into: txn.checks.liquidity
+
+  # tried again after a while, until the installation's wait limit
+  - id: liquidityShort
+    type: wait
+    when: txn.checks.liquidity.status == 'INSUFFICIENT'
+    code: LIQD
+    message: Not enough liquidity on the route; will be tried again
+    retrySeconds: 5
+
+  # ---- posting is the last step, so nothing after it can reject the payment ----
+  - id: post
+    type: call
+    connector: connectors.AccountPosting
+    once: true
+    request:
+      idempotencyKey: concat(txn.id, '-DEBIT')
+      reference: txn.id
+      debitAccount: txn.debtor.account
+      # the settlement account of the route, per currency where the scheme settles in several
+      creditAccount: settlementAccount(txn.route.scheme, txn.currency).account
+      creditAccountType: settlementAccount(txn.route.scheme, txn.currency).type
+      amount: coalesce(txn.fx.debitAmount, txn.amount)
+      currency: coalesce(txn.fx.debitCurrency, txn.currency)
+      # for a converted payment: what the settlement account gets, in the currency of the payment
+      creditAmount: txn.amount
+      creditCurrency: txn.currency
+      # the fee of the route from the schedule, charged with the debit (nothing when the scheme has no row)
+      feeAmount: "exists(lookup('reference.FeeSchedule', txn.route.scheme)) ? fee(coalesce(txn.fx.debitAmount, txn.amount), lookup('reference.FeeSchedule', txn.route.scheme).fixed, lookup('reference.FeeSchedule', txn.route.scheme).percent, lookup('reference.FeeSchedule', txn.route.scheme).min, lookup('reference.FeeSchedule', txn.route.scheme).max) : null"
+      feeAccount: lookup('reference.FeeSchedule', txn.route.scheme).feeAccount
+      feeText: lookup('reference.FeeSchedule', txn.route.scheme).text
+      # the value date of the debit: the requested execution date when it lies ahead, else the booking day
+      valueDate: "exists(txn.requestedDate) and txn.requestedDate > today() ? txn.requestedDate : null"
+    into: txn.posting
+
+  # the account system may refuse the debit (no funds, account blocked meanwhile): nothing was booked, the payment ends here
+  - id: notPosted
+    type: end
+    when: txn.posting.status != 'POSTED'
+    status: REJECTED
+    code: AM04
+    message: The account could not be debited for this payment

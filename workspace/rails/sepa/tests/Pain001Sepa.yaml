@@ -1,0 +1,16 @@
+kind: TestCase
+name: tests.SepaInstructionIsDebulked
+description: "The sample SEPA file has a normal and an instant batch; the instrument of the batch reaches each transaction."
+target: payments.inbound.Pain001ToCanonical
+givenMessage:
+  var: src
+  file: tests/messages/pain001-sepa.xml
+expect:
+  - count(result.batches) == 2
+  - result.declaredSum == 252455.40
+  - sumOf(collect(result.batches, 'txns'), 'amount') == 252455.40
+  - result.batches[0].debtor.account == 'DE89370400440532013000'
+  - result.batches[0].txns[0].serviceLevel == 'SEPA'
+  - not exists(result.batches[0].txns[0].localInstrument)
+  - result.batches[1].txns[0].localInstrument == 'INST'
+  - result.batches[0].txns[0].creditor.account == 'FR1420041010050500013M02606'

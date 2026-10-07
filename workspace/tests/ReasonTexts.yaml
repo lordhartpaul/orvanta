@@ -1,0 +1,17 @@
+kind: TestCase
+name: tests.AReasonIsExplainedInTheCustomersLanguage
+description: "text(code, language): the customer's language, English when that language has no text, the code when nothing has."
+target: payments.outbound.CanonicalToPain002
+given:
+  report: {id: ORVOUT0000000080, createdAt: "2026-10-06T10:00:00Z", originalMsgId: SALARY-1, originalMessageType: pain.001.001.09, senderBic: ORVAZAJJ, language: de}
+  batches:
+    - batchRef: B1
+      txns:
+        - {id: ORVTXN0000000081, endToEndId: SAL-1, status: REJECTED_BY_EXTERNAL, reasonCode: AC04, reasonText: Closed account number}
+        - {id: ORVTXN0000000082, endToEndId: SAL-2, status: REJECTED_BY_APPLICATION, reasonCode: XY99, reasonText: Something the engine said}
+expect:
+  - result.Document.CstmrPmtStsRpt.OrgnlPmtInfAndSts[0].TxInfAndSts[0].StsRsnInf.AddtlInf == 'Das Konto ist geschlossen'
+  - result.Document.CstmrPmtStsRpt.OrgnlPmtInfAndSts[0].TxInfAndSts[1].StsRsnInf.AddtlInf == 'XY99'
+  - text('AC04', 'nl') == 'The account is closed'
+  - text('AC04', 'fr-CH') == 'Le compte est clôturé'
+  - text('AC04', null) == 'The account is closed'

@@ -1,0 +1,112 @@
+kind: Mapping
+name: payments.outbound.CanonicalToCamt054
+description: >
+  Builds the debit and credit notification (camt.054.001.08) for one account. Every entry is one
+  booking: a credit for a payment received, a debit for a direct debit collection, or the reversal of
+  one of them, marked as a reversal and carrying the reason the payment went back.
+rules:
+  - set: Document.@xmlns
+    value: "'urn:iso:std:iso:20022:tech:xsd:camt.054.001.08'"
+  - set: Document.BkToCstmrDbtCdtNtfctn.GrpHdr.MsgId
+    value: notification.id
+  - set: Document.BkToCstmrDbtCdtNtfctn.GrpHdr.CreDtTm
+    value: notification.createdAt
+  - set: Document.BkToCstmrDbtCdtNtfctn.Ntfctn.Id
+    value: notification.id
+  - set: Document.BkToCstmrDbtCdtNtfctn.Ntfctn.CreDtTm
+    value: notification.createdAt
+  - set: Document.BkToCstmrDbtCdtNtfctn.Ntfctn.Acct.Id.IBAN
+    when: isIban(notification.account)
+    value: notification.account
+  - set: Document.BkToCstmrDbtCdtNtfctn.Ntfctn.Acct.Id.Othr.Id
+    when: not isIban(notification.account)
+    value: notification.account
+  - set: Document.BkToCstmrDbtCdtNtfctn.Ntfctn.Acct.Ownr.Nm
+    value: notification.owner
+  - set: Document.BkToCstmrDbtCdtNtfctn.Ntfctn.Acct.Svcr.FinInstnId.BICFI
+    value: notification.senderBic
+  - forEach: entries
+    as: e
+    append: Document.BkToCstmrDbtCdtNtfctn.Ntfctn.Ntry
+    rules:
+      - set: NtryRef
+        value: e.reference
+      # what was booked on the account: the value in its own currency when the payment came in another
+      - set: Amt.@Ccy
+        value: coalesce(e.txn.fx.creditCurrency, e.txn.currency)
+      - set: Amt.#text
+        value: str(coalesce(e.txn.charges.netAmount, e.txn.fx.creditAmount, e.txn.amount))
+      - set: CdtDbtInd
+        value: e.creditDebit
+      - set: RvslInd
+        when: e.reversal
+        value: "'true'"
+      - set: Sts.Cd
+        value: "'BOOK'"
+      - set: BookgDt.Dt
+        value: e.bookedOn
+      - set: ValDt.Dt
+        value: coalesce(e.txn.settlementDate, e.bookedOn)
+      - set: AcctSvcrRef
+        value: e.txn.id
+      - set: BkTxCd.Domn.Cd
+        value: "'PMNT'"
+      - set: BkTxCd.Domn.Fmly.Cd
+        value: "e.collection ? 'RDDT' : 'RCDT'"
+      - set: BkTxCd.Domn.Fmly.SubFmlyCd
+        value: "e.collection ? 'ESDD' : startsWith(e.txn.channelIn, 'rails.swift') ? 'XBCT' : 'ESCT'"
+      - set: NtryDtls.TxDtls.Refs.AcctSvcrRef
+        value: e.txn.id
+      - set: NtryDtls.TxDtls.Refs.EndToEndId
+        value: e.txn.endToEndId
+      - set: NtryDtls.TxDtls.Refs.MndtId
+        value: e.txn.mandate.id
+      - set: NtryDtls.TxDtls.AmtDtls.InstdAmt.Amt.@Ccy
+        when: exists(e.txn.fx.creditAmount)
+        value: e.txn.currency
+      - set: NtryDtls.TxDtls.AmtDtls.InstdAmt.Amt.#text
+        when: exists(e.txn.fx.creditAmount)
+        value: str(e.txn.amount)
+      - set: NtryDtls.TxDtls.AmtDtls.CntrValAmt.CcyXchg.XchgRate
+        when: exists(e.txn.fx.creditAmount)
+        value: str(e.txn.fx.rate)
+      # our charge, when it came off the amount: the entry is the net amount
+      - set: NtryDtls.TxDtls.Chrgs.Rcrd.Amt.@Ccy
+        when: exists(e.txn.charges.deducted)
+        value: e.txn.charges.currency
+      - set: NtryDtls.TxDtls.Chrgs.Rcrd.Amt.#text
+        when: exists(e.txn.charges.deducted)
+        value: str(e.txn.charges.deducted)
+      - set: NtryDtls.TxDtls.Chrgs.Rcrd.CdtDbtInd
+        when: exists(e.txn.charges.deducted)
+        value: "e.reversal ? 'CRDT' : 'DBIT'"
+      - set: NtryDtls.TxDtls.Chrgs.Rcrd.ChrgInclInd
+        when: exists(e.txn.charges.deducted)
+        value: "'true'"
+      - set: NtryDtls.TxDtls.RltdPties.Dbtr.Pty.Nm
+        value: e.txn.debtor.name
+      - set: NtryDtls.TxDtls.RltdPties.DbtrAcct.Id.IBAN
+        when: isIban(e.txn.debtor.account)
+        value: e.txn.debtor.account
+      - set: NtryDtls.TxDtls.RltdPties.DbtrAcct.Id.Othr.Id
+        when: not isIban(e.txn.debtor.account)
+        value: e.txn.debtor.account
+      - set: NtryDtls.TxDtls.RltdPties.Cdtr.Pty.Nm
+        value: e.txn.creditor.name
+      - set: NtryDtls.TxDtls.RltdPties.CdtrAcct.Id.IBAN
+        when: isIban(e.txn.creditor.account)
+        value: e.txn.creditor.account
+      - set: NtryDtls.TxDtls.RltdPties.CdtrAcct.Id.Othr.Id
+        when: not isIban(e.txn.creditor.account)
+        value: e.txn.creditor.account
+      - set: NtryDtls.TxDtls.RltdPties.Cdtr.Pty.Id.PrvtId.Othr.Id
+        when: e.collection
+        value: e.txn.creditor.schemeId
+      - set: NtryDtls.TxDtls.RmtInf.Ustrd
+        value: e.txn.remittance
+      - set: NtryDtls.TxDtls.RtrInf.Rsn.Cd
+        when: e.reversal
+        value: e.txn.return.reasonCode
+      - set: NtryDtls.TxDtls.RtrInf.AddtlInf
+        when: e.reversal
+        value: left(e.txn.return.reasonText, 105)

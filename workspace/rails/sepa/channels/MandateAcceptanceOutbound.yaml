@@ -1,0 +1,14 @@
+kind: Channel
+name: rails.sepa.MandateAcceptanceOutbound
+description: >
+  Acceptance reports (pain.012) answering mandate messages: accepted, or refused with the reason.
+direction: outbound
+format: iso20022
+messageType: pain.012.001.07
+mapping: payments.outbound.CanonicalToPain012
+destination:
+  type: folder
+  path: outbound/sepa-mandates
+  extension: xml
+properties:
+  senderBic: ORVADEFF

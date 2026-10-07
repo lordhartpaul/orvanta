@@ -1,0 +1,30 @@
+kind: Flow
+name: payments.flows.PostingReversal
+description: >
+  Reverses the account posting of a payment that was rejected by the receiving side, returned,
+  cancelled or rejected after it had been posted. Run by the engine, not by the processing flow.
+  The idempotency key makes a repeated attempt harmless.
+steps:
+  - id: reverse
+    type: call
+    connector: connectors.PostingReversal
+    request:
+      idempotencyKey: concat(txn.id, '-REVERSAL')
+      reference: txn.id
+      postingId: txn.posting.postingId
+      reason: txn.reasonCode
+    into: txn.posting.reversal
+    onError: reject
+
+  # a charge that was booked for the payment goes back with it
+  - id: reverseCharge
+    type: call
+    when: exists(txn.charges.posting.postingId)
+    connector: connectors.PostingReversal
+    request:
+      idempotencyKey: concat(txn.id, '-FEE-REVERSAL')
+      reference: txn.id
+      postingId: txn.charges.posting.postingId
+      reason: txn.reasonCode
+    into: txn.charges.posting.reversal
+    onError: reject

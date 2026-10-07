@@ -1,0 +1,12 @@
+kind: MessageSpec
+name: specs.swift.MT199
+description: >
+  Field rules of the MT199 free format message.
+  Formats are in SWIFT format notation. Written from the published field formats, not copied from a
+  standards release: compare with the release your bank is on before relying on it.
+format: swift.mt
+messageType: MT199
+fields:
+  - {tag: "20", name: transaction reference, required: true, format: "16x"}
+  - {tag: "21", name: related reference, format: "16x"}
+  - {tag: "79", name: narrative, required: true, format: "35*50x"}

@@ -1,0 +1,26 @@
+kind: Flow
+name: api.flows.AccountLimitWrite
+description: Validates the request, stores the limit and answers with what was stored.
+steps:
+  - id: check
+    type: rules
+    ref: api.rules.AccountLimitRequest
+    onViolation: reject
+
+  - id: store
+    type: save
+    dataset: data.AccountLimits
+    values:
+      account: request.path.account
+      perTransaction: num(request.body.perTransaction)
+      perDay: "exists(request.body.perDay) ? num(request.body.perDay) : null"
+      updatedBy: request.user
+      updatedAt: now()
+
+  - id: answer
+    type: find
+    dataset: data.AccountLimits
+    where:
+      account: request.path.account
+    first: true
+    into: response

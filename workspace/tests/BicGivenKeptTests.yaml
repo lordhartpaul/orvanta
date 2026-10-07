@@ -1,0 +1,11 @@
+kind: TestCase
+name: tests.AGivenCreditorBicIsKeptOverTheIbanOne
+target: payments.enrich.TransactionEnrichment
+given:
+  txn:
+    id: ORVTXN0000000092
+    amount: 10
+    currency: EUR
+    creditor: {name: "Someone", account: "DE89370400440532013000", agentBic: DEUTDEFFXXX}
+expect:
+  - txn.creditor.agentBic == 'DEUTDEFFXXX'

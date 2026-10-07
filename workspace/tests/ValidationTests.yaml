@@ -1,0 +1,18 @@
+kind: TestCase
+name: tests.ValidationReportsEveryDefect
+description: A transaction with several defects reports each of them with its reason code.
+target: payments.rules.TransactionValidation
+given:
+  txn:
+    endToEndId: E2E-1
+    amount: 0
+    currency: ZZZ
+    debtor: {account: "4051122334"}
+    creditor: {name: "Some Creditor", account: "GB00WRONG000000", agentBic: "NOTABIC"}
+expect:
+  - "'AM01' in result.codes"
+  - "'AM03' in result.codes"
+  - "'AC03' in result.codes"
+  - "'RC01' in result.codes"
+  - not ('AC02' in result.codes)
+  - result.count == 4

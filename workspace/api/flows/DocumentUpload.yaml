@@ -1,0 +1,26 @@
+kind: Flow
+name: api.flows.DocumentUpload
+steps:
+  - id: check
+    type: rules
+    ref: api.rules.DocumentRequest
+    onViolation: reject
+
+  - id: store
+    type: save
+    dataset: data.Documents
+    values:
+      reference: request.path.reference
+      name: request.body.name
+      contentType: coalesce(request.body.contentType, 'application/octet-stream')
+      content: request.body.content
+      size: len(request.body.content)
+      uploadedBy: request.user
+      uploadedAt: now()
+
+  - id: answer
+    type: set
+    values:
+      response.reference: request.path.reference
+      response.name: request.body.name
+      response.stored: "true"

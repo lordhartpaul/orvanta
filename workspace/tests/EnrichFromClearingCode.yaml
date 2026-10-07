@@ -1,0 +1,14 @@
+kind: TestCase
+name: tests.TheCreditorBankIsFoundFromItsNationalCodeAndTheCodeFromItsBic
+description: A sort code gives the BIC; a BIC gives the national code where the country uses one; the country comes from the IBAN.
+target: payments.enrich.TransactionEnrichment
+given:
+  txn:
+    id: ORVTXN0000000097
+    amount: 10
+    currency: GBP
+    creditor: {name: "Someone", account: "GB19LOYD30961700709943"}
+expect:
+  - txn.creditor.country == 'GB'
+  - txn.creditor.agentCode == '309617'
+  - txn.creditor.agentBic == 'LOYDGB2LXXX'

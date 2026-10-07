@@ -1,0 +1,7 @@
+kind: Api
+name: api.AccountLimitDelete
+description: Removes the limit of a debtor account.
+method: DELETE
+path: /limits/{account}
+permission: payments.approve
+target: api.flows.AccountLimitRemove

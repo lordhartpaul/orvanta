@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.09">
+  <CstmrCdtTrfInitn>
+    <GrpHdr>
+      <MsgId>SALARY-2026-10-001</MsgId>
+      <CreDtTm>2026-10-04T09:15:00</CreDtTm>
+      <NbOfTxs>5</NbOfTxs>
+      <CtrlSum>48550.75</CtrlSum>
+      <InitgPty>
+        <Nm>Karoo Mining Supplies (Pty) Ltd</Nm>
+      </InitgPty>
+    </GrpHdr>
+    <PmtInf>
+      <PmtInfId>SALARY-2026-10-001-ZAR</PmtInfId>
+      <PmtMtd>TRF</PmtMtd>
+      <ReqdExctnDt>
+        <Dt>2026-10-05</Dt>
+      </ReqdExctnDt>
+      <Dbtr>
+        <Nm>Karoo Mining Supplies (Pty) Ltd</Nm>
+      </Dbtr>
+      <DbtrAcct>
+        <Id>
+          <Othr>
+            <Id>4051122334</Id>
+          </Othr>
+        </Id>
+      </DbtrAcct>
+      <DbtrAgt>
+        <FinInstnId>
+          <BICFI>ORVAZAJJ</BICFI>
+        </FinInstnId>
+      </DbtrAgt>
+      <ChrgBr>SLEV</ChrgBr>
+      <CdtTrfTxInf>
+        <PmtId>
+          <EndToEndId>SAL-0001</EndToEndId>
+        </PmtId>
+        <Amt>
+          <InstdAmt Ccy="ZAR">18250.00</InstdAmt>
+        </Amt>
+        <CdtrAgt>
+          <FinInstnId>
+            <BICFI>FIRNZAJJ</BICFI>
+          </FinInstnId>
+        </CdtrAgt>
+        <Cdtr>
+          <Nm>Thandiwe Mokoena</Nm>
+        </Cdtr>
+        <CdtrAcct>
+          <Id>
+            <Othr>
+              <Id>62011223344</Id>
+            </Othr>
+          </Id>
+        </CdtrAcct>
+        <RmtInf>
+          <Ustrd>Salary October 2026</Ustrd>
+        </RmtInf>
+      </CdtTrfTxInf>
+      <CdtTrfTxInf>
+        <PmtId>
+          <EndToEndId>SAL-0002</EndToEndId>
+        </PmtId>
+        <Amt>
+          <InstdAmt Ccy="ZAR">21300.50</InstdAmt>
+        </Amt>
+        <CdtrAgt>
+          <FinInstnId>
+            <BICFI>ABSAZAJJ</BICFI>
+          </FinInstnId>
+        </CdtrAgt>
+        <Cdtr>
+          <Nm>Pieter van der Merwe</Nm>
+        </Cdtr>
+        <CdtrAcct>
+        

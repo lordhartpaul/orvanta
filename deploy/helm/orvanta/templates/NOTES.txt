@@ -1,0 +1,9 @@
+Orvanta Pay {{ .Chart.AppVersion }} is installed as release {{ .Release.Name }} in namespace {{ .Release.Namespace }}.
+
+The Console and API: service {{ include "orvanta.fullname" . }}-console, port {{ .Values.service.port }}
+{{- if .Values.ingress.enabled }} and https://{{ .Values.ingress.host }}/{{- end }}.
+Until an ingress is set up:   kubectl -n {{ .Release.Namespace }} port-forward svc/{{ include "orvanta.fullname" . }}-console 8480:{{ .Values.service.port }}
+
+Secrets come from the secret "{{ .Values.existingSecret }}" (ORVANTA_STORE_URI, ORVANTA_BUS_URI, ORVANTA_SECURITY_JWTSECRET,
+ORVANTA_SECURITY_INTEGRITYKEY, and for the very first start ORVANTA_SECURITY_BOOTSTRAPPASSWORD, to be removed afterwards).
+Everything else is in the config map {{ include "orvanta.fullname" . }}-config; a change there rolls the pods.

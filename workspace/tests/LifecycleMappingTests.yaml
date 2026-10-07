@@ -1,0 +1,14 @@
+kind: TestCase
+name: tests.Camt055IsRead
+description: The sample customer cancellation request yields one entry naming the original message and transaction.
+target: payments.inbound.Camt055ToCancellation
+givenMessage:
+  var: src
+  file: tests/messages/camt055-cancel-salary.xml
+expect:
+  - result.msgId == 'CXL-2026-10-001'
+  - count(result.entries) == 1
+  - result.entries[0].originalMsgId == 'SALARY-2026-10-001'
+  - result.entries[0].endToEndId == 'SAL-0002'
+  - result.entries[0].reasonCode == 'DUPL'
+  - result.entries[0].reasonText == 'Salary was paid twice'

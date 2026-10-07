@@ -1,0 +1,16 @@
+kind: TestCase
+name: tests.TextIsCutToAnMtFieldWithATruncationMark
+description: fit() cuts text to a field's length and marks the cut with a trailing plus, as SWIFT guidelines have it.
+target: payments.enrich.TransactionEnrichment
+given:
+  txn:
+    id: ORVTXN0000000096
+    amount: 10
+    currency: USD
+    creditor: {name: "A very long creditor name that will never fit into thirty-five characters", account: "1", agentBic: CHASUS33}
+    remittance: "short"
+expect:
+  - fit(txn.creditor.name, 35) == 'A very long creditor name that wil+'
+  - fit(txn.remittance, 35) == 'short'
+  - fit('exactly-ten', 11) == 'exactly-ten'
+  - not exists(fit(txn.missing, 35))

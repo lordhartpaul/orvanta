@@ -1,0 +1,42 @@
+kind: Mapping
+name: rails.sepa.maps.CanonicalToRecallAnswer
+description: >
+  Builds the resolution of investigation (camt.029.001.09) that refuses a recall request: status RJCR
+  and the reason, quoting the case and the ids of the payment the sender asked for.
+rules:
+  - set: Document.@xmlns
+    value: "'urn:iso:std:iso:20022:tech:xsd:camt.029.001.09'"
+  - set: Document.RsltnOfInvstgtn.Assgnmt.Id
+    value: answer.id
+  - set: Document.RsltnOfInvstgtn.Assgnmt.Assgnr.Agt.FinInstnId.BICFI
+    value: answer.senderBic
+  - set: Document.RsltnOfInvstgtn.Assgnmt.Assgne.Agt.FinInstnId.BICFI
+    value: answer.assignerBic
+  - set: Document.RsltnOfInvstgtn.Assgnmt.CreDtTm
+    value: answer.createdAt
+  - set: Document.RsltnOfInvstgtn.RslvdCase.Id
+    value: answer.caseId
+  - set: Document.RsltnOfInvstgtn.Sts.Conf
+    value: answer.status
+  - set: Document.RsltnOfInvstgtn.CxlDtls.TxInfAndSts.CxlStsId
+    value: answer.id
+  - set: Document.RsltnOfInvstgtn.CxlDtls.TxInfAndSts.RslvdCase.Id
+    value: answer.cancellationId
+  - set: Document.RsltnOfInvstgtn.CxlDtls.TxInfAndSts.OrgnlGrpInf.OrgnlMsgId
+    value: answer.originalMsgId
+  - set: Document.RsltnOfInvstgtn.CxlDtls.TxInfAndSts.OrgnlGrpInf.OrgnlMsgNmId
+    value: "'pacs.008.001.08'"
+  - set: Document.RsltnOfInvstgtn.CxlDtls.TxInfAndSts.OrgnlInstrId
+    value: answer.originalInstrId
+  - set: Document.RsltnOfInvstgtn.CxlDtls.TxInfAndSts.OrgnlEndToEndId
+    value: coalesce(answer.originalEndToEndId, txn.endToEndId)
+  - set: Document.RsltnOfInvstgtn.CxlDtls.TxInfAndSts.OrgnlTxId
+    value: coalesce(answer.originalTxId, txn.originalTxId)
+  - set: Document.RsltnOfInvstgtn.CxlDtls.TxInfAndSts.TxCxlSts
+    value: answer.status
+  - set: Document.RsltnOfInvstgtn.CxlDtls.TxInfAndSts.CxlStsRsnInf.Orgtr.Id.OrgId.AnyBIC
+    value: answer.senderBic
+  - set: Document.RsltnOfInvstgtn.CxlDtls.TxInfAndSts.CxlStsRsnInf.Rsn.Cd
+    value: answer.reasonCode
+  - set: Document.RsltnOfInvstgtn.CxlDtls.TxInfAndSts.CxlStsRsnInf.AddtlInf
+    value: left(answer.reasonText, 105)

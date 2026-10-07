@@ -1,0 +1,14 @@
+kind: Channel
+name: rails.swift.SwiftDeliveryInbound
+description: >
+  What the SWIFT interface says about the messages we sent: ACK (taken by the network) or NAK (refused,
+  with the error code), each followed by a copy of our message. An ACK is recorded on the payment; a NAK
+  puts it in repair for an operator.
+direction: inbound
+purpose: deliveryNotification
+format: swift.mt
+messageTypes: [ACK, NAK]
+mapping: rails.swift.maps.SwiftAckToDelivery
+transport:
+  - type: folder
+    path: inbound/swift-acks

@@ -1,0 +1,13 @@
+kind: TestCase
+name: tests.ADutchAccountFailingTheElevenTestIsRefused
+description: "NL91ABNA0417164300 passes the 11-test; an IBAN whose account part fails it is refused even with check digits right."
+target: payments.rules.TransactionValidation
+given:
+  txn:
+    endToEndId: CR-5
+    amount: 10
+    currency: EUR
+    debtor: {account: "4051122334"}
+    creditor: {name: "Someone", account: "NL29ABNA0123456788", agentBic: ABNANL2AXXX, country: NL}
+expect:
+  - "'AC03' in result.codes"

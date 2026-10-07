@@ -1,0 +1,7 @@
+kind: Api
+name: api.CutOffExtensionDelete
+description: Removes a scheme's cut-off extension.
+method: DELETE
+path: /cutoff-extensions/{scheme}
+permission: payments.approve
+target: api.flows.CutOffExtensionRemove

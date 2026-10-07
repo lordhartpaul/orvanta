@@ -1,0 +1,13 @@
+kind: TestCase
+name: tests.ACountryThatNeedsAnIbanRefusesAPlainAccountNumber
+description: "Germany identifies accounts by IBAN: a plain account number with a BIC is not enough."
+target: payments.rules.TransactionValidation
+given:
+  txn:
+    endToEndId: CR-1
+    amount: 10
+    currency: EUR
+    debtor: {account: "4051122334"}
+    creditor: {name: "Rheinland Pumpen GmbH", account: "0532013000", agentBic: COBADEFFXXX, country: DE}
+expect:
+  - "'RC01' in result.codes"

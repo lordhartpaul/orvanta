@@ -1,0 +1,16 @@
+kind: MessageSpec
+name: specs.swift.MT191
+description: >
+  Field rules of the MT191 request for payment of charges, interest and other expenses.
+  Formats are in SWIFT format notation. Written from the published field formats, not copied from a
+  standards release: compare with the release your bank is on before relying on it.
+format: swift.mt
+messageType: MT191
+fields:
+  - {tag: "20", name: transaction reference, required: true, format: "16x"}
+  - {tag: "21", name: related reference, required: true, format: "16x"}
+  - {tag: "32B", name: currency and amount, required: true, format: "3!a15d", is: currencyAmount}
+  - {tag: "52", name: ordering institution, options: {A: ["[/1!a][/34x]", "4!a2!a2!c[3!c]"], D: ["[/1!a][/34x]", "4*35x"]}}
+  - {tag: "57", name: account with institution, options: {A: ["[/1!a][/34x]", "4!a2!a2!c[3!c]"], B: ["[/1!a][/34x]", "[35x]"], D: ["[/1!a][/34x]", "4*35x"]}}
+  - {tag: "71B", name: details of charges, required: true, format: "6*35x"}
+  - {tag: "72", name: sender to receiver information, format: "6*35x"}

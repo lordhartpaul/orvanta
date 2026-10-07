@@ -1,0 +1,8 @@
+# Copy to seed-users.yaml and set passwords to create these users at the first start, when the
+# database has no users. Passwords are hashed when stored. Delete the file afterwards.
+# Without this file, set ORVANTA_SECURITY_BOOTSTRAPPASSWORD to create a single user "admin" instead.
+users:
+  - username: admin
+    displayName: Platform Administrator
+    roles: [ADMIN]
+    password: change-me-to-at-least-12-characters

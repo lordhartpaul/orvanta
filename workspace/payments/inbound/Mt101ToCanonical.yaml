@@ -1,0 +1,48 @@
+kind: Mapping
+name: payments.inbound.Mt101ToCanonical
+description: >
+  Debulks a SWIFT MT101 request for transfer into the canonical instruction. Sequence A (before
+  the first field 21) is the batch; every sequence B (starting at field 21) is one transaction.
+rules:
+  - let: head
+    value: mtHead(src, '21')
+  - set: msgId
+    value: mtField(head, '20')
+  - set: initiatingParty
+    value: src.sender
+  - append: batches
+    rules:
+      - let: orderer
+        value: coalesce(mtField(head, '50H'), mtField(head, '50G'), mtField(head, '50K'))
+      - set: batchRef
+        value: mtField(head, '20')
+      - set: requestedDate
+        value: mtDate(mtField(head, '30'))
+      - set: debtor.name
+        value: mtName(orderer)
+      - set: debtor.account
+        value: mtAccount(orderer)
+      - set: debtor.agentBic
+        value: coalesce(mtField(head, '52A'), src.receiver)
+      - forEach: mtGroups(src, '21')
+        as: seq
+        append: txns
+        rules:
+          - set: endToEndId
+            value: mtField(seq, '21')
+          - set: amount
+            value: mtAmt(mtField(seq, '32B'))
+          - set: currency
+            value: mtCcy(mtField(seq, '32B'))
+          - set: creditor.name
+            value: mtName(mtField(seq, '59'))
+          - set: creditor.account
+            value: mtAccount(mtField(seq, '59'))
+          - set: creditor.agentBic
+            value: mtField(seq, '57A')
+          - set: remittance
+            value: replace(mtField(seq, '70'), '\n', ' ')
+          - let: charges
+            value: mtField(seq, '71A')
+          - set: chargeBearer
+            value: "charges == 'OUR' ? 'DEBT' : charges == 'BEN' ? 'CRED' : 'SHAR'"

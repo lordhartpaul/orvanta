@@ -1,0 +1,76 @@
+kind: Flow
+name: rails.sepa.flows.IncomingDebitProcessing
+description: >
+  Processing of one SEPA Core Direct Debit collection received against the account of a customer.
+  It ends DEBITED when the customer's account has been debited. A collection that fails a rule, is a
+  duplicate, is for an account that does not exist, is closed or is blocked, is from a creditor the
+  customer has blocked or is above the customer's limit for that creditor, or meets an account
+  without funds, is sent back by the engine with the reason (REJECTED means "send it back" here).
+completeStatus: DEBITED
+steps:
+  - id: schemeRules
+    type: rules
+    ref: rails.sepa.rules.IncomingDebit
+    onViolation: reject
+
+  - id: duplicates
+    type: flow
+    ref: payments.flows.DuplicateCheck
+
+  - id: accountLookup
+    type: call
+    connector: connectors.AccountLookup
+    once: true
+    request:
+      account: txn.debtor.account
+    into: txn.checks.account
+
+  - id: accountStatus
+    type: rules
+    ref: payments.rules.DebtorAccountStatus
+    onViolation: reject
+
+  # what the customer told us about this creditor
+  - id: customerInstruction
+    type: find
+    dataset: data.DebitBlocks
+    where:
+      id: concat(txn.debtor.account, ':', txn.creditor.schemeId)
+    first: true
+    into: block
+
+  - id: creditorBlocked
+    type: end
+    when: exists(block) and not exists(block.maxAmount)
+    status: REJECTED
+    code: SL01
+    message: The customer does not allow direct debits by this creditor
+
+  - id: aboveCustomerLimit
+    type: end
+    when: exists(block.maxAmount) and txn.amount > block.maxAmount
+    status: REJECTED
+    code: SL01
+    message: The amount is above what the customer allows this creditor to collect
+
+  # the customer's account is debited against the settlement account; an account without funds refuses
+  - id: debit
+    type: call
+    connector: connectors.AccountPosting
+    once: true
+    request:
+      idempotencyKey: concat(txn.id, '-DEBIT')
+      reference: txn.id
+      debitAccount: txn.debtor.account
+      creditAccount: lookup('reference.SettlementAccounts', 'SEPA-SDD').account
+      creditAccountType: lookup('reference.SettlementAccounts', 'SEPA-SDD').type
+      amount: txn.amount
+      currency: txn.currency
+    into: txn.posting
+
+  - id: insufficientFunds
+    type: end
+    when: txn.posting.status != 'POSTED'
+    status: REJECTED
+    code: AM04
+    message: The account does not have the funds for this collection

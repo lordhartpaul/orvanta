@@ -1,0 +1,36 @@
+kind: Mapping
+name: rails.swift.maps.CanonicalToMt103Return
+description: >
+  Builds the MT103 that sends a received payment back to the sending bank. The parties change
+  places: our customer is the ordering customer, the original payer the beneficiary. Field 72 says
+  that it is a return, why, and which payment it returns. The amount is the one that was received.
+rules:
+  - forEach: txns
+    as: t
+    rules:
+      - append: messages
+        rules:
+          - set: type
+            value: "'103'"
+          - set: sender
+            value: bulk.senderBic
+          - set: receiver
+            value: t.sendingAgentBic
+          - set: b3.121
+            value: t.uetr
+          - field: 20
+            value: t.id
+          - field: 23B
+            value: "'CRED'"
+          - field: 32A
+            value: concat(fmtDate(todayIn('Africa/Johannesburg'), 'yyMMdd'), t.currency, mtAmount(t.amount))
+          - field: 50K
+            value: concat('/', t.creditor.account, '\n', left(t.creditor.name, 35))
+          - field: 59
+            value: "exists(t.debtor.account) ? concat('/', t.debtor.account, '\n', left(t.debtor.name, 35)) : left(t.debtor.name, 35)"
+          - field: 70
+            value: left(concat('RETURN OF ', t.originalTxId), 35)
+          - field: 71A
+            value: "'SHA'"
+          - field: 72
+            value: concat('/RETN/59/', '\n', '/', t.return.reasonCode, '/', '\n', '/MREF/', left(t.originalTxId, 16))

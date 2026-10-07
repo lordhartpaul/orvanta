@@ -1,0 +1,18 @@
+kind: TestCase
+name: tests.APaymentTheAccountSystemWillNotDebitIsRejected
+description: "The posting is refused for lack of funds: nothing was booked, and the payment is rejected with AM04."
+target: payments.flows.TransactionProcessing
+given:
+  txn:
+    id: ORVTXN0000000777
+    endToEndId: NO-FUNDS-1
+    amount: 900.00
+    currency: ZAR
+    requestedExecutionDate: "2026-10-05"
+    debtor: {name: Karoo Mining Supplies, account: "4051122334"}
+    creditor: {name: Normal Supplier, account: "62011223344", agentBic: FIRNZAJJ}
+mocks:
+  connectors.AccountPosting: {status: REFUSED, reason: INSUFFICIENT_FUNDS}
+expect:
+  - result.status == 'REJECTED'
+  - result.code == 'AM04'

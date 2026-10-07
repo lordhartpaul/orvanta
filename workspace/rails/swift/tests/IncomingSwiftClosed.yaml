@@ -1,0 +1,26 @@
+kind: TestCase
+name: tests.IncomingSwiftPaymentForAClosedAccountGoesBack
+description: "The account is closed: reason AC04, no rate asked for and nothing credited."
+target: rails.swift.flows.IncomingSwiftProcessing
+given:
+  txn:
+    id: ORVTXN0000000970
+    paymentType: IN
+    channelIn: rails.swift.Mt103Inbound
+    endToEndId: CHASE-REF-0002
+    originalTxId: CHASE-REF-0002
+    sendingAgentBic: CHASUS33
+    amount: 1200.00
+    currency: USD
+    debtor: {name: "Atlas Drilling Equipment Inc", account: "000123456789", agentBic: CHASUS33}
+    creditor: {name: "Pieter van der Merwe", account: "62055667788"}
+mocks:
+  connectors.AccountLookup: {status: CLOSED, currency: ZAR}
+  connectors.SanctionsScreening: {status: CLEAR}
+  connectors.AccountPosting: {status: POSTED, postingId: P-5}
+  connectors.FxRates: {rate: 18.50}
+expect:
+  - result.status == 'REJECTED'
+  - result.code == 'AC04'
+  - not exists(txn.posting)
+  - not exists(txn.fx)

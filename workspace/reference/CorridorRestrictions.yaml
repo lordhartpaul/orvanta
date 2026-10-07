@@ -1,0 +1,20 @@
+kind: ReferenceTable
+name: reference.CorridorRestrictions
+description: >
+  Country pairs and currencies the bank does not pay, or pays only after a person has looked: key
+  "<debtor country>|<creditor country>|<currency>" with '*' for a part that does not matter; action BLOCKED
+  (rejected, RR04) or REVIEW (held for a person, code CORR). The most specific row wins. The sample rows name
+  the comprehensively sanctioned destinations and a currency, from general knowledge; the bank's compliance
+  function owns this table.
+key: key
+rows:
+  - {key: "*|KP|*", action: BLOCKED, reason: Comprehensive sanctions programme}
+  - {key: "*|IR|*", action: BLOCKED, reason: Comprehensive sanctions programme}
+  - {key: "*|SY|*", action: BLOCKED, reason: Comprehensive sanctions programme}
+  - {key: "*|CU|*", action: BLOCKED, reason: Comprehensive sanctions programme}
+  - {key: "*|*|KPW", action: BLOCKED, reason: Restricted currency}
+  - {key: "*|*|IRR", action: BLOCKED, reason: Restricted currency}
+  - {key: "*|RU|*", action: REVIEW, reason: "Sectoral sanctions: a person checks the counterparty"}
+  - {key: "*|BY|*", action: REVIEW, reason: "Sectoral sanctions: a person checks the counterparty"}
+  - {key: "*|VE|*", action: REVIEW, reason: "Sectoral sanctions: a person checks the counterparty"}
+  - {key: "*|MM|*", action: REVIEW, reason: Enhanced due diligence destination}

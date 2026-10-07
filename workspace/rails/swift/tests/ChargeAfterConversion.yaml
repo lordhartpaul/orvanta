@@ -1,0 +1,27 @@
+kind: TestCase
+name: tests.TheChargeIsInTheCurrencyOfTheAccountAfterConversion
+description: "1,200 dollars for a rand account: 22,200 rand at the rate, less the rand charge."
+target: rails.swift.flows.IncomingSwiftProcessing
+given:
+  txn:
+    id: ORVTXN0000000980
+    paymentType: IN
+    channelIn: rails.swift.Mt103Inbound
+    endToEndId: CHASE-REF-0100
+    originalTxId: CHASE-REF-0100
+    sendingAgentBic: CHASUS33
+    amount: 1200.00
+    currency: USD
+    chargeBearer: SHAR
+    debtor: {name: "Atlas Drilling Equipment Inc", account: "000123456789", agentBic: CHASUS33}
+    creditor: {name: "Thandiwe Mokoena", account: "62011223344"}
+mocks:
+  connectors.AccountLookup: {status: ACTIVE, currency: ZAR}
+  connectors.SanctionsScreening: {status: CLEAR}
+  connectors.AccountPosting: {status: POSTED, postingId: P-7}
+  connectors.FxRates: {rate: 18.50}
+expect:
+  - result.status == 'CREDITED'
+  - txn.fx.creditAmount == 22200
+  - txn.charges.currency == 'ZAR'
+  - txn.charges.netAmount == 22075

@@ -1,0 +1,14 @@
+kind: Api
+name: api.AccountLimitPut
+description: >
+  Sets the limits of a debtor account: the most per payment and, optionally, the most per day.
+  Body: {"perTransaction": 50000, "perDay": 200000}.
+  The change takes effect for the next transaction processed.
+method: PUT
+path: /limits/{account}
+permission: payments.approve
+target: api.flows.AccountLimitWrite
+soap: {operation: SetAccountLimit}
+# examples for the OpenAPI description (GET /api/openapi.json)
+request: {perTransaction: 50000, perDay: 200000}
+response: {account: "4051122334", perTransaction: 50000, perDay: 200000}

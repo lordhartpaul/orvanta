@@ -1,0 +1,28 @@
+kind: Mapping
+name: payments.inbound.Pacs002ToAcknowledgement
+description: >
+  Reads an ISO 20022 payment status report (pacs.002) into the canonical acknowledgement:
+  the original message and one entry per reported transaction.
+rules:
+  - let: report
+    value: src.Document.FIToFIPmtStsRpt
+  - set: msgId
+    value: report.GrpHdr.MsgId
+  - set: originalMsgId
+    value: report.OrgnlGrpInfAndSts.OrgnlMsgId
+  - set: groupStatus
+    value: report.OrgnlGrpInfAndSts.GrpSts
+  - forEach: report.TxInfAndSts
+    as: st
+    append: entries
+    rules:
+      - set: transactionId
+        value: st.OrgnlTxId
+      - set: endToEndId
+        value: st.OrgnlEndToEndId
+      - set: status
+        value: st.TxSts
+      - set: reasonCode
+        value: st.StsRsnInf.Rsn.Cd
+      - set: reasonText
+        value: st.StsRsnInf.AddtlInf

@@ -1,0 +1,20 @@
+kind: TestCase
+name: tests.ForeignCurrencyIsDebitedInRand
+description: A dollar payment is debited in rand at the quoted rate and settles over the correspondent account.
+target: payments.flows.TransactionProcessing
+given:
+  txn:
+    id: ORVTXN0000000007
+    endToEndId: CHK-1
+    amount: 100
+    currency: USD
+    debtor: {name: "Karoo Mining Supplies", account: "4051122334"}
+    creditor: {name: "Thandiwe Mokoena", account: "62011223344", agentBic: CHASUS33}
+mocks:
+  connectors.FxRates: {rate: 18.50}
+expect:
+  - result.status == 'ROUTED'
+  - txn.fx.debitAmount == 1850
+  - txn.fx.debitCurrency == 'ZAR'
+  - txn.route.scheme == 'SWIFT'
+  - lookup('reference.SettlementAccounts', txn.route.scheme).type == 'NOSTRO'

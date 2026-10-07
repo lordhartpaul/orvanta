@@ -1,0 +1,80 @@
+kind: Mapping
+name: rails.sepa.maps.CanonicalToSepaPacs004
+description: >
+  Builds the pacs.004.001.09 that sends received SEPA Credit Transfers back. Every transaction quotes
+  the ids of the payment as it was received and says why it is returned.
+rules:
+  - set: Document.@xmlns
+    value: "'urn:iso:std:iso:20022:tech:xsd:pacs.004.001.09'"
+  - set: Document.PmtRtr.GrpHdr.MsgId
+    value: bulk.msgId
+  - set: Document.PmtRtr.GrpHdr.CreDtTm
+    value: bulk.createdAt
+  - set: Document.PmtRtr.GrpHdr.NbOfTxs
+    value: str(bulk.count)
+  - set: Document.PmtRtr.GrpHdr.TtlRtrdIntrBkSttlmAmt.@Ccy
+    value: "'EUR'"
+  - set: Document.PmtRtr.GrpHdr.TtlRtrdIntrBkSttlmAmt.#text
+    value: str(bulk.total)
+  - set: Document.PmtRtr.GrpHdr.IntrBkSttlmDt
+    value: todayIn('Europe/Berlin')
+  - set: Document.PmtRtr.GrpHdr.SttlmInf.SttlmMtd
+    value: "'CLRG'"
+  - set: Document.PmtRtr.GrpHdr.InstgAgt.FinInstnId.BICFI
+    value: bulk.senderBic
+  - forEach: txns
+    as: t
+    append: Document.PmtRtr.TxInf
+    rules:
+      - set: RtrId
+        value: t.id
+      - set: OrgnlGrpInf.OrgnlMsgId
+        value: t.originalMsgId
+      - set: OrgnlGrpInf.OrgnlMsgNmId
+        value: coalesce(t.originalMessageType, 'pacs.008.001.08')
+      - set: OrgnlInstrId
+        value: t.instructionRef
+      - set: OrgnlEndToEndId
+        value: t.endToEndId
+      - set: OrgnlTxId
+        value: t.originalTxId
+      - set: OrgnlUETR
+        value: t.uetr
+      - set: OrgnlIntrBkSttlmAmt.@Ccy
+        value: t.currency
+      - set: OrgnlIntrBkSttlmAmt.#text
+        value: str(t.amount)
+      - set: RtrdIntrBkSttlmAmt.@Ccy
+        value: t.currency
+      - set: RtrdIntrBkSttlmAmt.#text
+        value: str(t.amount)
+      - set: ChrgBr
+        value: "'SLEV'"
+      # who decided: the bank, or the customer when a credited payment is refunded
+      - set: RtrRsnInf.Orgtr.Id.OrgId.AnyBIC
+        when: t.return.requestedBy == 'application'
+        value: bulk.senderBic
+      # our customer is the creditor of a payment we received and the debtor of a collection
+      - set: RtrRsnInf.Orgtr.Nm
+        when: t.return.requestedBy != 'application'
+        value: "t.paymentType == 'DD_IN' ? t.debtor.name : t.creditor.name"
+      - set: RtrRsnInf.Rsn.Cd
+        value: t.return.reasonCode
+      - set: RtrRsnInf.AddtlInf
+        value: left(t.return.reasonText, 105)
+      - set: OrgnlTxRef.MndtRltdInf.MndtId
+        value: t.mandate.id
+      - set: OrgnlTxRef.RmtInf.Ustrd
+        value: t.remittance
+      - set: OrgnlTxRef.Dbtr.Pty.Nm
+        value: t.debtor.name
+      - set: OrgnlTxRef.DbtrAcct.Id.IBAN
+        value: t.debtor.account
+      - set: OrgnlTxRef.DbtrAgt.FinInstnId.BICFI
+        value: t.debtor.agentBic
+      - set: OrgnlTxRef.CdtrAgt.FinInstnId.BICFI
+        value: coalesce(t.creditor.agentBic, bulk.senderBic)
+      - set: OrgnlTxRef.Cdtr.Pty.Nm
+        value: t.creditor.name
+      - set: OrgnlTxRef.CdtrAcct.Id.IBAN
+        value: t.creditor.account

@@ -1,0 +1,93 @@
+kind: Flow
+name: rails.sepa.flows.IncomingCreditProcessing
+description: >
+  Processing of one SEPA Credit Transfer received for a customer. It ends CREDITED when the
+  customer's account has been credited. A payment that fails a rule, is a duplicate, or is for an
+  account that does not exist, is closed or is blocked, is sent back by the engine with the reason
+  (REJECTED means "send it back" for an incoming payment). A sender on a sanctions list stops the
+  payment for a person to decide: funds from such a party are neither credited nor returned by a machine.
+completeStatus: CREDITED
+steps:
+  - id: schemeRules
+    type: rules
+    ref: rails.sepa.rules.IncomingCredit
+    onViolation: reject
+
+  - id: duplicates
+    type: flow
+    ref: payments.flows.DuplicateCheck
+
+  - id: accountLookup
+    type: call
+    connector: connectors.AccountLookup
+    once: true
+    request:
+      account: txn.creditor.account
+    into: txn.checks.account
+
+  - id: accountStatus
+    type: rules
+    ref: rails.sepa.rules.CreditorAccountStatus
+    onViolation: reject
+
+  # the party the money comes from is screened; a match is for a person, not for an automatic return
+  - id: screen
+    type: call
+    connector: connectors.SanctionsScreening
+    once: true
+    request:
+      reference: txn.id
+      name: txn.debtor.name
+      account: txn.debtor.account
+      country: left(txn.debtor.account, 2)
+    into: txn.screening
+
+  # a channel with 'sanctionsHit: FREEZE' books the funds of a hit to the seized-funds account while a person decides
+  - id: freeze
+    type: call
+    when: txn.screening.status == 'HIT' and txn.sanctionsHit == 'FREEZE' and not contains(txn.overrides, 'SANC')
+    connector: connectors.AccountPosting
+    once: true
+    request:
+      idempotencyKey: concat(txn.id, '-FREEZE')
+      reference: txn.id
+      debitAccount: lookup('reference.SettlementAccounts', 'SEPA-SCT').account
+      creditAccount: lookup('reference.SettlementAccounts', 'FROZEN').account
+      amount: txn.amount
+      currency: txn.currency
+    into: txn.frozen
+
+  - id: sanctionsReview
+    type: end
+    when: (txn.screening.status == 'HIT' or txn.screening.status == 'POSSIBLE') and not contains(txn.overrides, 'SANC')
+    status: HOLD
+    code: SANC
+    message: "exists(txn.frozen) ? 'The sender matches a sanctions list entry; the funds are held on the seized-funds account until a person decides' : 'The sender matches a sanctions list entry; decide whether the payment may be credited'"
+
+  # released by a person: the funds come off the seized-funds account before the customer is credited
+  - id: unfreeze
+    type: call
+    when: exists(txn.frozen.postingId) and txn.frozen.status == 'POSTED' and not exists(txn.frozen.reversal)
+    connector: connectors.PostingReversal
+    once: true
+    request:
+      idempotencyKey: concat(txn.id, '-UNFREEZE')
+      reference: txn.id
+      postingId: txn.frozen.postingId
+      reason: "'Released after review'"
+    into: txn.frozen.reversal
+
+  # the customer's account is credited against the settlement account of the scheme; last, so nothing after it can fail
+  - id: credit
+    type: call
+    connector: connectors.AccountPosting
+    once: true
+    request:
+      idempotencyKey: concat(txn.id, '-CREDIT')
+      reference: txn.id
+      debitAccount: lookup('reference.SettlementAccounts', 'SEPA-SCT').account
+      debitAccountType: lookup('reference.SettlementAccounts', 'SEPA-SCT').type
+      creditAccount: txn.creditor.account
+      amount: txn.amount
+      currency: txn.currency
+    into: txn.posting

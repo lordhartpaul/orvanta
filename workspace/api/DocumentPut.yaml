@@ -1,0 +1,9 @@
+kind: Api
+name: api.DocumentPut
+description: >
+  Uploads the supporting document of a payment. The reference is the end-to-end id.
+  Body: {"name": "invoice-88120.pdf", "contentType": "application/pdf", "content": "<base64>"}
+method: PUT
+path: /documents/{reference}
+permission: payments.submit
+target: api.flows.DocumentUpload

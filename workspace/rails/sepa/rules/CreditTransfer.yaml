@@ -1,0 +1,47 @@
+kind: RuleSet
+name: rails.sepa.rules.CreditTransfer
+description: >
+  Scheme rules of SEPA Credit Transfer and SEPA Instant Credit Transfer that a payment must meet
+  before it is sent. Codes are ISO 20022 status reason codes.
+rules:
+  - id: CURRENCY_EURO
+    assert: txn.currency == 'EUR'
+    code: AM03
+    message: SEPA payments are in euro
+  - id: AMOUNT_RANGE
+    assert: txn.amount >= 0.01 and txn.amount <= 999999999.99
+    code: AM02
+    message: Amount must be between 0.01 and 999,999,999.99 euro
+  - id: INSTANT_LIMIT
+    when: txn.route.scheme == 'SEPA-INST'
+    assert: txn.amount <= 100000
+    code: AM02
+    message: An instant payment may not exceed 100,000 euro
+  - id: DEBTOR_IBAN
+    assert: isIban(txn.debtor.account) and len(txn.debtor.account) == lookup('rails.sepa.Countries', left(txn.debtor.account, 2)).ibanLength
+    code: AC02
+    message: Debtor account is not a valid IBAN of a SEPA country
+  - id: CREDITOR_IBAN
+    assert: isIban(txn.creditor.account) and len(txn.creditor.account) == lookup('rails.sepa.Countries', left(txn.creditor.account, 2)).ibanLength
+    code: AC03
+    message: Creditor account is not a valid IBAN of a SEPA country
+  - id: CHARGES_SHARED
+    assert: txn.chargeBearer in ['SLEV', 'SHAR']
+    code: CH16
+    message: SEPA charges are shared (SLEV)
+  - id: END_TO_END_ID
+    assert: exists(txn.endToEndId) and len(txn.endToEndId) <= 35 and isSepaText(txn.endToEndId)
+    code: CH16
+    message: End-to-end id is missing, longer than 35 characters or uses characters outside the SEPA character set
+  - id: NAMES_PRESENT
+    assert: exists(txn.debtor.name) and exists(txn.creditor.name) and len(txn.creditor.name) <= 70 and len(txn.debtor.name) <= 70
+    code: BE22
+    message: Debtor and creditor names are required and limited to 70 characters
+  - id: NAME_CHARACTERS
+    assert: isSepaText(txn.creditor.name) and isSepaText(txn.debtor.name)
+    code: CH16
+    message: A name uses characters outside the SEPA character set
+  - id: REMITTANCE
+    assert: len(txn.remittance) <= 140 and isSepaText(txn.remittance)
+    code: CH16
+    message: Remittance information is longer than 140 characters or uses characters outside the SEPA character set

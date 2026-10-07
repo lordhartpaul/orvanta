@@ -1,0 +1,13 @@
+kind: MessageSpec
+name: specs.swift.MT192
+description: >
+  Field rules of the MT192 request for cancellation of a category 1 message.
+  Formats are in SWIFT format notation. Written from the published field formats, not copied from a
+  standards release: compare with the release your bank is on before relying on it.
+format: swift.mt
+messageType: MT192
+fields:
+  - {tag: "20", name: transaction reference, required: true, format: "16x"}
+  - {tag: "21", name: related reference, required: true, format: "16x"}
+  - {tag: "11S", name: type and date of the original message, required: true, format: ["3!n", "6!n", "[4!n6!n]"]}
+  - {tag: "79", name: narrative description of the original message, format: "35*50x"}

@@ -1,0 +1,50 @@
+kind: Mapping
+name: payments.inbound.ConsoleInitiationToCanonical
+description: >
+  One payment initiated from the Console form becomes a canonical instruction with one batch and one
+  transaction, like a pain.001 with a single credit transfer.
+rules:
+  - set: msgId
+    value: src.msgId
+  - set: createdAt
+    value: src.createdAt
+  - set: initiatingParty
+    value: src.initiatedBy
+  - set: declaredCount
+    value: 1
+  - set: declaredSum
+    value: num(src.amount)
+  - append: batches
+    rules:
+      - set: batchRef
+        value: src.msgId
+      - set: requestedDate
+        value: src.requestedDate
+      - set: debtor.name
+        value: src.debtor.name
+      - set: debtor.account
+        value: src.debtor.account
+      - set: debtor.agentBic
+        value: src.debtor.agentBic
+      - append: txns
+        rules:
+          - set: endToEndId
+            value: src.endToEndId
+          - set: amount
+            value: num(src.amount)
+          - set: currency
+            value: src.currency
+          - set: creditor.name
+            value: src.creditor.name
+          - set: creditor.account
+            value: src.creditor.account
+          - set: creditor.agentBic
+            value: src.creditor.agentBic
+          - set: remittance
+            value: src.remittance
+          - set: chargeBearer
+            value: src.chargeBearer
+          - set: purposeCode
+            value: src.purposeCode
+          - set: priority
+            value: src.priority
